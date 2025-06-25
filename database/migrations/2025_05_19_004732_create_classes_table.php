@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('className')->uninque();
             $table->integer('studentsNum');
+            $table->integer('currentStudentNumber')->nullable();
             $table->timestamps();
         });
     }

@@ -69,6 +69,8 @@ class Kernel extends HttpKernel
         'student'=>\App\Http\Middleware\studentMiddleware::class,
         'parent'=>\App\Http\Middleware\parentMiddleware::class,
         'EnsureSingleLogin' => \App\Http\Middleware\EnsureSingleLogin::class,
+        'komy' => \App\Http\Middleware\komy::class,
+        'gaith' => \App\Http\Middleware\gaith::class,
 
 
     ];

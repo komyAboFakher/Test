@@ -53,6 +53,6 @@ class Student extends Model
 
     public function SchoolClass()
     {
-        return $this->belongsTo(schoolClass::class);
+        return $this->belongsTo(SchoolClass::class);
     }
 }

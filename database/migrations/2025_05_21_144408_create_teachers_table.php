@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('certification');
             $table->string('photo');
-            $table->string('subject');
+           // $table->string('subject');
             $table->decimal('salary',5,2)->default(0);
             $table->timestamps();
         });

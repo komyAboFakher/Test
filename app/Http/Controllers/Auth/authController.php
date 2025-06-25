@@ -146,7 +146,7 @@ class authController extends Controller
                 'role'=>'required|string|in:teacher',
                 'certification' => 'required|mimes:pdf|max:2048',
                 'photo' => 'mimes:png|max:2048',
-                'subject' => 'string|in:Maths,Physics,Chemistry,Biology,History,Geography,English,Arabic,French,Computer',
+                //'subject' => 'string|in:Maths,Physics,Chemistry,Biology,History,Geography,English,Arabic,French,Computer',
                 'salary' => 'numeric|min:0',
             ]);
 
@@ -179,7 +179,7 @@ class authController extends Controller
                     'user_id'=>$user->id,
                     'certification'=>$certificationPath,
                     'photo'=>$photoPath,
-                    'subject'=>$request->subject,
+                    //'subject'=>$request->subject,
                     'salary'=>$request->salary,
                 ]);
             }

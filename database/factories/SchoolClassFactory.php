@@ -26,8 +26,10 @@ class SchoolClassFactory extends Factory
 
 
         return [
-        'className' => '10-' . array_pop($numbers),
-        'studentsNum' => $this->faker->numberBetween(10, 50),
+            'className' => '10-' . array_pop($numbers),
+            'studentsNum' => $this->faker->numberBetween(10, 50),
+            'currentStudentNumber' => $this->faker->numberBetween(10, 50),
+
         ];
     }
 }

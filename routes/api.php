@@ -63,6 +63,26 @@ Route::post('/editClass',[classesManagementController::class,'editClass'])->midd
 Route::post('/assignStudentToClass',[classesManagementController::class,'assignStudentToClass'])->middleware('auth:sanctum','supervisor');//done w request
 Route::delete('/deleteClass',[classesManagementController::class,'deleteClass'])->middleware('auth:sanctum','supervisor');//done
 Route::post('/assignTeacherToClass',[classesManagementController::class,'assignTeacherToClass'])->middleware('auth:sanctum','supervisor');//done w request //dont froget to make it assign a specific tracher to three classes in the maximum
+
+// for gaith
+
+
+Route::get('/getAllStudents',[classesManagementController::class,'getAllStudents'])->middleware('auth:sanctum','komy'); // done
+Route::get('/getAllTeacherStudents',[classesManagementController::class,'getAllTeacherStudents'])->middleware('auth:sanctum','teacher'); //done
+Route::get('/getAllTeachers',[classesManagementController::class,'getAllTeachers'])->middleware('auth:sanctum','komy');// done
+Route::get('/getAllSupervisors',[classesManagementController::class,'getAllSupervisors'])->middleware('auth:sanctum','dean');//done
+Route::post('/getSpecificStudent',[classesManagementController::class,'getSpecificStudent'])->middleware('auth:sanctum','gaith');//done
+Route::post('/getSpecificTeacher',[classesManagementController::class,'getSpecificTeacher'])->middleware('auth:sanctum','komy');//done
+Route::post('/getSpecificSupervisor',[classesManagementController::class,'getSpecificSupervisor'])->middleware('auth:sanctum','dean');//done
+Route::post('/getUserInfo',[classesManagementController::class,'getUserInfo'])->middleware('auth:sanctum');//done
+
+Route::delete('/deleteUser',[classesManagementController::class,'deleteUser'])->middleware('auth:sanctum','dean');//done
+Route::delete('/deleteUser',[classesManagementController::class,'deleteUser'])->middleware('auth:sanctum','dean');//done
+
+
+
+
+
 //timetables management
 route::put('/createWeeklySchedule',[TimetablesManagementController::class,'createWeeklySchedule'])->middleware('auth:sanctum','supervisor');//done w request
 route::put('/uploadExamSchedule',[TimetablesManagementController::class,'uploadExamSchedule'])->middleware('auth:sanctum','supervisor');//done

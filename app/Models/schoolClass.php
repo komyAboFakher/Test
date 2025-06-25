@@ -5,12 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class schoolClass extends Model
+class SchoolClass extends Model
 {
+   use HasFactory;
    protected $table = "classes";
    protected $fillable = [
       'className',
       'studentsNum',
+      'currentStudentNumber',
    ];
    public function students()
    {
@@ -26,6 +28,10 @@ class schoolClass extends Model
    public function Teachers()
    {
       return $this->belongsToMany(Teacher::class, 'teacher_classes', 'teacher_id', 'class_id');
+   }
+   ////////////////////////////////////////////////////////
+   public function subject(){
+      return $this->hasMany(Subject::class);
    }
    ////////////////////////////////////////////////////////
    public function Marks()
