@@ -20,9 +20,9 @@ class classesManagementController extends Controller
         try {
             //validation
             $validation = Validator::make($request->all(), [
-                'className' => 'regex:/^\d{1,2}-[A-Z]$/',
+                'className' => ['regex:/^\d{1,2}-[A-Z]$/', 'unique:classes,className'],
                 'studentsNum' => 'required|integer|min:1',  // Added min:1 to ensure positive numbers
-                'currentStudentNumber' => 'nullable|integer|min:0|lte:studentsNum', // Added lte (less than or equal) rule
+                'currentStudentNumber' => 'required|integer|min:0|lte:studentsNum', // Added lte (less than or equal) rule
             ], [
                 'className.regex' => 'Class name must be in format like 10-A or 2-B with capital letter',
                 'currentStudentNumber.lte' => 'The current student number must be less than or equal to total students number.',
@@ -33,7 +33,7 @@ class classesManagementController extends Controller
                 return response()->json([
                     'status' => false,
                     'message' => $validation->errors(),
-                ]);
+                ], 422);
             }
 
             //create the class
@@ -79,25 +79,29 @@ class classesManagementController extends Controller
     {
         try {
             //validation
-            $validation = Validator::make(
-                $request->all(),
-                [
-                    'classId' => 'required|integer|exists:classes,id',
-                    'className' => 'required|regex:/^\d{1,2}-[A-Z]$/',
-                    'studentsNum' => 'required|integer|min:1',
-                    'currentStudentNumber' => 'nullable|integer|min:0|lte:studentsNum',
+            $validation = Validator::make($request->all(), [
+                'className' => 'regex:/^\d{1,2}-[A-Z]$/',
+                'studentsNum' => [
+                    'required',
+                    'integer',
+                    'min:1',
+                    function ($attribute, $value, $fail) use ($request) {
+                        if ($request->currentStudentNumber > $value) {
+                            $fail('Total capacity cannot be less than currently enrolled students.');
+                        }
+                    }
                 ],
-                [
-                    'className.regex' => 'Class name must be in format like 10-A or 2-B with capital letter',
-                    'currentStudentNumber.lte' => 'The current student number must be less than or equal to total students number.',
-                    'studentsNum.min' => 'Total students must be at least 1.'
-                ]
-            );
+                'currentStudentNumber' => 'required|integer|min:0|lte:studentsNum',
+            ], [
+                //'className.regex' => 'Class name must be in format like 10-A or 2-B with capital letter',
+                'currentStudentNumber.lte' => 'Currently enrolled students cannot exceed total capacity.',
+                'studentsNum.min' => 'Total capacity must be at least 1.'
+            ]);
             if ($validation->fails()) {
                 return response()->json([
                     'status' => false,
                     'message' => $validation->errors(),
-                ]);
+                ], 422);
             }
             //getting the class
             $class = schoolClass::where('id', $request->classId)->first();
@@ -325,6 +329,39 @@ class classesManagementController extends Controller
 
     //________________________________________________________________
 
+    public function getPaginateStudents()
+    {
+        try {
+
+
+            $students = User::with(['student.SchoolClass:id,className'])
+                ->where('role', 'student')
+                ->get()
+                ->map(function ($user) {
+                    return [
+                        'student_id' => $user->id,
+                        'full_name' => trim(implode(' ', array_filter([$user->name, $user->middleName, $user->lastName]))),
+                        'email' => $user->email,
+                        'phone' => $user->phoneNumber,
+                        'photo' => $user->student->photo ?? null,
+                        'gpa' => $user->student->Gpa ?? null,
+                        'class_id' => $user->student->class_id ?? null,
+                        'class_name' => $user->student->schoolClass->className ?? null // Simplified class info
+                    ];
+                });
+
+            return response()->json([
+                'status' => true,
+                'data' => $students
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'message' => $th->getMessage(),
+            ], 500);
+        }
+    }
+    //________________________________________________________________
     public function getAllTeacherStudents()
     {
 
@@ -335,14 +372,13 @@ class classesManagementController extends Controller
             $classes = TeacherClass::with([
 
                 'SchoolClasses.students.users:id,name,middleName,lastName,email,phoneNumber',
-                'SchoolClasses:id,className'
+                //'SchoolClasses:id,className'
             ])
                 ->where('teacher_id', $teacher->id)
                 ->get()
                 ->map(function ($teacherClass) {
                     return [
-                        'class_id' => $teacherClass->class_id,
-                        'class_name' => $teacherClass->SchoolClasses->className,
+
                         'students' => $teacherClass->SchoolClasses->students->map(function ($student) {
                             return [
                                 'student_id' => $student->user_id,
@@ -350,7 +386,9 @@ class classesManagementController extends Controller
                                 'email' => $student->users->email,
                                 'phone' => $student->users->phoneNumber,
                                 'photo' => $student->photo,
-                                'gpa' => $student->Gpa
+                                'gpa' => $student->Gpa,
+                                'class_id' => $student->class_id,
+                                'class_name' => $student->schoolClass->className
                             ];
                         })
                     ];
@@ -358,6 +396,7 @@ class classesManagementController extends Controller
 
             return response()->json([
                 'status' => true,
+                'message:' => 'your students !!',
                 'data' => $classes
             ]);
         } catch (\Throwable $th) {

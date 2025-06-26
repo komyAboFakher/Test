@@ -16,7 +16,7 @@ class SchoolClass extends Model
    ];
    public function students()
    {
-      return $this->hasMany(Student::class, 'class_id');
+      return $this->hasMany(Student::class,'class_id');
    }
    /////////////////////////////////////////////////////////
    public function ExamSchedules()

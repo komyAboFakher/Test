@@ -334,7 +334,8 @@ class authController extends Controller
             if(!Auth::attempt($request->only(['email','password']))){
                 return response()->json([
                     'status'=>false,
-                    'message'=>'email & password does not match with our record!'
+                    'error'=>'invalid Credentials',
+                    'message'=>'email or password is incorrect !! '
                 ],401);
             }
         //putting data in avariable

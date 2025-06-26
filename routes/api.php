@@ -9,6 +9,7 @@ use App\Http\Controllers\communicationController;
 use App\Http\Controllers\classesManagementController;
 use App\Http\Controllers\StudentAttendanceController;
 use App\Http\Controllers\ComplaintManagementController;
+use App\Http\Controllers\libraryController;
 use App\Http\Controllers\TimetablesManagementController;
 
 /*
@@ -68,6 +69,7 @@ Route::post('/assignTeacherToClass',[classesManagementController::class,'assignT
 
 
 Route::get('/getAllStudents',[classesManagementController::class,'getAllStudents'])->middleware('auth:sanctum','komy'); // done
+Route::get('/getPaginateStudents',[classesManagementController::class,'getPaginateStudents'])->middleware('auth:sanctum','komy'); // done
 Route::get('/getAllTeacherStudents',[classesManagementController::class,'getAllTeacherStudents'])->middleware('auth:sanctum','teacher'); //done
 Route::get('/getAllTeachers',[classesManagementController::class,'getAllTeachers'])->middleware('auth:sanctum','komy');// done
 Route::get('/getAllSupervisors',[classesManagementController::class,'getAllSupervisors'])->middleware('auth:sanctum','dean');//done
@@ -77,7 +79,7 @@ Route::post('/getSpecificSupervisor',[classesManagementController::class,'getSpe
 Route::post('/getUserInfo',[classesManagementController::class,'getUserInfo'])->middleware('auth:sanctum');//done
 
 Route::delete('/deleteUser',[classesManagementController::class,'deleteUser'])->middleware('auth:sanctum','dean');//done
-Route::delete('/deleteUser',[classesManagementController::class,'deleteUser'])->middleware('auth:sanctum','dean');//done
+//Route::delete('/deleteUser',[classesManagementController::class,'deleteUser'])->middleware('auth:sanctum','dean');//done
 
 
 
@@ -131,4 +133,15 @@ Route::delete('/deleteMedicalFile', [NurseController::class, 'deleteMedicalFile'
 Route::get('/getMedicalFiles', [NurseController::class, 'getMedicalFiles']);
 // for the students, so they can see their medical file
 Route::get('/getMyMedicalFiles', [NurseController::class, 'getMyMedicalFiles']);
-// hhhhhhhhh
+
+
+// library management at the school
+
+Route::post('/createBook',[libraryController::class,'createBook']);
+Route::post('/updateBook/{bookID}',[libraryController::class,'updateBook']);
+Route::delete('/deleteBook/{bookID}',[libraryController::class,'deleteBook']);
+Route::get('/showBook',[libraryController::class,'showBook']);
+//borrow management
+Route::post('/borrow',[libraryController::class,'borrow']);
+Route::post('/modifyBorrow',[libraryController::class,'modifyBorrow']);
+

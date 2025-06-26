@@ -118,4 +118,8 @@ class User extends Authenticatable
     {
         return $this->hasMany(Nursing::class);
     }
+    //_________________________________________________________________________
+    public function borrow(){
+        return $this->hasMany(Borrow::class,'user_id');
+    }
 }
