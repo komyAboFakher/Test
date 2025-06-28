@@ -16,11 +16,13 @@ class SubjectFactory extends Factory
      */
     public function definition(): array
     {
+       
+
         return [
-        'subjectName' => $this->faker->unique()->randomElement(['physics','math','chemistry','history','biology','computer']),
-        'minMark' => $this->faker->randomElement([50, 60]), 
-        'maxMark' => 100, 
-        'grade' => $this->faker->numberBetween(1, 12), 
+
+            'minMark' => $this->faker->randomElement([50, 60]),
+            'maxMark' => 100,
+
         ];
     }
 }

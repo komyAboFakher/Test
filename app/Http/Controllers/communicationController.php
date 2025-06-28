@@ -9,6 +9,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Blaspsoft\Blasp\Facades\Blasp;
+use App\Services\commentFilter;
 
 class CommunicationController extends Controller
 {
@@ -25,6 +27,8 @@ class CommunicationController extends Controller
                 'photos.*' => 'image|mimes:jpeg,png,jpg', // Validate multiple photos
                 'is_published' => 'boolean'
             ]);
+
+
 
             if ($validator->fails()) {
                 return response()->json([
@@ -329,6 +333,34 @@ class CommunicationController extends Controller
                 'content' => 'required|string'
             ]);
 
+            // my local filter, not used any more
+
+            // $filter = new CommentFilter();
+            // if (!$filter->isClean($request->content)) {
+            //     return response()->json([
+            //         'status' => false,
+            //         'message' => 'Your comment contains inappropriate language.'
+            //     ], 403);
+            // }
+
+            // the BLASP library for comment filtering 
+
+
+
+            $blaspResult = Blasp::check($request->content);
+
+            if ($blaspResult->hasProfanity()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Please avoid using inappropriate language.',
+                    'by the way :' => 'go fuck your self !! hahahahahahahaa '
+                ], 403);
+            }
+
+
+
+
+
             if ($validator->fails()) {
                 return response()->json([
                     'status' => false,
@@ -336,9 +368,6 @@ class CommunicationController extends Controller
                 ], 422);
             }
 
-            // if the comment is top level comment, parent-id == event_id, else it is reply !!
-
-            //$parentId = $request->has('parent_id') ? $request->parent_id : $request->event_id;
 
             $commentData = [
                 'event_id' => $request->event_id,
@@ -361,6 +390,7 @@ class CommunicationController extends Controller
             ], 404);
         }
     }
+
     //_________________________________________________________________________________________________
 
     public function editComment(Request $request, $commentID)

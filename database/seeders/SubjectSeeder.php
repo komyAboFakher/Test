@@ -13,7 +13,15 @@ class SubjectSeeder extends Seeder
      */
     public function run(): void
     {
-        Subject::factory()->count(6)->create();
+        $subjects = ['physics', 'math', 'chemistry', 'history', 'biology', 'computer'];
 
+        for ($grade = 1; $grade <= 12; $grade++) {
+            foreach ($subjects as $name) {
+                Subject::factory()->create([
+                    'subjectName' => $name,
+                    'grade' => $grade,
+                ]);
+            }
+        }
     }
 }

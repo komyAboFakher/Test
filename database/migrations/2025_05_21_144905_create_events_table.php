@@ -13,9 +13,10 @@ return new class extends Migration
     {
         Schema::create('events', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete(); // supervisor mostly
             $table->string('event_name');
-            $table->date('date');
-            $table->string('event_description');
+            $table->text('post');
+            $table->boolean('is_published')->nullable(); // content management
             $table->timestamps();
         });
     }

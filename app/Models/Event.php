@@ -9,9 +9,11 @@ class Event extends Model
 {
     use HasFactory;
     protected $fillable = [
+        'user_id',
         'event_name',
-        'date',
-        'event_description',
+        'post',
+        'is_published',
+        'photos'
     ];
 
 

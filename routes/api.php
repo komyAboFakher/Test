@@ -23,84 +23,88 @@ use App\Http\Controllers\TimetablesManagementController;
 |
 */
 //authentication routes:authController
-Route::post('/login',[authController::class,'login'])->middleware('EnsureSingleLogin');//done w request
-Route::post('/createDean',[authController::class,'createDean']);//done w request
-Route::post('/createUser',[authController::class,'createUser'])->middleware('auth:sanctum','dean');//done w request
-Route::post('/createTeacher',[authController::class,'createTeacher'])->middleware('auth:sanctum','dean');//done w request
-Route::post('/createSupervisor',[authController::class,'createSupervisor'])->middleware('auth:sanctum','dean');//done w request
+Route::post('/login', [authController::class, 'login'])->middleware('EnsureSingleLogin'); //done w request
+Route::post('/createDean', [authController::class, 'createDean']); //done w request
+Route::post('/createUser', [authController::class, 'createUser'])->middleware('auth:sanctum', 'dean'); //done w request
+Route::post('/createTeacher', [authController::class, 'createTeacher'])->middleware('auth:sanctum', 'dean'); //done w request
+Route::post('/createSupervisor', [authController::class, 'createSupervisor'])->middleware('auth:sanctum', 'dean'); //done w request
 //and modify the create func to intiate student, teacher, parent and supervisor tables
-Route::delete('/logout',[authController::class,'logout'])->middleware('auth:sanctum');//done w request
-Route::post('/sendForgetPasswordOtp',[authController::class,'sendForgetPasswordOtp']);//done w request
-Route::post('/confirmForgetPasswordOtp',[authController::class,'confirmForgetPasswordOtp']);//done w request
-Route::post('/resetPassword',[authController::class,'resetPassword']);//done w request
+Route::delete('/logout', [authController::class, 'logout'])->middleware('auth:sanctum'); //done w request
+Route::post('/sendForgetPasswordOtp', [authController::class, 'sendForgetPasswordOtp']); //done w request
+Route::post('/confirmForgetPasswordOtp', [authController::class, 'confirmForgetPasswordOtp']); //done w request
+Route::post('/resetPassword', [authController::class, 'resetPassword']); //done w request
 
 
 //student attendance management
 //1-
-Route::get('/studentsAttendanceForm',[StudentAttendanceController::class,'studentsAttendanceForm'])->middleware('auth:sanctum','teacher');//retrieving student data by class name to the teacher check the attendance //done w request
-Route::post('/studentsAttendanceSubmit',[StudentAttendanceController::class,'studentsAttendanceSubmit'])->middleware('auth:sanctum','teacher');//done w request
+Route::get('/studentsAttendanceForm', [StudentAttendanceController::class, 'studentsAttendanceForm'])->middleware('auth:sanctum', 'teacher'); //retrieving student data by class name to the teacher check the attendance //done w request
+Route::post('/studentsAttendanceSubmit', [StudentAttendanceController::class, 'studentsAttendanceSubmit'])->middleware('auth:sanctum', 'teacher'); //done w request
 //2-for supervisor
-Route::get('/checkStudentAbsenceReport',[StudentAttendanceController::class,'checkStudentAbsenceReport'])->middleware('auth:sanctum','supervisor');//checking attendance report //done w request
-Route::get('/checkStudentWarnings',[StudentAttendanceController::class,'checkStudentWarnings'])->middleware('auth:sanctum','supervisor');//checking student warnings and how many day they did no attend //done w request
-Route::post('/submitDailyReports',[StudentAttendanceController::class,'submitDailyReports'])->middleware('auth:sanctum','supervisor');//giving the supervisor the ability to submit all the daily reports //done w request
-Route::post('/incrementStudentAbsence',[StudentAttendanceController::class,'incrementStudentAbsence'])->middleware('auth:sanctum','supervisor');//giving the supervisor the ability to increment student absence num by one //done w request
+Route::get('/checkStudentAbsenceReport', [StudentAttendanceController::class, 'checkStudentAbsenceReport'])->middleware('auth:sanctum', 'supervisor'); //checking attendance report //done w request
+Route::get('/checkStudentWarnings', [StudentAttendanceController::class, 'checkStudentWarnings'])->middleware('auth:sanctum', 'supervisor'); //checking student warnings and how many day they did no attend //done w request
+Route::post('/submitDailyReports', [StudentAttendanceController::class, 'submitDailyReports'])->middleware('auth:sanctum', 'supervisor'); //giving the supervisor the ability to submit all the daily reports //done w request
+Route::post('/incrementStudentAbsence', [StudentAttendanceController::class, 'incrementStudentAbsence'])->middleware('auth:sanctum', 'supervisor'); //giving the supervisor the ability to increment student absence num by one //done w request
 
-Route::get('/searchStudentByName',[StudentAttendanceController::class,'searchStudentByName'])->middleware('auth:sanctum','supervisor');//giving the supervisor the ability to see all student based on the name and class name //done w request
-Route::get('/showAllStudents',[StudentAttendanceController::class,'showAllStudents'])->middleware('auth:sanctum','supervisor');//giving the supervisor the ability to see all student based on the name and class name //done w request
-Route::get('/getInfo',[StudentAttendanceController::class,'getInfo'])->middleware('auth:sanctum','student');//this api gets the user info based on his role 
+Route::get('/searchStudentByName', [StudentAttendanceController::class, 'searchStudentByName'])->middleware('auth:sanctum', 'supervisor'); //giving the supervisor the ability to see all student based on the name and class name //done w request
+Route::get('/showAllStudents', [StudentAttendanceController::class, 'showAllStudents'])->middleware('auth:sanctum', 'supervisor'); //giving the supervisor the ability to see all student based on the name and class name //done w request
+Route::get('/getInfo', [StudentAttendanceController::class, 'getInfo'])->middleware('auth:sanctum', 'student'); //this api gets the user info based on his role 
 //2-for students
-Route::get('/checkStudentAttendanceHistory',[StudentAttendanceController::class,'checkStudentAttendanceHistory'])->middleware('auth:sanctum','student');//giving the atudent the ability to check his attendance history //done w request
-Route::get('/showParentSon',[StudentAttendanceController::class,'showParentSon'])->middleware('auth:sanctum','parent');//giving the parent thee ability to see his son data //done w request
+Route::get('/checkStudentAttendanceHistory', [StudentAttendanceController::class, 'checkStudentAttendanceHistory'])->middleware('auth:sanctum', 'student'); //giving the atudent the ability to check his attendance history //done w request
+Route::get('/showParentSon', [StudentAttendanceController::class, 'showParentSon'])->middleware('auth:sanctum', 'parent'); //giving the parent thee ability to see his son data //done w request
 
 
 //3-
-Route::post('/uploadJustification',[StudentAttendanceController::class,'uploadJustification'])->middleware('auth:sanctum','student');//done w request
+Route::post('/uploadJustification', [StudentAttendanceController::class, 'uploadJustification'])->middleware('auth:sanctum', 'student'); //done w request
 //4-
-Route::get('/checkJustifications',[StudentAttendanceController::class,'checkJustifications'])->middleware('auth:sanctum','supervisor');//done w request
+Route::get('/checkJustifications', [StudentAttendanceController::class, 'checkJustifications'])->middleware('auth:sanctum', 'supervisor'); //done w request
+
+
 //classes managmenet
-Route::Put('/createClasses',[classesManagementController::class,'createClasses'])->middleware('auth:sanctum','supervisor');//done w request
-Route::get('/showClasses',[classesManagementController::class,'showClasses'])->middleware('auth:sanctum','supervisor');//done w request
-Route::post('/editClass',[classesManagementController::class,'editClass'])->middleware('auth:sanctum','supervisor');//done w request
-Route::post('/assignStudentToClass',[classesManagementController::class,'assignStudentToClass'])->middleware('auth:sanctum','supervisor');//done w request
-Route::delete('/deleteClass',[classesManagementController::class,'deleteClass'])->middleware('auth:sanctum','supervisor');//done
-Route::post('/assignTeacherToClass',[classesManagementController::class,'assignTeacherToClass'])->middleware('auth:sanctum','supervisor');//done w request //dont froget to make it assign a specific tracher to three classes in the maximum
 
-// for gaith
+Route::Put('/createClasses', [classesManagementController::class, 'createClasses'])->middleware('auth:sanctum', 'supervisor'); //done w request
+Route::get('/showClasses', [classesManagementController::class, 'showClasses'])->middleware('auth:sanctum', 'supervisor'); //done w request
+Route::post('/editClass', [classesManagementController::class, 'editClass'])->middleware('auth:sanctum', 'supervisor'); //done w request
+Route::post('/assignStudentToClass', [classesManagementController::class, 'assignStudentToClass'])->middleware('auth:sanctum', 'supervisor'); //done w request
+Route::delete('/deleteClass', [classesManagementController::class, 'deleteClass'])->middleware('auth:sanctum','supervisor');//done
+Route::post('/assignTeacherToClass', [classesManagementController::class, 'assignTeacherToClass'])->middleware('auth:sanctum', 'supervisor'); //done w request //dont froget to make it assign a specific tracher to three classes in the maximum
+//Route::post('/updateAssignTeacherToClass', [classesManagementController::class, 'updateAssignTeacherToClass']);//->middleware('auth:sanctum', 'supervisor'); //done w request
+
+// for gaith, by KOMY 
 
 
-Route::get('/getAllStudents',[classesManagementController::class,'getAllStudents'])->middleware('auth:sanctum','komy'); // done
-Route::get('/getPaginateStudents',[classesManagementController::class,'getPaginateStudents'])->middleware('auth:sanctum','komy'); // done
-Route::get('/getAllTeacherStudents',[classesManagementController::class,'getAllTeacherStudents'])->middleware('auth:sanctum','teacher'); //done
-Route::get('/getAllTeachers',[classesManagementController::class,'getAllTeachers'])->middleware('auth:sanctum','komy');// done
-Route::get('/getAllSupervisors',[classesManagementController::class,'getAllSupervisors'])->middleware('auth:sanctum','dean');//done
-Route::post('/getSpecificStudent',[classesManagementController::class,'getSpecificStudent'])->middleware('auth:sanctum','gaith');//done
-Route::post('/getSpecificTeacher',[classesManagementController::class,'getSpecificTeacher'])->middleware('auth:sanctum','komy');//done
-Route::post('/getSpecificSupervisor',[classesManagementController::class,'getSpecificSupervisor'])->middleware('auth:sanctum','dean');//done
-Route::post('/getUserInfo',[classesManagementController::class,'getUserInfo'])->middleware('auth:sanctum');//done
-
-Route::delete('/deleteUser',[classesManagementController::class,'deleteUser'])->middleware('auth:sanctum','dean');//done
-//Route::delete('/deleteUser',[classesManagementController::class,'deleteUser'])->middleware('auth:sanctum','dean');//done
+Route::get('/getAllStudents', [classesManagementController::class, 'getAllStudents'])->middleware('auth:sanctum', 'komy'); // done w request
+Route::get('/getPaginateStudents', [classesManagementController::class, 'getPaginateStudents'])->middleware('auth:sanctum', 'komy'); // done w request
+Route::get('/getAllTeacherStudents', [classesManagementController::class, 'getAllTeacherStudents'])->middleware('auth:sanctum', 'teacher'); //done w request
+Route::get('/getAllTeachers', [classesManagementController::class, 'getAllTeachers']);//->middleware('auth:sanctum', 'komy'); // done w request
+Route::get('/getAllSupervisors', [classesManagementController::class, 'getAllSupervisors'])->middleware('auth:sanctum', 'dean'); //done w request
+Route::post('/getSpecificStudent', [classesManagementController::class, 'getSpecificStudent'])->middleware('auth:sanctum', 'gaith'); //done w request
+Route::post('/getSpecificTeacher', [classesManagementController::class, 'getSpecificTeacher'])->middleware('auth:sanctum', 'komy'); //done w request
+Route::post('/getSpecificSupervisor', [classesManagementController::class, 'getSpecificSupervisor'])->middleware('auth:sanctum', 'dean'); //done w request
+Route::get('/getUserInfo', [classesManagementController::class, 'getUserInfo'])->middleware('auth:sanctum'); //done w request
+Route::get('/getClassTeachers', [classesManagementController::class, 'getClassTeachers'])->middleware('auth:sanctum','supervisor'); //done w request
+Route::delete('/deleteUser', [classesManagementController::class, 'deleteUser'])->middleware('auth:sanctum', 'dean'); //done w request
+Route::get('showSubjects',[classesManagementController::class,'showSubjects'])->middleware('auth:sanctum', 'komy'); //done w request
 
 
 
 
 
 //timetables management
-route::put('/createWeeklySchedule',[TimetablesManagementController::class,'createWeeklySchedule'])->middleware('auth:sanctum','supervisor');//done w request
-route::put('/uploadExamSchedule',[TimetablesManagementController::class,'uploadExamSchedule'])->middleware('auth:sanctum','supervisor');//done
-route::get('/getStudentWeeklySchedule',[TimetablesManagementController::class,'getStudentWeeklySchedule'])->middleware('auth:sanctum','student');//done w request
+route::put('/createWeeklySchedule', [TimetablesManagementController::class, 'createWeeklySchedule'])->middleware('auth:sanctum', 'supervisor'); //done w request
+route::put('/uploadExamSchedule', [TimetablesManagementController::class, 'uploadExamSchedule'])->middleware('auth:sanctum', 'supervisor'); //done
+route::get('/getStudentWeeklySchedule', [TimetablesManagementController::class, 'getStudentWeeklySchedule'])->middleware('auth:sanctum', 'student'); //done w request
 //needs to be done
-route::get('/getStudentExamSchedule',[TimetablesManagementController::class,'getStudentExamSchedule'])->middleware('auth:sanctum','student');//
-route::get('/getTeacherWeeklySchedule',[TimetablesManagementController::class,'getTeacherWeeklySchedule'])->middleware('auth:sanctum','teacher');//pdf ?= true => to give the ability to download the schedule as pdf and if it false i will only return the data
-route::get('/getTeacherExamSchedule',[TimetablesManagementController::class,'getTeacherExamSchedule'])->middleware('auth:sanctum','teacher');//
+route::get('/getStudentExamSchedule', [TimetablesManagementController::class, 'getStudentExamSchedule'])->middleware('auth:sanctum', 'student'); //
+route::get('/getTeacherWeeklySchedule', [TimetablesManagementController::class, 'getTeacherWeeklySchedule'])->middleware('auth:sanctum', 'teacher'); //pdf ?= true => to give the ability to download the schedule as pdf and if it false i will only return the data
+route::get('/getTeacherExamSchedule', [TimetablesManagementController::class, 'getTeacherExamSchedule'])->middleware('auth:sanctum', 'teacher'); //
 
 
 //////////////////////////////////////////////////////////KOMAY STUFF/////////////////////////////////////////////////////
 //marks management
-Route::get('/getAllTeacherInfo/{teacherID}', [marksController::class,'getAllTeacherInfo']);
-Route::get('/getEmptyExcelCheatForMarks/{teacherID}/{classID}/{subjectID}/{semester}/{type}', [marksController::class,'getEmptyExcelCheatForMarks']);
-Route::post('/uploadMarkExcelCheat', [marksController::class,'uploadMarkExcelCheat']);
-Route::get('/studentGetResult/{studentID}', [marksController::class,'studentGetResult']);
+Route::get('/getAllTeacherInfo/{teacherID}', [marksController::class, 'getAllTeacherInfo']);
+Route::get('/getEmptyExcelCheatForMarks/{teacherID}/{classID}/{subjectID}/{semester}/{type}', [marksController::class, 'getEmptyExcelCheatForMarks']);
+Route::post('/uploadMarkExcelCheat', [marksController::class, 'uploadMarkExcelCheat']);
+Route::get('/studentGetResult/{studentID}', [marksController::class, 'studentGetResult']);
 
 //events management
 
@@ -110,7 +114,15 @@ Route::delete('/deleteEvent/{eventID}', [CommunicationController::class, 'delete
 // this api is for the users who made events(mostly supervisors), so they can see their own posts NOTE: look at the controller
 Route::get('/getEvents/{userID}', [CommunicationController::class, 'getEvents']);
 //this api is for the students, so they can see the whole events, i mean here the students get all events
-Route::get('/getAllPublishedEvents', [communicationController::class, 'getAllPublishedEvents']);
+Route::get('/getAllPublishedEvents', [CommunicationController::class, 'getAllPublishedEvents']);
+
+//comments management
+
+
+Route::post('/addComment', [CommunicationController::class, 'addComment']);
+Route::post('/editComment/{commentID}', [CommunicationController::class, 'editComment']);
+Route::delete('/deleteComment/{commentID}', [CommunicationController::class, 'deleteComment']);
+Route::get('/getEventComments/{eventID}', [CommunicationController::class, 'getEventComments']);
 
 //complains managements
 
@@ -128,7 +140,7 @@ Route::delete('/softDeleteComplaint', [ComplaintManagementController::class, 'so
 
 Route::post('/addMedicalFile', [NurseController::class, 'addMedicalFile']);
 Route::post('/updateMedicalFile', [NurseController::class, 'updateMedicalFile']);
-Route::delete('/deleteMedicalFile', [NurseController::class, 'deleteMedicalFile']);// soft delete
+Route::delete('/deleteMedicalFile', [NurseController::class, 'deleteMedicalFile']); // soft delete
 // for the nurse, searching among the files (search in flutter)
 Route::get('/getMedicalFiles', [NurseController::class, 'getMedicalFiles']);
 // for the students, so they can see their medical file
@@ -137,12 +149,25 @@ Route::get('/getMyMedicalFiles', [NurseController::class, 'getMyMedicalFiles']);
 
 // library management at the school
 
-Route::post('/createBook',[libraryController::class,'createBook']);
-Route::post('/updateBook/{bookID}',[libraryController::class,'updateBook']);
-Route::delete('/deleteBook/{bookID}',[libraryController::class,'deleteBook']);
-Route::get('/showBook',[libraryController::class,'showBook']);
+Route::post('/createBook', [libraryController::class, 'createBook']);
+Route::post('/updateBook/{bookID}', [libraryController::class, 'updateBook']);
+Route::delete('/deleteBook/{bookID}', [libraryController::class, 'deleteBook']);
+Route::get('/showBook', [libraryController::class, 'showBook']);
 //borrow management
-Route::post('/borrow',[libraryController::class,'borrow']);
-Route::post('/modifyBorrow',[libraryController::class,'modifyBorrow']);
+Route::post('/borrow', [libraryController::class, 'borrow']);
+Route::post('/modifyBorrow', [libraryController::class, 'modifyBorrow']);
 
 //komy
+/*
+php artisan db:seed
+php artisan db:seed --class=ClassSeeder
+php artisan db:seed --class=TeacherSeeder
+php artisan db:seed --class=SupervisorSeeder
+php artisan db:seed --class=SubjectSeeder
+
+//
+// don't try this seeder, it is not important, just try to assign teacher to class (classManagementController)
+//
+php artisan db:seed --class=TeacherClassSeeder
+
+*/

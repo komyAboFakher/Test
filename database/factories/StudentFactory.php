@@ -19,8 +19,7 @@ class StudentFactory extends Factory
     public function definition(): array
     {
         return [
-        'user_id' => User::where('role', 'student')->inRandomOrder()->first()->id,
-        'class_id' => schoolClass::inRandomOrder()->first()->id,
+        
         'schoolGraduatedFrom' => $this->faker->company,
         'photo' => $this->faker->imageUrl(200, 200, 'people', true),
         'Gpa' => $this->faker->randomFloat(2, 0, 4),

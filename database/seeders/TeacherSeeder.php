@@ -2,9 +2,10 @@
 
 namespace Database\Seeders;
 
+use App\Models\User;
 use App\Models\Teacher;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 class TeacherSeeder extends Seeder
 {
@@ -13,6 +14,14 @@ class TeacherSeeder extends Seeder
      */
     public function run(): void
     {
-        Teacher::factory()->count(10)->create();
+        //Teacher::factory()->count(10)->create();
+
+        $teacherUsers = User::where('role', 'teacher')->get();
+
+        foreach ($teacherUsers as $user) {
+            Teacher::factory()->create([
+                'user_id' => $user->id,
+            ]);
+        }
     }
 }

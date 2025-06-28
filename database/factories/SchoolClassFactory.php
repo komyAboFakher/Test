@@ -16,20 +16,14 @@ class SchoolClassFactory extends Factory
      */
     public function definition(): array
     {
-
-        static $numbers = null;
-
-        if ($numbers === null) {
-            $numbers = range(1, 10); // Creates [1,2,3,4,...,10]
-            shuffle($numbers); // Shuffles the numbers randomly
-        }
-
+          // no duplicate names here, as long as you seed only 26 class, the number of letters in the
+          // english alphabet (A->Z)
+        static $index = 0;
+        $letters = range('A', 'Z'); // Up to 26 classes (10-A to 10-Z)
 
         return [
-            'className' => '10-' . array_pop($numbers),
-            'studentsNum' => $this->faker->numberBetween(10, 50),
-            'currentStudentNumber' => $this->faker->numberBetween(10, 50),
-
+            'className' => '10-' . $letters[$index++],
+            'studentsNum' => $this->faker->numberBetween(30,40),
         ];
     }
 }

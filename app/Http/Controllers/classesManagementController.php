@@ -7,11 +7,14 @@ use App\Models\Student;
 use App\Models\Subject;
 use App\Models\Teacher;
 use App\Models\schoolClass;
-use App\Models\SchoolClass as ModelsSchoolClass;
 use App\Models\TeacherClass;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use App\Models\SchoolClass as ModelsSchoolClass;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use PhpParser\Node\Expr\FuncCall;
 
 class classesManagementController extends Controller
 {
@@ -22,11 +25,10 @@ class classesManagementController extends Controller
             $validation = Validator::make($request->all(), [
                 'className' => ['regex:/^\d{1,2}-[A-Z]$/', 'unique:classes,className'],
                 'studentsNum' => 'required|integer|min:1',  // Added min:1 to ensure positive numbers
-                'currentStudentNumber' => 'required|integer|min:0|lte:studentsNum', // Added lte (less than or equal) rule
+                //'currentStudentNumber' => 'required|integer|min:0|lte:studentsNum', // Added lte (less than or equal) rule
             ], [
                 'className.regex' => 'Class name must be in format like 10-A or 2-B with capital letter',
-                'currentStudentNumber.lte' => 'The current student number must be less than or equal to total students number.',
-                'studentsNum.min' => 'Total students must be at least 1.'
+                'studentsNum.min' => 'Total students must be at least 1 '
             ]);
 
             if ($validation->fails()) {
@@ -40,7 +42,6 @@ class classesManagementController extends Controller
             $class = schoolClass::create([
                 'className' => $request->className,
                 'studentsNum' => $request->studentsNum,
-                'currentStudentNumber' => $request->currentStudentNumber ?? 0, // Default to 0 if null
             ]);
 
             //returning success message
@@ -56,6 +57,8 @@ class classesManagementController extends Controller
             ], 500);
         }
     }
+
+    //__________________________________________________________________________________________
 
     public function showClasses(Request $request)
     {
@@ -75,27 +78,20 @@ class classesManagementController extends Controller
         }
     }
 
+    //___________________________________________________________________________________
+
     public function editClass(Request $request)
     {
         try {
             //validation
             $validation = Validator::make($request->all(), [
+                'class_id' => 'required|integer|exists:classes,id',
                 'className' => 'regex:/^\d{1,2}-[A-Z]$/',
-                'studentsNum' => [
-                    'required',
-                    'integer',
-                    'min:1',
-                    function ($attribute, $value, $fail) use ($request) {
-                        if ($request->currentStudentNumber > $value) {
-                            $fail('Total capacity cannot be less than currently enrolled students.');
-                        }
-                    }
-                ],
-                'currentStudentNumber' => 'required|integer|min:0|lte:studentsNum',
+                'studentsNum' => 'required|integer|min:1',
+
             ], [
-                //'className.regex' => 'Class name must be in format like 10-A or 2-B with capital letter',
-                'currentStudentNumber.lte' => 'Currently enrolled students cannot exceed total capacity.',
-                'studentsNum.min' => 'Total capacity must be at least 1.'
+                'studentsNum.min' => 'Total capacity must be at least 1.',
+                'className.regex' => 'the class name must be like 10-A with capital letter'
             ]);
             if ($validation->fails()) {
                 return response()->json([
@@ -103,15 +99,36 @@ class classesManagementController extends Controller
                     'message' => $validation->errors(),
                 ], 422);
             }
-            //getting the class
-            $class = schoolClass::where('id', $request->classId)->first();
-            //editting the class students number and current student number and name
-            $class->className = $request->className;
-            $class->studentsNum = $request->studentsNum;
-            $class->currentStudentNumber = $request->currentStudentNumber;
-            //saving the class after editing
-            $class->save();
-            //returning success message
+
+
+            $class = SchoolClass::findOrFail($request->class_id);
+
+            // check for duplicated names, but the class can keep his own name
+            if (SchoolClass::where('className', $request->className)
+                ->where('id', '!=', $request->class_id)
+                ->exists()
+            ) {
+                return response()->json([
+                    'message' => "The class name is already in use!"
+                ], 409);
+            }
+
+
+            if ($request->studentsNum < $class->currentStudentNumber) {
+                return response()->json([
+                    'message' => "the max size can't be less than the current student number !!!"
+                ]);
+            }
+
+
+
+
+            $class->fill($request->only([
+                'class_id',
+                'className',
+                'studentsNum'
+            ]))->save();
+
             return response()->json([
                 'status' => true,
                 'message' => 'class has been edited succesfully!',
@@ -124,47 +141,107 @@ class classesManagementController extends Controller
             ], 500);
         }
     }
+    //_________________________________________________________________________________
 
     public function assignStudentToClass(Request $request)
     {
         try {
-            //validation
-            $validation = Validator::make($request->all(), [
+            // Validation
+            $validator = Validator::make($request->all(), [
                 'studentId' => 'required|integer|exists:students,id',
-                'className' => 'regex:/^\d{1,2}-[A-Z]$/',
+                'new_class_id' => 'required|integer|exists:classes,id',
+            ], [
+                'studentId.exists' => 'The specified student does not exist',
+                'new_class_id.exists' => 'The specified class does not exist'
             ]);
-            if ($validation->fails()) {
+
+            if ($validator->fails()) {
                 return response()->json([
                     'status' => false,
-                    'message' => $validation->errors(),
-                ]);
-            }
-            //getting the student
-            $student = Student::where('id', $request->studentId)->first();
-            //getting the class
-            $class = schoolClass::where('className', $request->className)->first();
-            //we need to check if the class has capacity
-            $classStudents = Student::where('class_id', $class->id)->get();
-            if (count($classStudents) < $class->studentsNum) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'the class is full',
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
                 ], 422);
             }
-            //assigning the class to the student
-            $student->class_id = $class->id;
-            //return success message
-            return Response()->json([
+
+
+            DB::beginTransaction();
+
+            //getting the student, then the current student number in the new class
+
+            $student = Student::findOrFail($request->studentId);
+            $newClass = SchoolClass::withCount('students')->findOrFail($request->new_class_id);
+
+            //getting the old class_id
+
+            $oldClass = $student->class_id ? SchoolClass::find($student->class_id) : null;
+
+            // Check if moving to same class
+
+            if ($student->class_id == $request->new_class_id) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Student is already in this class'
+                ], 409);
+            }
+
+            // Check new class capacity
+
+            if ($newClass->students_count >= $newClass->studentsNum) {
+                DB::rollBack();
+                return response()->json([
+                    'status' => false,
+                    'message' => 'this class has reached maximum capacity',
+                    'current_count :' => $newClass->students_count,
+                    'max_capacity :' => $newClass->studentsNum
+                ], 422);
+            }
+
+            // Update student's class
+            $student->class_id = $request->new_class_id;
+            // $student->save();
+
+            $student->fill($request->only([
+                'new_class_id'
+            ]))->save();
+            // Increment new class count
+            if (is_null($newClass->currentStudentNumber)) {
+                $newClass->currentStudentNumber = 1;
+            } else {
+                $newClass->increment('currentStudentNumber');
+            }
+            $newClass->save();
+
+            // Decrement old class if exists
+            if ($oldClass) {
+                $oldClass->decrement('currentStudentNumber');
+            }
+
+            DB::commit();
+
+            return response()->json([
                 'status' => true,
-                'message' => 'student has been assigned to class successfully!',
+                'message' => 'Student transferred successfully',
+                'data' => [
+                    'student' => $student->users->only(['id', 'name', 'middleName', 'lastName']),
+                    'old_class' => $oldClass ? $oldClass->only(['id', 'className', 'currentStudentNumber']) : null,
+                    'new_class' => $newClass->only(['id', 'className', 'currentStudentNumber'])
+                ]
             ]);
-        } catch (\Throwable $th) {
+        } catch (ModelNotFoundException $e) {
+            DB::rollBack();
             return response()->json([
                 'status' => false,
-                'message' => $th->getMessage(),
+                'message' => 'Resource not found: ' . $e->getMessage()
+            ], 404);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return response()->json([
+                'status' => false,
+                'message' => 'Transfer failed: ' . $th->getMessage()
             ], 500);
         }
     }
+    //_____________________________________________________________________________________
 
     public function deleteClass(Request $request)
     {
@@ -198,24 +275,8 @@ class classesManagementController extends Controller
             ], 500);
         }
     }
+    //________________________________________________________________________________
 
-    public function showAllTeachers()
-    {
-        try {
-            //getting all teachers
-            $teachers = Teacher::all();
-            //returning data
-            return response()->json([
-                'status' => true,
-                'data' => $teachers,
-            ]);
-        } catch (\Throwable $th) {
-            return response()->json([
-                'status' => false,
-                'message' => $th->getMessage(),
-            ], 500);
-        }
-    }
 
     public function assignTeacherToClass(Request $request)
     {
@@ -282,7 +343,6 @@ class classesManagementController extends Controller
             ]);
         }
     }
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -333,20 +393,21 @@ class classesManagementController extends Controller
     {
         try {
 
-
+            //get the students from the student table, then User() relation to get the info
             $students = User::with(['student.SchoolClass:id,className'])
                 ->where('role', 'student')
                 ->get()
                 ->map(function ($user) {
                     return [
-                        'student_id' => $user->id,
+                        'user_id' => $user->id,
+                        'student_id' => $user->student->id,
                         'full_name' => trim(implode(' ', array_filter([$user->name, $user->middleName, $user->lastName]))),
                         'email' => $user->email,
                         'phone' => $user->phoneNumber,
-                        'photo' => $user->student->photo ?? null,
-                        'gpa' => $user->student->Gpa ?? null,
-                        'class_id' => $user->student->class_id ?? null,
-                        'class_name' => $user->student->schoolClass->className ?? null // Simplified class info
+                        'photo' => $user->student->photo,
+                        'gpa' => $user->student->Gpa,
+                        'class_id' => $user->student->class_id ?? '',
+                        'class_name' => $user->student->schoolClass->className ?? '' // Simplified class info
                     ];
                 });
 
@@ -419,38 +480,36 @@ class classesManagementController extends Controller
                 ->where('role', 'teacher')
                 ->get()
                 ->map(function ($user) {
-                    if (!$user->teacher) {
-                        return null;
-                    }
+
 
                     return [
-                        'teacher_id' => $user->id,
+                        'user_id' => $user->id,
+                        'teacher_id' => $user->teacher->id,
                         'full_name' => trim($user->name . ' ' . $user->middleName . ' ' . $user->lastName),
                         'email' => $user->email,
                         'phone' => $user->phoneNumber,
                         'certification' => $user->teacher->certification ?? null,
                         'photo' => $user->teacher->photo ?? null,
                         'salary' => $user->teacher->salary ?? null,
+                        'subject' => $user->teacher->subject ?? null,
                         'classes' => $user->teacher->schoolClasses->map(function ($schoolClass) {
                             return [
                                 'class_id' => $schoolClass->id,
                                 'class_name' => $schoolClass->className,
-                                //'subject_id' => $schoolClass->pivot->subject_id ?? null didn't work like this
-
                             ];
                         }),
-                        'subject' => $user->teacher->subject->map(function ($subject) {
-                            return [
-                                'subject_id' => $subject->id,
-                                'subject_name' => $subject->subjectName
-                            ];
-                        })
+                        //'subject' => $user->teacher->subject->map(function ($subject) {
+                        //    return [
+                        //        'subject_id' => $subject->id,
+                        //        'subject_name' => $subject->subjectName
+                        //    ];
+                        //})
 
 
                     ];
-                })
-                ->filter()
-                ->values();
+                });
+            //->filter()
+            //->values();
 
             return response()->json([
                 'status' => true,
@@ -473,7 +532,8 @@ class classesManagementController extends Controller
                 ->get()
                 ->map(function ($user) {
                     return [
-                        'supervisor_id' => $user->id,
+                        'user_id' => $user->id,
+                        'supervisor_id' => $user->supervisor->id,
                         'full_name' => trim("{$user->name} {$user->middleName} {$user->lastName}"),
                         'email' => $user->email,
                         'phone' => $user->phoneNumber,
@@ -654,20 +714,11 @@ class classesManagementController extends Controller
     public function getUserInfo(Request $request)
     {
         try {
-            $validator = Validator::make($request->all(), [
-                'user_id' => 'required|integer|exists:users,id'
-            ]);
 
-            if ($validator->fails()) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Validation error',
-                    'errors' => $validator->errors()
-                ], 422);
-            }
+            $currentUser = auth()->user();
 
             $user = User::with(['student', 'teacher', 'supervisor'])
-                ->where('id', $request->user_id)
+                ->where('id', $currentUser->id)
                 ->first();
 
             if (!$user) {
@@ -690,26 +741,28 @@ class classesManagementController extends Controller
             switch ($user->role) {
                 case 'student':
                     $response['profile_data'] = [
-                        'photo' => $user->student->photo ?? null,
-                        'shool-graduated-from' => $user->student->schoolGraduatedFrom ?? null,
-                        'gpa' => $user->student->Gpa ?? null,
-                        'class_id' => $user->student->class_id ?? null
+                        'photo' => $user->student->photo ?? '',
+                        'shool-graduated-from' => $user->student->schoolGraduatedFrom ?? '',
+                        'gpa' => $user->student->Gpa ?? '',
+                        'class_id' => $user->student->class_id ?? ' ',
+                        'class_name' => $user->student->schoolClass->className ?? ' '
                     ];
                     break;
 
                 case 'teacher':
                     $response['profile_data'] = [
-                        'photo' => $user->teacher->photo ?? null,
-                        'certification' => $user->teacher->certification ?? null,
-                        'salary' => $user->teacher->salary ?? null
+                        'photo' => $user->teacher->photo ?? '',
+                        'certification' => $user->teacher->certification ?? '',
+                        'subject' => $user->teacher->subject ?? '',
+                        'salary' => $user->teacher->salary ?? ''
                     ];
                     break;
 
                 case 'supervisor':
                     $response['profile_data'] = [
-                        'photo' => $user->supervisor->photo ?? null,
-                        'certification' => $user->supervisor->certification ?? null,
-                        'salary' => $user->supervisor->salary ?? null,
+                        'photo' => $user->supervisor->photo ?? '',
+                        'certification' => $user->supervisor->certification ?? '',
+                        'salary' => $user->supervisor->salary ?? '',
                     ];
                     break;
             }
@@ -717,6 +770,57 @@ class classesManagementController extends Controller
             return response()->json([
                 'status' => true,
                 'data' => $response
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'message' => $th->getMessage()
+            ], 500);
+        }
+    }
+    //________________________________________________________________
+    public function getClassTeachers(Request $request)
+    {
+
+        try {
+            //$currentUser = auth()->user();
+            $validator = Validator::make($request->all(), [
+                'class_id' => 'required|integer|exists:teacher_classes,class_id'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Validation error',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+
+            $teachers = TeacherClass::with(['teachers.user:id,name,middleName,lastName,email'])  // Only load needed fields
+                ->where('class_id', $request->class_id)
+                ->get()
+                ->map(function ($teacherClass) {
+                    return [
+                        'teacher_id' => $teacherClass->teacher_id,
+                        'user_info' => trim($teacherClass->teachers->user->name . ' ' . $teacherClass->teachers->user->middleName . ' ' . $teacherClass->teachers->user->lastName),
+                        'subject' => $teacherClass->teachers->subject  // Assuming you have subject field
+                    ];
+                });
+
+
+            if ($teachers->isEmpty()) {
+                return response()->json([
+                    'status' => true,
+                    'message' => 'No teachers assigned to this class yet',
+                    'data' => []
+                ]);
+            }
+
+            return response()->json([
+                'status' => true,
+                'message' => 'the assigned teachers to this class :',
+                'data' => $teachers
             ]);
         } catch (\Throwable $th) {
             return response()->json([
@@ -763,6 +867,26 @@ class classesManagementController extends Controller
                 'status' => true,
                 'message' => "user deleted !!!"
             ], 200);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'message' => $th->getMessage()
+            ], 500);
+        }
+    }
+    //_________________________________________________________________
+
+    public function showSubjects()
+    {
+
+        try {
+
+            $subjects = Subject::all();
+
+            return response()->json([
+                'status' => false,
+                'data' => $subjects,
+            ]);
         } catch (\Throwable $th) {
             return response()->json([
                 'status' => false,

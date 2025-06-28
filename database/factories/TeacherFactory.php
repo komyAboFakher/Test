@@ -17,13 +17,11 @@ class TeacherFactory extends Factory
     public function definition(): array
     {
 
-    return [
-    'user_id' => \App\Models\User::where('role', 'teacher')->inRandomOrder()->first()->id, 
-    'certification' => $this->faker->randomElement(['Certified Teacher', 'Masters Degree',  'Diploma']),
-    'photo' => $this->faker->imageUrl(200, 200, 'people'),
-    //'subject' => $this->faker->randomElement(['physics','math','chemistry','history','biology','computer']), 
-    'salary' => $this->faker->randomFloat(2, 100, 999),
-    ];
-
+        return [
+            'certification' => $this->faker->randomElement(['Certified Teacher', 'Masters Degree',  'Diploma']),
+            'photo' => $this->faker->imageUrl(200, 200, 'people'),
+            'subject' => $this->faker->randomElement(['physics','math','chemistry','history','biology','computer']),
+            'salary' => $this->faker->randomFloat(2, 100, 999),
+        ];
     }
 }

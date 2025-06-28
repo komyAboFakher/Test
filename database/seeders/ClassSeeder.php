@@ -15,8 +15,8 @@ class ClassSeeder extends Seeder
     public function run(): void
     {
        
-
-    SchoolClass::factory()->count(10)->create();
+    // don't change the count, don't you dare to do that !!!!!!
+    SchoolClass::factory()->count(26)->create();
 
 
 
