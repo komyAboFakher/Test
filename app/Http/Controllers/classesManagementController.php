@@ -275,7 +275,8 @@ class classesManagementController extends Controller
             ], 500);
         }
     }
-    //________________________________________________________________________________
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
     public function assignTeacherToClass(Request $request)
@@ -316,7 +317,24 @@ class classesManagementController extends Controller
                 ], 404);
             }
 
-            //now we will create a teacher-classes row
+            //checking existing assign
+            $existingAssign = TeacherClass::where('teacher_id', $request->teacherId)->where('class_id', $class->id)->where('subject_id', $subject->id)->first();
+            $alreadyAssigned = TeacherClass::where('class_id', $class->id)->where('subject_id', $subject->id)->first();
+
+            if ($existingAssign) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'the assign has been made already',
+                ], 422);
+            }
+
+            if ($alreadyAssigned) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'there is already another teacher assigned for the same class with the same subject but if you want we can overwrite it',
+                ], 422);
+            }
+            //now we will create a teacher-classes row  
             $classesTeacherAssignedTO = TeacherClass::where('teacher_id', $request->teacherId)->count();
             if ($classesTeacherAssignedTO < 3) {
                 $teacherClass = TeacherClass::firstOrCreate([
@@ -340,9 +358,113 @@ class classesManagementController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => $th->getMessage(),
+            ], 500);
+        }
+    }
+    //________________________________________________________________________________
+
+    public function overWriteTeacherToClass(Request $request)
+    {
+        try {
+            //validation
+            $validation = Validator::make($request->all(), [
+                'teacherId' => 'required|integer|exists:teachers,id',
+                'className' => 'regex:/^\d{1,2}-[A-Z]$/',
+            ]);
+
+            if ($validation->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => $validation->errors(),
+                ], 422);
+            }
+            //first off all we need to gather the data about the subject to get the right subject id
+            //we wiil get the subject that this teacher teaches
+            $theacherSubject = Teacher::where('id', $request->teacherId)->value('subject');
+            //now we need to get class id by its name
+            $class = schoolClass::where('className', $request->className)->first();
+            if (!$class) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Class not found',
+                ], 404);
+            }
+            //now we need to know which grade this class is
+            $classParts = explode('-', $request->className);
+            $grade = $classParts[0];
+            //now we will get the subject from subjects table
+            $subject = Subject::where('subjectName', $theacherSubject)->where('grade', $grade)->first();
+            if (!$subject) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Subject not found for this grade',
+                ], 404);
+            }
+
+            //deleting the old record
+            TeacherClass::where('class_id', $class->id)->where('subject_id', $subject->id)->delete();
+
+            //now we will create a teacher-classes row  
+            $classesTeacherAssignedTO = TeacherClass::where('teacher_id', $request->teacherId)->count();
+            if ($classesTeacherAssignedTO < 3) {
+                $teacherClass = TeacherClass::firstOrCreate([
+                    'teacher_id' => $request->teacherId,
+                    'class_id' => $class->id,
+                    'subject_id' => $subject->id,
+                ]);
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'messgae' => 'the teacher has been assigned to enough classes',
+                ], 422);
+            }
+            //returning success message
+            return response()->json([
+                'status' => true,
+                'message' => 'assignment has been done successfully!',
+                'data' => $teacherClass,
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'message' => $th->getMessage(),
+            ], 500);
+        }
+    }
+    //__________________________________________________________________________
+    
+    public function unassignTeacherToClass(Request $request)
+    {
+        try {
+            //validation
+            $validation = Validator::make($request->all(), [
+                'teacherId' => 'required|integer|exists:teachers,id',
+                'className' => 'regex:/^\d{1,2}-[A-Z]$/',
+            ]);
+
+            if ($validation->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => $validation->erros(),
+                ], 422);
+            }
+            //first of all we wanna get the claass id based on the classname
+            $class = SchoolClass::where('className', $request->className)->first();
+            //now we wanna delete the records on the db
+            TeacherClass::where('teacher_id', $request->teacherId)->where('class_id', $class->id)->delete();
+            //return success message
+            return response()->json([
+                'status' => true,
+                'message' => 'the teacher has been unassigned successfully!',
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'message' => $th->getMessage()
             ]);
         }
     }
+
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////
 

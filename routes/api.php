@@ -10,6 +10,7 @@ use App\Http\Controllers\classesManagementController;
 use App\Http\Controllers\StudentAttendanceController;
 use App\Http\Controllers\ComplaintManagementController;
 use App\Http\Controllers\libraryController;
+use App\Http\Controllers\PrController;
 use App\Http\Controllers\TimetablesManagementController;
 
 /*
@@ -67,7 +68,8 @@ Route::post('/editClass', [classesManagementController::class, 'editClass'])->mi
 Route::post('/assignStudentToClass', [classesManagementController::class, 'assignStudentToClass'])->middleware('auth:sanctum', 'supervisor'); //done w request
 Route::delete('/deleteClass', [classesManagementController::class, 'deleteClass'])->middleware('auth:sanctum','supervisor');//done
 Route::post('/assignTeacherToClass', [classesManagementController::class, 'assignTeacherToClass'])->middleware('auth:sanctum', 'supervisor'); //done w request //dont froget to make it assign a specific tracher to three classes in the maximum
-//Route::post('/updateAssignTeacherToClass', [classesManagementController::class, 'updateAssignTeacherToClass']);//->middleware('auth:sanctum', 'supervisor'); //done w request
+Route::delete('/unassignTeacherToClass', [classesManagementController::class, 'unassignTeacherToClass'])->middleware('auth:sanctum', 'supervisor'); //done w request 
+Route::post('/overWriteTeacherToClass', [classesManagementController::class, 'overWriteTeacherToClass'])->middleware('auth:sanctum', 'supervisor'); //done w request
 
 // for gaith, by KOMY 
 
@@ -75,13 +77,13 @@ Route::post('/assignTeacherToClass', [classesManagementController::class, 'assig
 Route::get('/getAllStudents', [classesManagementController::class, 'getAllStudents'])->middleware('auth:sanctum', 'komy'); // done w request
 Route::get('/getPaginateStudents', [classesManagementController::class, 'getPaginateStudents'])->middleware('auth:sanctum', 'komy'); // done w request
 Route::get('/getAllTeacherStudents', [classesManagementController::class, 'getAllTeacherStudents'])->middleware('auth:sanctum', 'teacher'); //done w request
-Route::get('/getAllTeachers', [classesManagementController::class, 'getAllTeachers']);//->middleware('auth:sanctum', 'komy'); // done w request
+Route::get('/getAllTeachers', [classesManagementController::class, 'getAllTeachers'])->middleware('auth:sanctum', 'komy'); // done w request
 Route::get('/getAllSupervisors', [classesManagementController::class, 'getAllSupervisors'])->middleware('auth:sanctum', 'dean'); //done w request
 Route::post('/getSpecificStudent', [classesManagementController::class, 'getSpecificStudent'])->middleware('auth:sanctum', 'gaith'); //done w request
 Route::post('/getSpecificTeacher', [classesManagementController::class, 'getSpecificTeacher'])->middleware('auth:sanctum', 'komy'); //done w request
 Route::post('/getSpecificSupervisor', [classesManagementController::class, 'getSpecificSupervisor'])->middleware('auth:sanctum', 'dean'); //done w request
 Route::get('/getUserInfo', [classesManagementController::class, 'getUserInfo'])->middleware('auth:sanctum'); //done w request
-Route::get('/getClassTeachers', [classesManagementController::class, 'getClassTeachers'])->middleware('auth:sanctum','supervisor'); //done w request
+Route::post('/getClassTeachers', [classesManagementController::class, 'getClassTeachers'])->middleware('auth:sanctum','supervisor'); //done w request
 Route::delete('/deleteUser', [classesManagementController::class, 'deleteUser'])->middleware('auth:sanctum', 'dean'); //done w request
 Route::get('showSubjects',[classesManagementController::class,'showSubjects'])->middleware('auth:sanctum', 'komy'); //done w request
 
@@ -156,6 +158,16 @@ Route::get('/showBook', [libraryController::class, 'showBook']);
 //borrow management
 Route::post('/borrow', [libraryController::class, 'borrow']);
 Route::post('/modifyBorrow', [libraryController::class, 'modifyBorrow']);
+
+// public relations managements
+Route::post('/publish',[PrController::class,'publish']);
+Route::post('/updatePublish',[PrController::class,'updatePublish']);
+Route::post('/deletePublish',[PrController::class,'deletePublish']);
+Route::post('/showPublish',[PrController::class,'showPublish']);
+
+
+
+
 
 //komy
 /*
