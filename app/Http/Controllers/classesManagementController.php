@@ -998,22 +998,5 @@ class classesManagementController extends Controller
     }
     //_________________________________________________________________
 
-    public function showSubjects()
-    {
-
-        try {
-
-            $subjects = Subject::all();
-
-            return response()->json([
-                'status' => false,
-                'data' => $subjects,
-            ]);
-        } catch (\Throwable $th) {
-            return response()->json([
-                'status' => false,
-                'message' => $th->getMessage()
-            ], 500);
-        }
-    }
+   
 }
