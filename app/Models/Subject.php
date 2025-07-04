@@ -11,8 +11,8 @@ class Subject extends Model
 
     protected $fillable = [
         'subjectName',
-        'min_mark',
-        'max_mark',
+        'minMark',
+        'maxMark',
         'grade',
     ];
 

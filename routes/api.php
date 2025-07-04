@@ -89,7 +89,7 @@ Route::delete('/deleteUser', [classesManagementController::class, 'deleteUser'])
 
 // subjects management
 
-Route::Put('/createSubject', [SubjectsManagementController::class, 'createSubject'])->middleware('auth:sanctum', 'supervisor'); //done
+Route::Put('/createSubject', [SubjectsManagementController::class, 'createSubject']);//->middleware('auth:sanctum', 'supervisor'); //done
 Route::get('/getAllSubjects', [SubjectsManagementController::class, 'getAllSubjects'])->middleware('auth:sanctum', 'supervisor'); //done
 Route::get('/getSubjectById', [SubjectsManagementController::class, 'getSubjectById'])->middleware('auth:sanctum', 'supervisor'); //done
 Route::post('/updateSubject', [SubjectsManagementController::class, 'updateSubject'])->middleware('auth:sanctum', 'supervisor'); //done
