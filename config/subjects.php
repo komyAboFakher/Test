@@ -7,10 +7,6 @@ return [
         'Chemistry',
         'Biology',
         'History',
-        'Geography',
-        'English',
-        'Arabic',
-        'French',
         'Computer',
     ],
 ];

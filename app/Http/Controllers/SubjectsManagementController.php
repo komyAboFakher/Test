@@ -8,6 +8,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Auth\Events\Validated;
 use Illuminate\Support\Facades\Validator;
 use PDO;
+use Symfony\Component\HttpKernel\Event\ResponseEvent;
 
 class SubjectsManagementController extends Controller
 {
@@ -37,8 +38,16 @@ class SubjectsManagementController extends Controller
                     'message' => 'minMark cannot be greater than maxMark',
                 ], 422);
             }
+            //we wanna check if there is already a row defined for the same subject and same grade
+            $alreadyExistingSubject=Subject::where('subjectName',$request->subjectName)->where('grade',$request->grade)->first();
+            if($alreadyExistingSubject){
+                return Response()->json([
+                    'status'=>false,
+                    'messsage'=>'you have already defined this subject',
+                ],422);
+            }
             //now we wanna create the subject
-            $subject = Subject::create([
+            $subject = Subject::firstOrCreate([
                 'subjectName' => $request->subjectName,
                 'minMark' => $request->minMark,
                 'maxMark' => $request->maxMark,
@@ -130,6 +139,13 @@ class SubjectsManagementController extends Controller
 
             //first of all we wanna get the subject from the db
             $subject = Subject::where('id', $request->subjectId)->first();
+            if(!$subject){
+                return response()->json([
+                    'status'=>false,
+                    'message'=>'the subject has not been found',
+                ]);
+            }
+            
             if ($request->has('minMark')) {
                 $subject->minMark = $request->minMark;
             }
