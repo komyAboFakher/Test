@@ -570,11 +570,11 @@ class marksController extends Controller
 
         try {
 
-            //$currentUser = auth()->user()->student;
+            $currentUser = auth()->user()->Student->id;
             //$studentID = $request->student->id;
 
             $validator = Validator::make($request->all(), [
-                'student_id' => 'required|integer',
+                //'student_id' => 'required|integer',
                 'semester' => 'required|string|in:First,Second',
                 'type' => 'required|string|in:final,mid-term,quizz',
                 'year' => 'required|digits:4|integer|min:2000|max:' . now()->year,
@@ -593,7 +593,7 @@ class marksController extends Controller
 
 
 
-            $marks = Mark::where('student_id', $request->student_id)
+            $marks = Mark::where('student_id', $currentUser)
                 ->where('type', $request->type)
                 ->where('semester', $request->semester)
                 ->whereYear('created_at', $request->year)
@@ -626,7 +626,7 @@ class marksController extends Controller
 
             return response()->json([
                 'status'         => true,
-                'message'        => 'your results my lord',
+                'message'        => 'your results my lord :',
                 'imported_count' => $formattedResults
             ], 200);
         } catch (\Throwable $th) {

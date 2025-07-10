@@ -113,7 +113,7 @@ route::get('/getTeacherExamSchedule', [TimetablesManagementController::class, 'g
 Route::get('/getAllTeacherInfo/{teacherID}', [marksController::class, 'getAllTeacherInfo'])->middleware('auth:sanctum', 'supervisor');
 Route::post('/getEmptyExcelCheatForMarks', [marksController::class, 'getEmptyExcelCheatForMarks'])->middleware('auth:sanctum', 'teacher');
 Route::post('/uploadMarkExcelCheat', [marksController::class, 'uploadMarkExcelCheat'])->middleware('auth:sanctum', 'teacher');
-Route::get('/studentGetResult', [marksController::class, 'studentGetResult']);//->middleware('auth:sanctum', 'student');
+Route::post('/studentGetResult', [marksController::class, 'studentGetResult'])->middleware('auth:sanctum', 'student');
 //Route::get('/studentGetResult/{studentID}', [marksController::class, 'studentGetResult'])->middleware('auth:sanctum', 'gaith');
 
 //events management
