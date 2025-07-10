@@ -24,7 +24,7 @@ class classesManagementController extends Controller
             //validation
             $validation = Validator::make($request->all(), [
                 'className' => ['regex:/^\d{1,2}-[A-Z]$/', 'unique:classes,className'],
-                'studentsNum' => 'required|integer|min:1',  // Added min:1 to ensure positive numbers
+                'studentsNum' => 'required|integer|min:1',
                 //'currentStudentNumber' => 'required|integer|min:0|lte:studentsNum', // Added lte (less than or equal) rule
             ], [
                 'className.regex' => 'Class name must be in format like 10-A or 2-B with capital letter',
@@ -432,7 +432,7 @@ class classesManagementController extends Controller
         }
     }
     //__________________________________________________________________________
-    
+
     public function unassignTeacherToClass(Request $request)
     {
         try {
@@ -491,7 +491,8 @@ class classesManagementController extends Controller
                                 'email' => $student->users->email,
                                 'phone' => $student->users->phoneNumber,
                                 'photo' => $student->photo,
-                                'gpa' => $student->Gpa
+                                'gpa' => $student->Gpa,
+                                'absences number' => $student->AbsenceStudent->absence_num ?? ''
                             ];
                         })
                     ];
@@ -529,7 +530,8 @@ class classesManagementController extends Controller
                         'photo' => $user->student->photo,
                         'gpa' => $user->student->Gpa,
                         'class_id' => $user->student->class_id ?? '',
-                        'class_name' => $user->student->schoolClass->className ?? '' // Simplified class info
+                        'class_name' => $user->student->schoolClass->className ?? '',
+                        'absences number' => $user->student->AbsenceStudent->absence_num ?? ''
                     ];
                 });
 
@@ -833,6 +835,15 @@ class classesManagementController extends Controller
         }
     }
     //________________________________________________________________
+    private function calculateAttendanceYears($createdAt): int
+    {
+        $createdYear = \Carbon\Carbon::parse($createdAt)->year;
+        $currentYear = now()->year;
+
+        return max(1, $currentYear - $createdYear + 1); // Adding +1 to include current year
+    }
+
+    //________________________________________________________________
     public function getUserInfo(Request $request)
     {
         try {
@@ -862,12 +873,14 @@ class classesManagementController extends Controller
             // Add role-specific data
             switch ($user->role) {
                 case 'student':
+                    $attendanceYears = $this->calculateAttendanceYears($user->created_at);
                     $response['profile_data'] = [
                         'photo' => $user->student->photo ?? '',
                         'shool-graduated-from' => $user->student->schoolGraduatedFrom ?? '',
                         'gpa' => $user->student->Gpa ?? '',
                         'class_id' => $user->student->class_id ?? ' ',
-                        'class_name' => $user->student->schoolClass->className ?? ' '
+                        'class_name' => $user->student->schoolClass->className ?? ' ',
+                        'number of attendance years' => $attendanceYears ?? ' ',
                     ];
                     break;
 
@@ -907,7 +920,7 @@ class classesManagementController extends Controller
         try {
             //$currentUser = auth()->user();
             $validator = Validator::make($request->all(), [
-                'class_id' => 'required|integer|exists:teacher_classes,class_id'
+                'class_id' => 'required|integer|exists:classes,id'
             ]);
 
             if ($validator->fails()) {
@@ -998,5 +1011,5 @@ class classesManagementController extends Controller
     }
     //_________________________________________________________________
 
-   
+
 }

@@ -89,7 +89,7 @@ Route::delete('/deleteUser', [classesManagementController::class, 'deleteUser'])
 
 // subjects management
 
-Route::Put('/createSubject', [SubjectsManagementController::class, 'createSubject']);//->middleware('auth:sanctum', 'supervisor'); //done
+Route::Put('/createSubject', [SubjectsManagementController::class, 'createSubject'])->middleware('auth:sanctum', 'supervisor'); //done
 Route::get('/getAllSubjects', [SubjectsManagementController::class, 'getAllSubjects'])->middleware('auth:sanctum', 'supervisor'); //done
 Route::get('/getSubjectById', [SubjectsManagementController::class, 'getSubjectById'])->middleware('auth:sanctum', 'supervisor'); //done
 Route::post('/updateSubject', [SubjectsManagementController::class, 'updateSubject'])->middleware('auth:sanctum', 'supervisor'); //done
@@ -110,28 +110,29 @@ route::get('/getTeacherExamSchedule', [TimetablesManagementController::class, 'g
 
 //////////////////////////////////////////////////////////KOMAY STUFF/////////////////////////////////////////////////////
 //marks management
-Route::get('/getAllTeacherInfo/{teacherID}', [marksController::class, 'getAllTeacherInfo']);
-Route::get('/getEmptyExcelCheatForMarks/{teacherID}/{classID}/{subjectID}/{semester}/{type}', [marksController::class, 'getEmptyExcelCheatForMarks']);
-Route::post('/uploadMarkExcelCheat', [marksController::class, 'uploadMarkExcelCheat']);
-Route::get('/studentGetResult/{studentID}', [marksController::class, 'studentGetResult']);
+Route::get('/getAllTeacherInfo/{teacherID}', [marksController::class, 'getAllTeacherInfo'])->middleware('auth:sanctum', 'supervisor');
+Route::post('/getEmptyExcelCheatForMarks', [marksController::class, 'getEmptyExcelCheatForMarks'])->middleware('auth:sanctum', 'teacher');
+Route::post('/uploadMarkExcelCheat', [marksController::class, 'uploadMarkExcelCheat'])->middleware('auth:sanctum', 'teacher');
+Route::get('/studentGetResult', [marksController::class, 'studentGetResult']);//->middleware('auth:sanctum', 'student');
+//Route::get('/studentGetResult/{studentID}', [marksController::class, 'studentGetResult'])->middleware('auth:sanctum', 'gaith');
 
 //events management
 
-Route::post('/addEvent', [CommunicationController::class, 'addEvent']);
-Route::post('/editEvent/{eventID}', [CommunicationController::class, 'editEvent']);
-Route::delete('/deleteEvent/{eventID}', [CommunicationController::class, 'deleteEvent']);
+Route::post('/addEvent', [CommunicationController::class, 'addEvent'])->middleware('auth:sanctum', 'supervisor');
+Route::post('/editEvent/{eventID}', [CommunicationController::class, 'editEvent'])->middleware('auth:sanctum', 'supervisor');
+Route::delete('/deleteEvent/{eventID}', [CommunicationController::class, 'deleteEvent'])->middleware('auth:sanctum', 'supervisor');
 // this api is for the users who made events(mostly supervisors), so they can see their own posts NOTE: look at the controller
-Route::get('/getEvents/{userID}', [CommunicationController::class, 'getEvents']);
+Route::get('/getEvents', [CommunicationController::class, 'getEvents'])->middleware('auth:sanctum', 'supervisor');
 //this api is for the students, so they can see the whole events, i mean here the students get all events
-Route::get('/getAllPublishedEvents', [CommunicationController::class, 'getAllPublishedEvents']);
+Route::get('/getAllPublishedEvents', [CommunicationController::class, 'getAllPublishedEvents'])->middleware('auth:sanctum');
 
 //comments management
 
 
-Route::post('/addComment', [CommunicationController::class, 'addComment']);
-Route::post('/editComment/{commentID}', [CommunicationController::class, 'editComment']);
-Route::delete('/deleteComment/{commentID}', [CommunicationController::class, 'deleteComment']);
-Route::get('/getEventComments/{eventID}', [CommunicationController::class, 'getEventComments']);
+Route::post('/addComment', [CommunicationController::class, 'addComment'])->middleware('auth:sanctum');
+Route::post('/editComment/{commentID}', [CommunicationController::class, 'editComment'])->middleware('auth:sanctum');
+Route::delete('/deleteComment/{commentID}', [CommunicationController::class, 'deleteComment'])->middleware('auth:sanctum');
+Route::get('/getEventComments/{eventID}', [CommunicationController::class, 'getEventComments'])->middleware('auth:sanctum');
 
 //complains managements
 
@@ -183,6 +184,7 @@ php artisan db:seed --class=ClassSeeder
 php artisan db:seed --class=TeacherSeeder
 php artisan db:seed --class=SupervisorSeeder
 php artisan db:seed --class=SubjectSeeder
+php artisan db:seed --class=StudentSeeder
 
 //
 // don't try this seeder, it is not important, just try to assign teacher to class (classManagementController)

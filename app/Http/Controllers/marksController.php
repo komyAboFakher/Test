@@ -5,26 +5,24 @@ namespace App\Http\Controllers;
 use App\Models\Mark;
 use App\Models\Subject;
 use App\Models\schoolClass;
+use App\Models\Student;
 use App\Models\TeacherClass;
+use Illuminate\Database\Events\TransactionRolledBack;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Rap2hpoutre\FastExcel\FastExcel;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 
 class marksController extends Controller
 {
-        // MAJD //get the teacher's classses based on teacher id
+    // MAJD //get the teacher's classses based on teacher id
 
     public function getAllTeacherInfo($teacherID)
     {
 
 
         try {
-
-
-
-
-
 
             $teacherClasses = TeacherClass::select(
                 'teacher_classes.teacher_id',
@@ -53,7 +51,7 @@ class marksController extends Controller
 
     // MAJD // generating epmty excel cheat that has the students info for the teacher and download it to the device.
 
-    public function getEmptyExcelCheatForMarks($teacherID, $classID, $subjectID, $semester, $type)
+    public function getEmptyExcelCheatForMarks(Request $request)
     {
 
 
@@ -61,19 +59,42 @@ class marksController extends Controller
 
 
 
+            $currentUser = auth()->user()->teacher;
+
+
+            $validator = Validator::make(
+                $request->all(),
+                [
+                    'classID' => 'required|integer|exists:classes,id',
+                    'semester' => 'required|string|in:First,Second',
+                    'type' => 'required|string|in:final,mid-term,quizz',
+                ],
+                [
+                    'type' => 'type must be final or mid-term or quizz !!',
+                    'semester' => 'semster must be First or Second only !! ',
+                ]
+            );
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => $validator->errors(),
+                ], 422);
+            }
+
             // get the students with the specific class with their needed info.
 
-            $SchoolClass = schoolClass::with([
-                'Students.Users' => function ($query) {
+            $SchoolClass = SchoolClass::with([
+                'students.Users' => function ($query) {
                     $query->select('id', 'name', 'middleName', 'lastName');
                 }
-            ])->findOrFail($classID);
+            ])->findOrFail($request->classID);
+
 
             //get the the subject name for the title of the excel file
 
-            $teacherClass = TeacherClass::where('teacher_id', $teacherID)
-                ->where('class_id', $classID)
-                ->where('subject_id', $subjectID)
+            $teacherClass = TeacherClass::where('teacher_id', $currentUser->id)
+                ->where('class_id', $request->classID)
                 ->with('Subject')
                 ->firstOrFail();
 
@@ -108,15 +129,15 @@ class marksController extends Controller
                     'middle name' => $student->Users->middleName,
                     'last name'   => $student->Users->lastName,
                     'mark' => '', // Empty for the teacher
-                    'semester' => $semester,
-                    'type' => $type
+                    'semester' => $request->semester,
+                    'type' => $request->type
                 ]);
             }
 
             // Return FastExcel-generated Excel file for download
 
             // Generate the file name 
-            $fileName = "{$subjectName}_{$SchoolClass->className}_{$type}_{$semester}.xlsx";
+            $fileName = "{$subjectName}_{$SchoolClass->className}_{$request->type}_{$request->semester}.xlsx";
 
             // replace special characters
 
@@ -152,7 +173,7 @@ class marksController extends Controller
             return response()->json([
                 'status' => true,
                 'file_url' => $fileUrl,
-                'message' => 'marks file  generated successfully',
+                'message' => 'marks file  generated successfully !!',
 
             ], 200);
         } catch (\Throwable $th) {
@@ -180,20 +201,20 @@ class marksController extends Controller
     public function uploadMarkExcelCheat(Request $request)
     {
         try {
-            // Validate that an Excel_file/ class_id/ teacher_id
-            $request->validate([
-                'excel_file' => 'required|file|mimes:xlsx,xls',
-                'teacher_id' => 'required|integer',
-                'class_id'   => 'required|integer',
-                'subject_id' => 'required|integer',
 
-            ]);
+            $currentUser = auth()->user()->teacher;
 
+            $request->validate(
+                [
+                    'excel_file' => 'required|file|mimes:xlsx,xls',
+                    'class_id'   => 'required|integer|exists:classes,id',
+                ],
+                [
+                    'excel_file' => 'only xlsx and xls wil be accepted !!'
+                ]
+            );
 
-            // Get form values.
-            $teacherID = $request->input('teacher_id');
             $classID   = $request->input('class_id');
-            $subjectID   = $request->input('subject_id');
 
             // creating a path for the uploaded file !!!
 
@@ -202,8 +223,17 @@ class marksController extends Controller
 
 
             // check the min mark in the subjects table to determine the success mark
+            $teacherClass = TeacherClass::where('teacher_id', $currentUser->id)
+                ->where('class_id', $classID)
+                ->first();
 
-            $minMark = Subject::where('id', $subjectID)->value('minMark');
+            $minMark = null;
+
+            if ($teacherClass) {
+                $minMark = Subject::where('id', $teacherClass->subject_id)->value('minMark');
+            }
+
+            //$minMark = Subject::where('id', $subjectID)->value('minMark');
 
             // Define allowed values from database enums
             $allowedSemesters = ['First', 'Second'];
@@ -276,6 +306,13 @@ class marksController extends Controller
                 // Convert mark to string as it stored in our table
 
                 $mark = isset($row['mark']) ? (string)$row['mark'] : '';
+                //check if the mark is empty, with no value
+                //if (!$mark) {
+                //    return response()->json([
+                //        'status' => false,
+                //        'message' => 'the mark cannot be empty !!',
+                //    ]);
+                //}
 
 
                 // Validate and format semester
@@ -296,9 +333,9 @@ class marksController extends Controller
 
                 $existing = Mark::where([
                     'class_id' => $classID,
-                    'teacher_id' => $teacherID,
+                    'teacher_id' => $currentUser->id,
                     'student_id' => $studentID,
-                    'subject_id' => $subjectID
+                    'subject_id' => $teacherClass->subject_id
                 ])->first();
 
                 if ($existing) {
@@ -317,9 +354,9 @@ class marksController extends Controller
                     $anyChangesMade = true;
                     Mark::create([
                         'class_id' => $classID,
-                        'teacher_id' => $teacherID,
+                        'teacher_id' => $currentUser->id,
                         'student_id' => $studentID,
-                        'subject_id' => $subjectID,
+                        'subject_id' => $teacherClass->subject_id,
                         'mark' => $mark,
                         'success' => $success,
                         'semester' => $semester,
@@ -361,6 +398,165 @@ class marksController extends Controller
         }
     }
 
+    //____________________________________________________________________________________________________
+
+    public function upload(Request $request)
+    {
+        try {
+            $currentUser = auth()->user()->teacher;
+
+            $request->validate([
+                'excel_file' => 'required|file|mimes:xlsx,xls',
+            ], [
+                'excel_file' => 'Only xlsx and xls files are accepted !!'
+            ]);
+
+            // Allowed values from DB logic
+            $allowedSemesters = ['First', 'Second'];
+            $allowedExamTypes = ['final', 'mid-term', 'quizz'];
+            $count = 0;
+            $dataRows = [];
+
+            // open the excel and read it
+            $file = $request->file('excel_file');
+            $rows = (new \Rap2hpoutre\FastExcel\FastExcel())->import($file->getRealPath());
+
+            $rowsArr = [];
+            foreach ($rows as $row) {
+                $row = array_change_key_case((array)$row, CASE_LOWER);
+                $rowsArr[] = $row;
+            }
+
+            // Extract and validate data
+            $isFirstRow = true;
+            foreach ($rowsArr as $row) {
+                if ($isFirstRow && isset($row['student id']) && strtolower(trim($row['student id'])) === 'student id') {
+                    $isFirstRow = false;
+                    continue;
+                }
+
+                $isFirstRow = false;
+                if (!isset($row['student id']) || !is_numeric($row['student id'])) {
+                    throw new \Exception("Invalid student ID in row.");
+                }
+
+                $dataRows[] = $row;
+                $count++;
+            }
+
+            if (empty($dataRows)) {
+                $firstFewRows = array_slice($rowsArr, 0, 5);
+                throw new \Exception('No student records found. First few rows: ' . json_encode($firstFewRows));
+            }
+
+            // Find expected students from teacher's assigned classes
+            $teacherClassIDs = TeacherClass::where('teacher_id', $currentUser->id)->pluck('class_id');
+            $expectedStudentIDs = Student::whereIn('class_id', $teacherClassIDs)->pluck('id')->toArray();
+            $excelStudentIDs = array_map(fn($row) => (int)$row['student id'], $dataRows);
+            $missingIDs = array_diff($expectedStudentIDs, $excelStudentIDs);
+
+            // Insert marks
+            DB::beginTransaction();
+            $changedStudentIds = [];
+
+            foreach ($dataRows as $row) {
+                $studentID = (int)$row['student id'];
+
+                $student = Student::select('class_id')->where('id', $studentID)->first();
+                if (!$student || !$student->class_id) {
+                    throw new \Exception("Missing or invalid class ID for student ID: {$studentID}");
+                }
+
+                $classID = $student->class_id;
+
+                $teacherClass = TeacherClass::where('teacher_id', $currentUser->id)
+                    ->where('class_id', $classID)
+                    ->first();
+
+                if (!$teacherClass) {
+                    throw new \Exception("Teacher not assigned to class ID: {$classID} (student ID: {$studentID})");
+                }
+
+                $minMark = Subject::where('id', $teacherClass->subject_id)->value('minMark');
+
+                $mark = isset($row['mark']) ? (string)$row['mark'] : '';
+                if (!$mark) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => "Mark cannot be empty for student ID {$studentID} !!",
+                    ]);
+                }
+
+                $semester = ucfirst(strtolower($row['semester'] ?? ''));
+                if (!in_array($semester, $allowedSemesters)) {
+                    throw new \Exception("Invalid semester: {$row['semester']}. Allowed: " . implode(', ', $allowedSemesters));
+                }
+
+                $type = strtolower($row['type'] ?? '');
+                if (!in_array($type, $allowedExamTypes)) {
+                    throw new \Exception("Invalid exam type: {$row['type']}. Allowed: " . implode(', ', $allowedExamTypes));
+                }
+
+                $success = ($mark >= $minMark);
+
+                $existing = Mark::where([
+                    'class_id' => $classID,
+                    'teacher_id' => $currentUser->id,
+                    'student_id' => $studentID,
+                    'subject_id' => $teacherClass->subject_id
+                ])->first();
+
+                if ($existing) {
+                    $needsUpdate = ($existing->mark != $mark || $existing->semester != $semester || $existing->type != $type);
+                    if ($needsUpdate) {
+                        $existing->update([
+                            'mark' => $mark,
+                            'success' => $success,
+                            'semester' => $semester,
+                            'type' => $type
+                        ]);
+                    }
+                } else {
+                    Mark::create([
+                        'class_id' => $classID,
+                        'teacher_id' => $currentUser->id,
+                        'student_id' => $studentID,
+                        'subject_id' => $teacherClass->subject_id,
+                        'mark' => $mark,
+                        'success' => $success,
+                        'semester' => $semester,
+                        'type' => $type
+                    ]);
+                }
+
+                $changedStudentIds[] = $studentID;
+            }
+
+            DB::commit();
+
+            // Store file
+            $directory = 'full_mark_excels';
+            Storage::disk('public')->makeDirectory($directory);
+            $fileName = $file->getClientOriginalName();
+            $filePath = $file->storeAs($directory, $fileName, 'public');
+            $fileUrl = asset("storage/{$directory}/{$fileName}");
+
+            // Final response
+            return response()->json([
+                'status' => true,
+                'message' => 'Marks uploaded successfully!',
+                'file_url' => $fileUrl,
+                'imported_count' => count($dataRows),
+                'missing_student_ids' => array_values($missingIDs), // Clean numeric array
+            ], 200);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return response()->json([
+                'status' => false,
+                'message' => $th->getMessage(),
+            ], 500);
+        }
+    }
 
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -368,34 +564,55 @@ class marksController extends Controller
 
 
 
-    public function studentGetResult($studentID)
+    public function studentGetResult(Request $request)
     {
 
 
         try {
 
+            //$currentUser = auth()->user()->student;
+            //$studentID = $request->student->id;
+
+            $validator = Validator::make($request->all(), [
+                'student_id' => 'required|integer',
+                'semester' => 'required|string|in:First,Second',
+                'type' => 'required|string|in:final,mid-term,quizz',
+                'year' => 'required|digits:4|integer|min:2000|max:' . now()->year,
+
+            ], [
+                'semester.in' => 'semester must be First or Second !!',
+                'type.in' => 'type must be final or mid-term or quizz  !!',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'errors' => $validator->errors()
+                ], 422);
+            }
 
 
-            // $marks = Mark::where('student_id', $studentID)->get();
 
-            $marks = Mark::where('student_id', $studentID)
-                ->with('subject:id,subjectName,minMark,maxMark') // assuming 'subject' is the relationship name
-                ->get(['id', 'mark', 'subject_id', 'student_id']); // specify fields you need
+            $marks = Mark::where('student_id', $request->student_id)
+                ->where('type', $request->type)
+                ->where('semester', $request->semester)
+                ->whereYear('created_at', $request->year)
+                ->with('subject:id,subjectName,minMark,maxMark')
+                ->get(['id', 'mark', 'subject_id', 'student_id', 'type', 'semester']);
 
 
 
             $formattedResults = $marks->map(function ($mark) {
                 return [
 
-                    'subject_id' => $mark->subject_id,
-                    'subject_name' => $mark->subject->subjectName ?? 'N/A',
+                    //'subject_id' => $mark->subject_id,
+                    'subject_name' => $mark->subject->subjectName,
+                    //'semester' => $mark->semester,
+                    //'type' => $mark->type,
                     'min-mark' => $mark->subject->minMark,
                     'max-mark' => $mark->subject->maxMark,
-                    'mark_id' => $mark->id,
+                    //'mark_id' => $mark->id,
                     'result' => $mark->mark,
-
-
-                    // include any other fields you need
                 ];
             });
 

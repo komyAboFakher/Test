@@ -20,8 +20,9 @@ class CommunicationController extends Controller
     public function addEvent(Request $request)
     {
         try {
+
+            $currentUser = auth()->user();
             $validator = Validator::make($request->all(), [
-                'user_id' => 'required|integer',
                 'event_name' => 'required|string|max:255',
                 'post' => 'required|string',
                 'photos.*' => 'image|mimes:jpeg,png,jpg', // Validate multiple photos
@@ -41,7 +42,7 @@ class CommunicationController extends Controller
 
             // 1. Create the event
             $event = Event::create([
-                'user_id' => $request->user_id,
+                'user_id' => $currentUser->id,
                 'event_name' => $request->event_name,
                 'post' => $request->post,
                 'is_published' => $request->boolean('is_published', false)
@@ -64,7 +65,6 @@ class CommunicationController extends Controller
             DB::commit();
 
 
-            // format the response in goog shape
 
             return response()->json([
                 'status' => true,
@@ -102,10 +102,11 @@ class CommunicationController extends Controller
     public function editEvent(Request $request, $eventID)
     {
         try {
+
+            $currentUser = auth()->user();
             $event = Event::findOrFail($eventID);
 
             $validator = Validator::make($request->all(), [
-                'user_id' => 'required|integer',
                 'event_name' => 'string|max:255',
                 'post' => 'string',
                 'is_published' => 'boolean',
@@ -204,20 +205,14 @@ class CommunicationController extends Controller
     }
     //____________________________________________________________________________________-
 
-    public function getEvents($userID)
+    public function getEvents()
     {
         try {
             // Validate the user ID first
-            if (!is_numeric($userID)) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Invalid user ID format'
-                ], 400);
-            }
-
-
-            $events = Event::with(['User'])
-                ->where('user_id', $userID)
+             $currentUser = auth()->user();
+            
+             $events = Event::with(['User'])
+                ->where('user_id', $currentUser->id)
                 ->orderBy('created_at', 'desc')
                 ->paginate(10);
 
@@ -232,7 +227,8 @@ class CommunicationController extends Controller
                     'is_published' => $event->is_published,
                     'created_at' => $event->created_at,
                     'updated_at' => $event->updated_at,
-                    'user' => $event->user, // Include user data if needed
+                    'full_name' => trim("{$event->user->name} {$event->user->middleName} {$event->user->lastName}"),
+                    'email' => $event->user->email,
                     'media' => $event->media->map(function ($media) {
                         return [
                             'id' => $media->id,
@@ -247,7 +243,7 @@ class CommunicationController extends Controller
             if ($events->isEmpty()) {
                 return response()->json([
                     'status' => true,
-                    'message' => 'No events found for this user',
+                    'message' => 'No events published yet !!!',
                     'events' => []
                 ]);
             }
@@ -271,7 +267,7 @@ class CommunicationController extends Controller
     {
         try {
             $events = Event::with(['user' => function ($query) {
-                $query->select('id', 'name', 'middleName', 'lastname', 'role');
+                $query->select('id', 'name', 'middleName', 'lastName','email', 'role');
             }])
                 ->where('is_published', true)
                 ->orderBy('created_at', 'desc')
@@ -286,7 +282,9 @@ class CommunicationController extends Controller
                     'is_published' => $event->is_published,
                     'created_at' => $event->created_at,
                     'updated_at' => $event->updated_at,
-                    'user' => $event->user, // Include user data if needed
+                    'full_name' => trim("{$event->user->name} {$event->user->middleName} {$event->user->lastName}"),
+                    'email' => $event->user->email,
+                    'role' => $event->user->role,
                     'media' => $event->media->map(function ($media) {
                         return [
                             'id' => $media->id,
@@ -325,13 +323,20 @@ class CommunicationController extends Controller
 
         try {
 
+            $currentUser = auth()->user();
 
             $validator = Validator::make($request->all(), [
                 'event_id' => 'required|integer',
-                'user_id' => 'required|integer',
                 'parent_id' => 'nullable|integer',
                 'content' => 'required|string'
             ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'errors' => $validator->errors()
+                ], 422);
+            }
 
             // my local filter, not used any more
 
@@ -357,21 +362,9 @@ class CommunicationController extends Controller
                 ], 403);
             }
 
-
-
-
-
-            if ($validator->fails()) {
-                return response()->json([
-                    'status' => false,
-                    'errors' => $validator->errors()
-                ], 422);
-            }
-
-
             $commentData = [
                 'event_id' => $request->event_id,
-                'user_id' => $request->user_id,
+                'user_id' => $currentUser->id,
                 'parent_id' => $request->parent_id,
                 'content' => $request->content
             ];
@@ -398,6 +391,8 @@ class CommunicationController extends Controller
 
         try {
 
+            $currentUser = auth()->user();
+
 
             $comment = Comment::findOrFail($commentID);
 
@@ -411,6 +406,16 @@ class CommunicationController extends Controller
                     'status' => false,
                     'errors' => $validator->errors()
                 ], 422);
+            }
+
+            $blaspResult = Blasp::check($request->content);
+
+            if ($blaspResult->hasProfanity()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Please avoid using inappropriate language.',
+                    'by the way :' => 'go fuck your self !! hahahahahahahaa '
+                ], 403);
             }
 
             $updateData = $request->only(['content']);

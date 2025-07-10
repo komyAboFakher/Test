@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('mark');
             $table->boolean('success');
             $table->enum('semester',['First','Second']);
+            $table->enum('type',['final', 'mid-term', 'quizz']);
             $table->timestamps();
         });
     }
