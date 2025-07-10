@@ -47,7 +47,7 @@ class Student extends Model
 
     public function CheckInTeacher()
     {
-        return $this->belongsTo(CheckInTeacher::class);
+        return $this->hasMany(CheckInTeacher::class);
     }
     //__________________________________________________________________________
 

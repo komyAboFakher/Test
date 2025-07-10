@@ -24,7 +24,7 @@ class CheckInTeacher extends Model
 //______________________________________________________________________________
 
     public function Student(){
-        return $this->hasMany(Student::class);
+        return $this->belongsTo(Student::class);
     }
 //______________________________________________________________________________
 
