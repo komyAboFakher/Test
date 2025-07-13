@@ -18,8 +18,7 @@ return [
 // config/cors.php
         'paths' => ['api/*'],
         'allowed_methods' => ['*'],
-        'allowed_origins' => [env('FRONTEND_URL', 'http://localhost:5173')],
-        'allowed_headers' => ['*'],
+'allowed_origins' => [env('FRONTEND_URL', 'http://localhost:5173'), env('FRONTEND_URL', 'https://clinquant-blini-f5fbeb.netlify.app')],        'allowed_headers' => ['*'],
         'exposed_headers' => [],
         'max_age' => 0,
         'supports_credentials' => false,
