@@ -2626,21 +2626,26 @@
 					"name": "Get All event's comments",
 					"request": {
 						"auth": {
-							"type": "noauth"
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "4|mLwbkDDGATNh5K0gGmeJZtNh9CEnHFkpCvxlyz5t23aeaae4",
+									"type": "string"
+								}
+							]
 						},
 						"method": "GET",
 						"header": [
 							{
 								"key": "Content-Type",
 								"value": "application/json",
-								"type": "text",
-								"disabled": true
+								"type": "text"
 							},
 							{
 								"key": "Accept",
 								"value": "application/json",
-								"type": "text",
-								"disabled": true
+								"type": "text"
 							}
 						],
 						"url": {
@@ -2663,10 +2668,17 @@
 					"response": []
 				},
 				{
-					"name": "Add Comment",
+					"name": "add comment",
 					"request": {
 						"auth": {
-							"type": "noauth"
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "2|F7BUVgmoqRB2ErY81WSkH4hnIHkT467NtFtB43II21437fea",
+									"type": "string"
+								}
+							]
 						},
 						"method": "POST",
 						"header": [
@@ -2685,25 +2697,19 @@
 							"mode": "formdata",
 							"formdata": [
 								{
-									"key": "user_id",
-									"value": "15",
-									"type": "text"
-								},
-								{
 									"key": "event_id",
 									"value": "1",
 									"type": "text"
 								},
 								{
 									"key": "content",
-									"value": "@sshole, f u c k you !! ",
+									"value": "what do you mean by so??",
 									"type": "text"
 								},
 								{
 									"key": "parent_id",
-									"value": "2",
-									"type": "text",
-									"disabled": true
+									"value": "22",
+									"type": "text"
 								}
 							]
 						},
@@ -2729,7 +2735,14 @@
 					"name": "Edit Comment",
 					"request": {
 						"auth": {
-							"type": "noauth"
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "2|F7BUVgmoqRB2ErY81WSkH4hnIHkT467NtFtB43II21437fea",
+									"type": "string"
+								}
+							]
 						},
 						"method": "POST",
 						"header": [
@@ -2748,32 +2761,26 @@
 							"mode": "formdata",
 							"formdata": [
 								{
-									"key": "user_id",
-									"value": "4",
-									"type": "text",
-									"disabled": true
-								},
-								{
 									"key": "content",
-									"value": "nuts !!!!!",
+									"value": "nuts !!!!",
 									"type": "text"
 								}
 							]
 						},
 						"url": {
-							"raw": "http://127.0.0.1:8000/api/editComment/7",
+							"raw": "http://26.131.177.200:8000/api/editComment/8",
 							"protocol": "http",
 							"host": [
-								"127",
-								"0",
-								"0",
-								"1"
+								"26",
+								"131",
+								"177",
+								"200"
 							],
 							"port": "8000",
 							"path": [
 								"api",
 								"editComment",
-								"7"
+								"8"
 							]
 						}
 					},
@@ -2847,19 +2854,13 @@
 							"mode": "formdata",
 							"formdata": [
 								{
-									"key": "user_id",
-									"value": "49",
-									"type": "text",
-									"disabled": true
-								},
-								{
 									"key": "event_name",
-									"value": "me at the zoo!!!",
+									"value": "just trying to publish couple events !!",
 									"type": "text"
 								},
 								{
 									"key": "post",
-									"value": "this is the first event with media",
+									"value": "nothing important",
 									"type": "text"
 								},
 								{
@@ -2929,6 +2930,193 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "show reported comments (supervisor)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "4|mLwbkDDGATNh5K0gGmeJZtNh9CEnHFkpCvxlyz5t23aeaae4",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://26.131.177.200:8000/api/showReportedComments/1",
+							"protocol": "http",
+							"host": [
+								"26",
+								"131",
+								"177",
+								"200"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"showReportedComments",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "report a comment",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "4|mLwbkDDGATNh5K0gGmeJZtNh9CEnHFkpCvxlyz5t23aeaae4",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "comment_id",
+									"value": "6",
+									"type": "text"
+								},
+								{
+									"key": "reason",
+									"value": "just for try",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://26.131.177.200:8000/api/reportComment",
+							"protocol": "http",
+							"host": [
+								"26",
+								"131",
+								"177",
+								"200"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"reportComment"
+							],
+							"query": [
+								{
+									"key": "",
+									"value": null,
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getReportedComments  v3",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "4|mLwbkDDGATNh5K0gGmeJZtNh9CEnHFkpCvxlyz5t23aeaae4",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://26.131.177.200:8000/api/getReportedComments/8",
+							"protocol": "http",
+							"host": [
+								"26",
+								"131",
+								"177",
+								"200"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"getReportedComments",
+								"8"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "make reaction",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "2|F7BUVgmoqRB2ErY81WSkH4hnIHkT467NtFtB43II21437fea",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"reaction\": \"love\",\r\n    \"reactable_id\": 2,\r\n    \"reactable_type\": \"comment\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://26.131.177.200:8000/api/react",
+							"protocol": "http",
+							"host": [
+								"26",
+								"131",
+								"177",
+								"200"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"react"
+							]
+						}
+					},
+					"response": []
 				}
 			]
 		},
@@ -2966,24 +3154,24 @@
 							"formdata": [
 								{
 									"key": "class_id",
-									"value": "1",
+									"value": "3",
 									"type": "text"
 								},
 								{
 									"key": "excel_file",
 									"type": "file",
-									"src": "postman-cloud:///1f05c22e-5218-4cb0-8f14-a21db51dbddc"
+									"src": "postman-cloud:///1f05d54b-8024-4d40-92dc-23f5d56eaf6e"
 								}
 							]
 						},
 						"url": {
-							"raw": "http://127.0.0.1:8000/api/uploadMarkExcelCheat",
+							"raw": "http://26.131.177.200:8000/api/uploadMarkExcelCheat",
 							"protocol": "http",
 							"host": [
-								"127",
-								"0",
-								"0",
-								"1"
+								"26",
+								"131",
+								"177",
+								"200"
 							],
 							"port": "8000",
 							"path": [
@@ -2997,6 +3185,16 @@
 				{
 					"name": "Get All Teacher Info",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "2|F7BUVgmoqRB2ErY81WSkH4hnIHkT467NtFtB43II21437fea",
+									"type": "string"
+								}
+							]
+						},
 						"method": "GET",
 						"header": [
 							{
@@ -3011,19 +3209,18 @@
 							}
 						],
 						"url": {
-							"raw": "http://127.0.0.1:8000/api/getAllTeacherInfo/4",
+							"raw": "http://26.131.177.200:8000/api/getAllTeacherInfo",
 							"protocol": "http",
 							"host": [
-								"127",
-								"0",
-								"0",
-								"1"
+								"26",
+								"131",
+								"177",
+								"200"
 							],
 							"port": "8000",
 							"path": [
 								"api",
-								"getAllTeacherInfo",
-								"4"
+								"getAllTeacherInfo"
 							]
 						}
 					},
@@ -3031,11 +3228,18 @@
 				},
 				{
 					"name": "Student Get Result",
-					"protocolProfileBehavior": {
-						"disableBodyPruning": true
-					},
 					"request": {
-						"method": "GET",
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "3|QHDWIhQvIV4e0NQLKbVk7cTpY8XLet93V75h18JS00da4827",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
 						"header": [
 							{
 								"key": "Content-Type",
@@ -3050,7 +3254,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"student_id\": 1,\r\n    \"semester\": \"First\",\r\n    \"type\":\"final\",\r\n    \"year\": 2025\r\n}",
+							"raw": "{\r\n    \"semester\": \"Second\",\r\n    \"type\":\"mid-term\",\r\n    \"year\": 2025\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -3103,16 +3307,16 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n\r\n\"classID\": 1,\r\n\"semester\": \"First\",\r\n\"type\": \"finall\"\r\n\r\n\r\n\r\n\r\n}"
+							"raw": "{\r\n\r\n\"classID\": 3,\r\n\"semester\": \"Second\",\r\n\"type\": \"mid-term\"\r\n\r\n\r\n\r\n\r\n}"
 						},
 						"url": {
-							"raw": "http://127.0.0.1:8000/api/getEmptyExcelCheatForMarks",
+							"raw": "http://26.131.177.200:8000/api/getEmptyExcelCheatForMarks",
 							"protocol": "http",
 							"host": [
-								"127",
-								"0",
-								"0",
-								"1"
+								"26",
+								"131",
+								"177",
+								"200"
 							],
 							"port": "8000",
 							"path": [

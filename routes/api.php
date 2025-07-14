@@ -140,6 +140,8 @@ Route::delete('/deleteReportedComments', [CommunicationController::class, 'showR
 
 //reactions
 Route::post('/react',[communicationController::class, 'react']) ->middleware(['auth:sanctum', 'throttle:reactions']);
+Route::post('/getReactions',[communicationController::class, 'getReactions']) ->middleware(['auth:sanctum', 'throttle:reactions']);
+//Route::post('/react',[communicationController::class, 'react']) ->middleware(['auth:sanctum', 'throttle:reactions']);
 
 //complains managements
 

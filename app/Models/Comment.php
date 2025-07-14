@@ -56,7 +56,7 @@ class Comment extends Model
 
     public function reactions()
     {
-        return $this->morphToMany(Reaction::class, 'reactables')
+        return $this->morphToMany(Reaction::class,'reactable', 'reactables')
             ->withPivot('user_id')
             ->withTimestamps();
     }

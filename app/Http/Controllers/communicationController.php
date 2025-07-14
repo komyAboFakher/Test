@@ -237,6 +237,7 @@ class CommunicationController extends Controller
                     'event_name' => $event->event_name,
                     'post' => $event->post,
                     'is_published' => $event->is_published,
+                    'comments_number' => $event->comment->count(),
                     'created_at' => $event->created_at,
                     'updated_at' => $event->updated_at,
                     'media' => $event->media->map(function ($media) {
@@ -287,11 +288,13 @@ class CommunicationController extends Controller
                 return [
                     'id' => $event->id,
                     'user_id' => $event->user_id,
-                    'publisher name' => trim("{$event->user->name} {$event->user->middleName} {$event->user->lastName}"),
+                    'publisherName' => trim("{$event->user->name} {$event->user->middleName} {$event->user->lastName}"),
                     'email' => $event->user->email,
                     'event_name' => $event->event_name,
                     'post' => $event->post,
                     'is_published' => $event->is_published,
+                    'comment_number' => $event->comment->count(),
+                    'reaction_number' => $event->reactions->count(),
                     'created_at' => $event->created_at,
                     'updated_at' => $event->updated_at,
                     'role' => $event->user->role,
@@ -507,6 +510,7 @@ class CommunicationController extends Controller
                             'email' => $comment->user->email,
                             'role' => $comment->user->role,
                             'content' => $comment->content,
+                            'reaction_number' => $comment->reactions->count(),
                             'created_at' => $comment->created_at->toIso8601String(),
                             'replies' => $buildTree($allComments, $comment->id)
                         ];
@@ -803,6 +807,63 @@ class CommunicationController extends Controller
             ], 500);
         }
     }
+
+    //___________________________________________________________________________________________
+    public function getReactions(Request $request)
+    {
+        try {
+
+            $validator = Validator::make($request->all(), [
+                'reactable_id' => 'required|integer|exists:reactables,reactable_id',
+                'reactable_type' => 'required|string|in:event,comment',
+            ]);
+
+
+            if ($validator->fails()) {
+                return response()->json($validator->errors(), 422);
+            }
+
+            // Determine reactable model and relationship
+            $reactableType = $request->reactable_type === 'event'
+                ? Event::class
+                : Comment::class;
+
+            
+
+
+            $reactable = $reactableType::with(['reactions' => function ($query) {
+                $query->withPivot('reaction_id', 'created_at', 'updated_at');
+            }])->findOrFail($request->reactable_id);
+
+            
+
+            $formattedReactions = $reactable->reactions->map(function ($reaction) {
+                return [
+                    'reaction_id' => $reaction->pivot->reaction_id,
+                    'reaction_type' => $reaction->type,
+                    'user_id' => $reaction->pivot->user_id,
+                    'name' => $reaction->reactedEvents,
+                    'created_at' => $reaction->pivot->created_at,
+                    'updated_at' => $reaction->pivot->updated_at,
+                ];
+            });
+
+            return response()->json([
+                'status' => true,
+                'message' => $formattedReactions,
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to process reaction',
+                'error' => $th->getMessage()
+            ], 500);
+        }
+    }
+    //___________________________________________________________________________________________
+    public function getEventReactions() {}
+    //___________________________________________________________________________________________
+    public function getCommentReactions() {}
 }
 
 
