@@ -18,12 +18,13 @@ class marksController extends Controller
 {
     // MAJD //get the teacher's classses based on teacher id
 
-    public function getAllTeacherInfo($teacherID)
+    public function getAllTeacherInfo()
     {
 
 
         try {
 
+            $currentUser = auth()->user()->teacher->id;
             $teacherClasses = TeacherClass::select(
                 'teacher_classes.teacher_id',
                 'teacher_classes.class_id',
@@ -33,7 +34,7 @@ class marksController extends Controller
             )
                 ->join('classes', 'teacher_classes.class_id', '=', 'classes.id')
                 ->join('subjects', 'teacher_classes.subject_id', '=', 'subjects.id')
-                ->where('teacher_id', $teacherID)
+                ->where('teacher_id', $currentUser)
                 ->get();
 
             return response()->json([
@@ -164,7 +165,7 @@ class marksController extends Controller
                 throw new \Exception("Failed to create Excel file");
             }
 
-            // Generate correct URL (MUST match storage link structure)
+            
             $fileUrl = asset("storage/$relativePath");
 
 
@@ -637,3 +638,7 @@ class marksController extends Controller
         }
     }
 }
+
+
+// MY LIFE IS WORTHLESS, DAY IN AND DAY OUT I LOOK FOR REASON OF MY LIVING, AND NEVER FIND, SUCH SHAME!!
+//K0M@YY

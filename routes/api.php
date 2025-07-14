@@ -110,7 +110,7 @@ route::get('/getTeacherExamSchedule', [TimetablesManagementController::class, 'g
 
 //////////////////////////////////////////////////////////KOMAY STUFF/////////////////////////////////////////////////////
 //marks management
-Route::get('/getAllTeacherInfo/{teacherID}', [marksController::class, 'getAllTeacherInfo'])->middleware('auth:sanctum', 'supervisor');
+Route::get('/getAllTeacherInfo', [marksController::class, 'getAllTeacherInfo'])->middleware('auth:sanctum', 'teacher');
 Route::post('/getEmptyExcelCheatForMarks', [marksController::class, 'getEmptyExcelCheatForMarks'])->middleware('auth:sanctum', 'teacher');
 Route::post('/uploadMarkExcelCheat', [marksController::class, 'uploadMarkExcelCheat'])->middleware('auth:sanctum', 'teacher');
 Route::post('/studentGetResult', [marksController::class, 'studentGetResult'])->middleware('auth:sanctum', 'student');
@@ -118,21 +118,28 @@ Route::post('/studentGetResult', [marksController::class, 'studentGetResult'])->
 
 //events management
 
-Route::post('/addEvent', [CommunicationController::class, 'addEvent'])->middleware('auth:sanctum', 'supervisor');
-Route::post('/editEvent/{eventID}', [CommunicationController::class, 'editEvent'])->middleware('auth:sanctum', 'supervisor');
-Route::delete('/deleteEvent/{eventID}', [CommunicationController::class, 'deleteEvent'])->middleware('auth:sanctum', 'supervisor');
+Route::post('/addEvent', [CommunicationController::class, 'addEvent'])->middleware('auth:sanctum', 'supervisor'); // doen with r
+Route::post('/editEvent/{eventID}', [CommunicationController::class, 'editEvent'])->middleware('auth:sanctum', 'supervisor'); //done with r
+Route::delete('/deleteEvent/{eventID}', [CommunicationController::class, 'deleteEvent'])->middleware('auth:sanctum', 'supervisor'); // done with r
 // this api is for the users who made events(mostly supervisors), so they can see their own posts NOTE: look at the controller
-Route::get('/getEvents', [CommunicationController::class, 'getEvents'])->middleware('auth:sanctum', 'supervisor');
+Route::get('/getEvents', [CommunicationController::class, 'getEvents'])->middleware('auth:sanctum', 'supervisor'); // done with r
 //this api is for the students, so they can see the whole events, i mean here the students get all events
-Route::get('/getAllPublishedEvents', [CommunicationController::class, 'getAllPublishedEvents'])->middleware('auth:sanctum');
+Route::get('/getAllPublishedEvents', [CommunicationController::class, 'getAllPublishedEvents'])->middleware('auth:sanctum'); // done with r
+
 
 //comments management
 
 
-Route::post('/addComment', [CommunicationController::class, 'addComment'])->middleware('auth:sanctum');
-Route::post('/editComment/{commentID}', [CommunicationController::class, 'editComment'])->middleware('auth:sanctum');
-Route::delete('/deleteComment/{commentID}', [CommunicationController::class, 'deleteComment'])->middleware('auth:sanctum');
-Route::get('/getEventComments/{eventID}', [CommunicationController::class, 'getEventComments'])->middleware('auth:sanctum');
+Route::post('/addComment', [CommunicationController::class, 'addComment'])->middleware('auth:sanctum');// done with r
+Route::post('/editComment/{commentID}', [CommunicationController::class, 'editComment'])->middleware('auth:sanctum');// done with r
+Route::delete('/deleteComment/{commentID}', [CommunicationController::class, 'deleteComment'])->middleware('auth:sanctum');// done with r
+Route::get('/getEventComments/{eventID}', [CommunicationController::class, 'getEventComments'])->middleware('auth:sanctum');// done wih r
+Route::post('/reportComment', [CommunicationController::class, 'reportComment'])->middleware('auth:sanctum');// done wih r
+Route::get('/showReportedComments/{eventID}', [CommunicationController::class, 'showReportedComments'])->middleware('auth:sanctum', 'supervisor');// done wih r
+Route::delete('/deleteReportedComments', [CommunicationController::class, 'showReportedComments'])->middleware('auth:sanctum', 'supervisor');
+
+//reactions
+Route::post('/react',[communicationController::class, 'react']) ->middleware(['auth:sanctum', 'throttle:reactions']);
 
 //complains managements
 

@@ -57,7 +57,7 @@ class User extends Authenticatable
 
     public function student()
     {
-        return $this->hasOne(Student::class,'user_id');
+        return $this->hasOne(Student::class, 'user_id');
     }
     //_________________________________________________________________________
 
@@ -119,7 +119,36 @@ class User extends Authenticatable
         return $this->hasMany(Nursing::class);
     }
     //_________________________________________________________________________
-    public function borrow(){
-        return $this->hasMany(Borrow::class,'user_id');
+    public function borrow()
+    {
+        return $this->hasMany(Borrow::class, 'user_id');
+    }
+    //_________________________________________________________________________
+
+    public function report()
+    {
+        return $this->hasMany(ReportedComment::class, 'reporter_id');
+    }
+    //_________________________________________________________________________
+
+    public function reactions()
+    {
+        return $this->belongsToMany(Reaction::class, 'reactables');
+    }
+
+    //_________________________________________________________________________
+
+    public function reactedEvents()
+    {
+        return $this->morphedByMany(Event::class, 'reactable', 'reactables')
+            ->withPivot('reaction_id')
+            ->withTimestamps();
+    }
+
+    public function reactedComments()
+    {
+        return $this->morphedByMany(Comment::class, 'reactable', 'reactables')
+            ->withPivot('reaction_id')
+            ->withTimestamps();
     }
 }

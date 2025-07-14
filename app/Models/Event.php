@@ -25,11 +25,18 @@ class Event extends Model
 
     public function Comment()
     {
-        return $this->hasMany(Comment::class);
+        return $this->hasMany(Comment::class, 'event_id');
     }
 
     public function media()
     {
-        return $this->hasMany(Media::class);
+        return $this->hasMany(Media::class, 'event_id');
+    }
+
+    public function reactions()
+    {
+        return $this->morphToMany(Reaction::class, 'reactables')
+            ->withPivot('user_id')
+            ->withTimestamps();
     }
 }

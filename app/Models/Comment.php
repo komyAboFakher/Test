@@ -17,12 +17,12 @@ class Comment extends Model
 
     public function Event()
     {
-        return $this->belongsTo(Event::class);
+        return $this->belongsTo(Event::class, 'event_id');
     }
 
     public function User()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id');
     }
     // defining the selfe referential relation between the comment and the reply, nested comments
 
@@ -46,4 +46,44 @@ class Comment extends Model
     Charlie replies to Bob: "Which trail?" (Comment ID 3, parent_id = 2)
 
         */
+    //______________________________________________________________________________
+
+    public function reportedComment()
+    {
+        return $this->hasMany(ReportedComment::class, 'comment_id');
+    }
+
+
+    public function reactions()
+    {
+        return $this->morphToMany(Reaction::class, 'reactables')
+            ->withPivot('user_id')
+            ->withTimestamps();
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////
+
+
+    public function ancestors()
+    {
+        return $this->parent()->with(['ancestors.user']);
+    }
+
+
+    public function descendants()
+    {
+        return $this->replies()->with(['descendants.user']);
+    }
+
+    public function allDescendants()
+    {
+        return $this->hasMany(Comment::class, 'parent_id')
+            ->with('allDescendants');
+    }
+
+    public function allAncestors()
+    {
+        return $this->belongsTo(Comment::class, 'parent_id')
+            ->with('allAncestors');
+    }
 }
