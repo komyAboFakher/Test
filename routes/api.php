@@ -2,16 +2,17 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\PrController;
+use App\Http\Controllers\fcmController;
 use App\Http\Controllers\marksController;
 use App\Http\Controllers\NurseController;
+use App\Http\Controllers\libraryController;
 use App\Http\Controllers\Auth\authController;
 use App\Http\Controllers\communicationController;
 use App\Http\Controllers\classesManagementController;
 use App\Http\Controllers\StudentAttendanceController;
-use App\Http\Controllers\ComplaintManagementController;
-use App\Http\Controllers\libraryController;
-use App\Http\Controllers\PrController;
 use App\Http\Controllers\SubjectsManagementController;
+use App\Http\Controllers\ComplaintManagementController;
 use App\Http\Controllers\TimetablesManagementController;
 
 /*
@@ -46,8 +47,10 @@ Route::get('/checkStudentAbsenceReport', [StudentAttendanceController::class, 'c
 Route::get('/checkStudentWarnings', [StudentAttendanceController::class, 'checkStudentWarnings'])->middleware('auth:sanctum', 'supervisor'); //checking student warnings and how many day they did no attend //done w request
 Route::post('/submitDailyReports', [StudentAttendanceController::class, 'submitDailyReports'])->middleware('auth:sanctum', 'supervisor'); //giving the supervisor the ability to submit all the daily reports //done w request
 Route::post('/incrementStudentAbsence', [StudentAttendanceController::class, 'incrementStudentAbsence'])->middleware('auth:sanctum', 'supervisor'); //giving the supervisor the ability to increment student absence num by one //done w request
+Route::post('/decrementStudentAbsence', [StudentAttendanceController::class, 'decrementStudentAbsence'])->middleware('auth:sanctum', 'supervisor'); //giving the supervisor the ability to decrement student absence num by one //done 
 
-Route::get('/searchStudentByName', [StudentAttendanceController::class, 'searchStudentByName'])->middleware('auth:sanctum', 'supervisor'); //giving the supervisor the ability to see all student based on the name and class name //done w request
+
+Route::get('/searchStudentById', [StudentAttendanceController::class, 'searchStudentById'])->middleware('auth:sanctum', 'supervisor'); //giving the supervisor the ability to see all student based on the name and class name //done w request
 Route::get('/showAllStudents', [StudentAttendanceController::class, 'showAllStudents'])->middleware('auth:sanctum', 'supervisor'); //giving the supervisor the ability to see all student based on the name and class name //done w request
 Route::get('/getInfo', [StudentAttendanceController::class, 'getInfo'])->middleware('auth:sanctum', 'student'); //this api gets the user info based on his role 
 //2-for students
@@ -89,13 +92,14 @@ Route::delete('/deleteUser', [classesManagementController::class, 'deleteUser'])
 
 // subjects management
 
-Route::Put('/createSubject', [SubjectsManagementController::class, 'createSubject'])->middleware('auth:sanctum', 'supervisor'); //done
+Route::Post('/createSubject', [SubjectsManagementController::class, 'createSubject'])->middleware('auth:sanctum', 'supervisor'); //done
 Route::get('/getAllSubjects', [SubjectsManagementController::class, 'getAllSubjects'])->middleware('auth:sanctum', 'supervisor'); //done
 Route::get('/getSubjectById', [SubjectsManagementController::class, 'getSubjectById'])->middleware('auth:sanctum', 'supervisor'); //done
-Route::post('/updateSubject', [SubjectsManagementController::class, 'updateSubject'])->middleware('auth:sanctum', 'supervisor'); //done
+Route::put('/updateSubject', [SubjectsManagementController::class, 'updateSubject'])->middleware('auth:sanctum', 'supervisor'); //done
 Route::delete('/deleteSubject', [SubjectsManagementController::class, 'deleteSubject'])->middleware('auth:sanctum', 'supervisor'); //done
 
-
+// the fcm
+Route::post('/save-fcm-token', [fcmController::class, 'saveFcmToken']);
 
 
 //timetables management
@@ -125,23 +129,27 @@ Route::delete('/deleteEvent/{eventID}', [CommunicationController::class, 'delete
 Route::get('/getEvents', [CommunicationController::class, 'getEvents'])->middleware('auth:sanctum', 'supervisor'); // done with r
 //this api is for the students, so they can see the whole events, i mean here the students get all events
 Route::get('/getAllPublishedEvents', [CommunicationController::class, 'getAllPublishedEvents'])->middleware('auth:sanctum'); // done with r
+// get event by id for share
+Route::post('/shareEvent', [CommunicationController::class, 'shareEvent'])->middleware('auth:sanctum'); // done with r
+// get user's posts or events
+Route::post('/getUserEvents', [CommunicationController::class, 'getUserEvents'])->middleware('auth:sanctum'); // done with r
 
 
 //comments management
 
 
-Route::post('/addComment', [CommunicationController::class, 'addComment'])->middleware('auth:sanctum');// done with r
-Route::post('/editComment/{commentID}', [CommunicationController::class, 'editComment'])->middleware('auth:sanctum');// done with r
-Route::delete('/deleteComment/{commentID}', [CommunicationController::class, 'deleteComment'])->middleware('auth:sanctum');// done with r
-Route::get('/getEventComments/{eventID}', [CommunicationController::class, 'getEventComments'])->middleware('auth:sanctum');// done wih r
-Route::post('/reportComment', [CommunicationController::class, 'reportComment'])->middleware('auth:sanctum');// done wih r
-Route::get('/showReportedComments/{eventID}', [CommunicationController::class, 'showReportedComments'])->middleware('auth:sanctum', 'supervisor');// done wih r
+Route::post('/addComment', [CommunicationController::class, 'addComment'])->middleware('auth:sanctum'); // done with r
+Route::post('/editComment/{commentID}', [CommunicationController::class, 'editComment'])->middleware('auth:sanctum'); // done with r
+Route::delete('/deleteComment/{commentID}', [CommunicationController::class, 'deleteComment'])->middleware('auth:sanctum'); // done with r
+Route::get('/getEventComments/{eventID}', [CommunicationController::class, 'getEventComments'])->middleware('auth:sanctum'); // done wih r
+Route::post('/reportComment', [CommunicationController::class, 'reportComment'])->middleware('auth:sanctum'); // done wih r
+Route::get('/showReportedComments/{eventID}', [CommunicationController::class, 'showReportedComments'])->middleware('auth:sanctum', 'supervisor'); // done wih r
 Route::delete('/deleteReportedComments', [CommunicationController::class, 'showReportedComments'])->middleware('auth:sanctum', 'supervisor');
 
 //reactions
-Route::post('/react',[communicationController::class, 'react']) ->middleware(['auth:sanctum', 'throttle:reactions']);
-Route::post('/getReactions',[communicationController::class, 'getReactions']) ->middleware(['auth:sanctum', 'throttle:reactions']);
-//Route::post('/react',[communicationController::class, 'react']) ->middleware(['auth:sanctum', 'throttle:reactions']);
+Route::post('/react', [communicationController::class, 'react'])->middleware(['auth:sanctum', 'throttle:reactions']);
+Route::post('/getReactions', [communicationController::class, 'getReactions'])->middleware(['auth:sanctum']);
+
 
 //complains managements
 

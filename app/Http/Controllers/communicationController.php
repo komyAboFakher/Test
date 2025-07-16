@@ -226,9 +226,16 @@ class CommunicationController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->paginate(10);
 
+
+
+
+
             // formating the json response only 
 
             $Events = $events->map(function ($event) {
+
+                $reactionTypes = $event->reactions->groupBy('type')->map->count();
+
                 return [
                     'id' => $event->id,
                     'user_id' => $event->user_id,
@@ -238,6 +245,10 @@ class CommunicationController extends Controller
                     'post' => $event->post,
                     'is_published' => $event->is_published,
                     'comments_number' => $event->comment->count(),
+                    'reactions' => [
+                        'reaction_number' => $event->reactions->count(),
+                        'types' => $reactionTypes
+                    ],
                     'created_at' => $event->created_at,
                     'updated_at' => $event->updated_at,
                     'media' => $event->media->map(function ($media) {
@@ -277,14 +288,30 @@ class CommunicationController extends Controller
     public function getAllPublishedEvents()
     {
         try {
-            $events = Event::with(['user' => function ($query) {
-                $query->select('id', 'name', 'middleName', 'lastName', 'email', 'role');
-            }])
+            $currentUser = Auth()->user();
+            $events = Event::with([
+                'user' => function ($query) {
+                    $query->select('id', 'name', 'middleName', 'lastName', 'email', 'role');
+                },
+                'reactions'
+
+            ])
                 ->where('is_published', true)
                 ->orderBy('created_at', 'desc')
                 ->paginate(10);
 
-            $Events = $events->map(function ($event) {
+            $userReactions = DB::table('reactables')
+                ->join('reactions', 'reactables.reaction_id', '=', 'reactions.id')
+                ->where('reactables.user_id', $currentUser->id)
+                ->where('reactables.reactable_type', Event::class)
+                ->select('reactables.reactable_id as event_id', 'reactions.type as reaction_type')
+                ->get()
+                ->keyBy('event_id');
+
+
+            $Events = $events->map(function ($event) use ($userReactions) {
+                $reactionTypes = $event->reactions->groupBy('type')->map->count();
+                $userReaction = $userReactions->get($event->id);
                 return [
                     'id' => $event->id,
                     'user_id' => $event->user_id,
@@ -294,7 +321,12 @@ class CommunicationController extends Controller
                     'post' => $event->post,
                     'is_published' => $event->is_published,
                     'comment_number' => $event->comment->count(),
-                    'reaction_number' => $event->reactions->count(),
+                    'reactions' => [
+                        'reaction_number' => $event->reactions->count(),
+                        'types' => $reactionTypes
+                    ],
+                    'is_reacted' => isset($userReaction),
+                    'user_reaction_type' => $userReaction->reaction_type ?? null,
                     'created_at' => $event->created_at,
                     'updated_at' => $event->updated_at,
                     'role' => $event->user->role,
@@ -327,6 +359,170 @@ class CommunicationController extends Controller
             ], 500);
         }
     }
+    //_________________________________________________________________________________________________
+    public function shareEvent(Request $request)
+    {
+
+        try {
+
+            $currentUser = Auth()->user()->id;
+
+            $validator = Validator::make($request->all(), [
+                'event_id' => 'required|integer|exists:events,id'
+            ]);
+
+            $events = Event::with(['user' => function ($query) {
+                $query->select('id', 'name', 'middleName', 'lastName', 'email', 'role');
+            }])
+                ->where('is_published', true)
+                ->where('id', $request->event_id)
+                ->orderBy('created_at', 'desc')
+                ->paginate(10);
+
+            $userReactions = DB::table('reactables')
+                ->join('reactions', 'reactables.reaction_id', '=', 'reactions.id')
+                ->where('reactables.user_id', $currentUser)
+                ->where('reactables.reactable_type', Event::class)
+                ->select('reactables.reactable_id as event_id', 'reactions.type as reaction_type')
+                ->get()
+                ->keyBy('event_id');
+
+            $Events = $events->map(function ($event) use ($userReactions) {
+                $reactionTypes = $event->reactions->groupBy('type')->map->count();
+                $userReaction = $userReactions->get($event->id);
+
+                return [
+                    'id' => $event->id,
+                    'user_id' => $event->user_id,
+                    'publisherName' => trim("{$event->user->name} {$event->user->middleName} {$event->user->lastName}"),
+                    'email' => $event->user->email,
+                    'event_name' => $event->event_name,
+                    'post' => $event->post,
+                    'is_published' => $event->is_published,
+                    'comment_number' => $event->comment->count(),
+                    'reaction_number' => $event->reactions->count(),
+                    'reactions' => [
+                        'reaction_number' => $event->reactions->count(),
+                        'types' => $reactionTypes
+                    ],
+                    'is_reacted' => isset($userReaction),
+                    'user_reaction_type' => $userReaction->reaction_type ?? null,
+                    'created_at' => $event->created_at,
+                    'updated_at' => $event->updated_at,
+                    'role' => $event->user->role,
+                    'media' => $event->media->map(function ($media) {
+                        return [
+                            'id' => $media->id,
+                            'url' => asset(Storage::url($media->photo_path)),
+                        ];
+                    })
+                ];
+            });
+
+            if ($events->isEmpty()) {
+                return response()->json([
+                    'status' => true,
+                    'message' => 'No published events found',
+                    'events' => []
+                ]);
+            }
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Published event retrieved successfully',
+                'events' => $Events
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to retrieve events: ' . $th->getMessage()
+            ], 500);
+        }
+    }
+    //_________________________________________________________________________________________________
+    public function getUserEvents(Request $request)
+    {
+
+        try {
+            // Validate the user ID first
+            $currentUser = Auth()->user()->id;
+            $validator = Validator::make($request->all(), [
+                'user_id' => 'required|integer|exists:events, user_id'
+            ]);
+
+
+            $events = Event::with(['User'])
+                ->where('user_id', $request->user_id)
+                ->orderBy('created_at', 'desc')
+                ->paginate(10);
+
+            $userReactions = DB::table('reactables')
+                ->join('reactions', 'reactables.reaction_id', '=', 'reactions.id')
+                ->where('reactables.user_id', $currentUser)
+                ->where('reactables.reactable_type', Event::class)
+                ->select('reactables.reactable_id as event_id', 'reactions.type as reaction_type')
+                ->get()
+                ->keyBy('event_id');
+
+
+
+            // formating the json response only 
+
+            $Events = $events->map(function ($event) use ($userReactions) {
+
+                $reactionTypes = $event->reactions->groupBy('type')->map->count();
+                $userReaction = $userReactions->get($event->id);
+
+                return [
+                    'id' => $event->id,
+                    'user_id' => $event->user_id,
+                    'full_name' => trim("{$event->user->name} {$event->user->middleName} {$event->user->lastName}"),
+                    'email' => $event->user->email,
+                    'event_name' => $event->event_name,
+                    'post' => $event->post,
+                    'is_published' => $event->is_published,
+                    'comments_number' => $event->comment->count(),
+                    'reactions' => [
+                        'reaction_number' => $event->reactions->count(),
+                        'types' => $reactionTypes
+                    ],
+                    'is_reacted' => isset($userReaction),
+                    'user_reaction_type' => $userReaction->reaction_type ?? null,
+                    'created_at' => $event->created_at,
+                    'updated_at' => $event->updated_at,
+                    'media' => $event->media->map(function ($media) {
+                        return [
+                            'id' => $media->id,
+                            'url' => asset(Storage::url($media->photo_path)),
+                        ];
+                    })
+                ];
+            });
+
+
+            // Check if any events found
+            if ($events->isEmpty()) {
+                return response()->json([
+                    'status' => true,
+                    'message' => 'No events published yet !!!',
+                    'events' => []
+                ]);
+            }
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Events retrieved successfully',
+                'events' =>  $Events
+
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to retrieve events: ' . $th->getMessage()
+            ], 500);
+        }
+    }
+
     //________________________________________________________________________________________________
     //                               the commments managements                                        |
     //________________________________________________________________________________________________|
@@ -494,6 +690,9 @@ class CommunicationController extends Controller
                 ->where('event_id', $eventId)
                 ->get();
 
+
+
+
             // Build the threaded comment tree
             $buildTree = function ($comments, $parentId = null) use (&$buildTree, $allComments) {
                 $branch = [];
@@ -525,6 +724,11 @@ class CommunicationController extends Controller
             // Build the tree starting from top-level comments
             $threadedComments = $buildTree($allComments, null);
 
+            if (!$threadedComments) {
+                return response()->json([
+                    "message" => "no comments yet !!"
+                ]);
+            }
 
             return response()->json([
                 'status' => true,
@@ -804,7 +1008,7 @@ class CommunicationController extends Controller
                 'status' => false,
                 'message' => 'Failed to process reaction',
                 'error' => $th->getMessage()
-            ], 500);
+            ], 404);
         }
     }
 
@@ -828,25 +1032,35 @@ class CommunicationController extends Controller
                 ? Event::class
                 : Comment::class;
 
-            
 
 
-            $reactable = $reactableType::with(['reactions' => function ($query) {
-                $query->withPivot('reaction_id', 'created_at', 'updated_at');
+
+            $reactable = $reactableType::with(['reactions.users' => function ($query) {
+                $query->select('users.id', 'users.name', 'users.middleName', 'users.lastName', 'users.email') // Only get necessary user fields
+                    ->withPivot('reaction_id', 'created_at', 'updated_at');
             }])->findOrFail($request->reactable_id);
 
-            
-
+            // Format the reactions with user info
             $formattedReactions = $reactable->reactions->map(function ($reaction) {
                 return [
+                    'user' => $reaction->users->map(function ($user) {
+                        return [
+                            'id' => $user->id,
+                            'name' => $user->name,
+                            'middle_name' => $user->middleName,
+                            'last_name' => $user->lastName,
+                            'email' => $user->email,
+
+                        ];
+                    }),
                     'reaction_id' => $reaction->pivot->reaction_id,
                     'reaction_type' => $reaction->type,
-                    'user_id' => $reaction->pivot->user_id,
-                    'name' => $reaction->reactedEvents,
                     'created_at' => $reaction->pivot->created_at,
                     'updated_at' => $reaction->pivot->updated_at,
                 ];
             });
+
+
 
             return response()->json([
                 'status' => true,
@@ -860,10 +1074,6 @@ class CommunicationController extends Controller
             ], 500);
         }
     }
-    //___________________________________________________________________________________________
-    public function getEventReactions() {}
-    //___________________________________________________________________________________________
-    public function getCommentReactions() {}
 }
 
 

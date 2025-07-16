@@ -16,10 +16,10 @@ class SchoolClass extends Model
    ];
    public function students()
    {
-      return $this->hasMany(Student::class,'class_id');
+      return $this->hasMany(Student::class, 'class_id');
    }
    /////////////////////////////////////////////////////////
-   public function ExamSchedules()
+   public function ExamSchedule()
    {
       return $this->hasOne(ExamSchedule::class);
    }
@@ -30,7 +30,8 @@ class SchoolClass extends Model
       return $this->belongsToMany(Teacher::class, 'teacher_classes', 'teacher_id', 'class_id');
    }
    ////////////////////////////////////////////////////////
-   public function subject(){
+   public function subject()
+   {
       return $this->hasMany(Subject::class);
    }
    ////////////////////////////////////////////////////////
@@ -39,13 +40,18 @@ class SchoolClass extends Model
       return $this->hasmany(Mark::class);
    }
    ////////////////////////////////////////////////////////
-   public function ScheduleBriefs()
+   public function ScheduleBrief()
    {
       return $this->hasmany(ScheduleBrief::class);
    }
    ////////////////////////////////////////////////////////
-   public function Sessions()
+   public function Session()
    {
       return $this->hasmany(Session::class);
+   }
+   ////////////////////////////////////////////////////////
+   public function TeacherClass()
+   {
+      return $this->hasmany(TeacherClass::class);
    }
 }

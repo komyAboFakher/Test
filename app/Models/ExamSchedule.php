@@ -14,6 +14,6 @@ class ExamSchedule extends Model
         'schedule_pdf',
     ];
     public function Clas(){
-        return $this->belongsTo(Clas::class);
+        return $this->belongsTo(SchoolClass::class);
     }
 }
