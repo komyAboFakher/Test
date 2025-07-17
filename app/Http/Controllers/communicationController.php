@@ -685,19 +685,30 @@ class CommunicationController extends Controller
     {
         try {
 
+            $currentUser = Auth()->user()->id;
 
-            $allComments = Comment::with('user')
+            $allComments = Comment::with('user', 'reactions')
                 ->where('event_id', $eventId)
                 ->get();
 
+            $userReactions = DB::table('reactables')
+                ->join('reactions', 'reactables.reaction_id', '=', 'reactions.id')
+                ->where('reactables.user_id', $currentUser)
+                ->where('reactables.reactable_type', Comment::class)
+                ->select('reactables.reactable_id as comment_id', 'reactions.type as reaction_type')
+                ->get()
+                ->keyBy('comment_id');
 
 
 
             // Build the threaded comment tree
-            $buildTree = function ($comments, $parentId = null) use (&$buildTree, $allComments) {
+            $buildTree = function ($comments, $parentId = null) use (&$buildTree, $allComments, $userReactions) {
                 $branch = [];
 
+
                 foreach ($comments as $comment) {
+                    $reactionTypes = $comment->reactions->groupBy('type')->map->count();
+                    $userReaction = $userReactions->get($comment->id);
                     if ($comment->parent_id == $parentId) {
                         $commentData = [
                             'id' => $comment->id,
@@ -709,7 +720,12 @@ class CommunicationController extends Controller
                             'email' => $comment->user->email,
                             'role' => $comment->user->role,
                             'content' => $comment->content,
-                            'reaction_number' => $comment->reactions->count(),
+                            'reactions' => [
+                                'reaction_number' => $comment->reactions->count(),
+                                'types' => $reactionTypes
+                            ],
+                            'is_reacted' => isset($userReaction),
+                            'user_reaction_type' => $userReaction->reaction_type ?? null,
                             'created_at' => $comment->created_at->toIso8601String(),
                             'replies' => $buildTree($allComments, $comment->id)
                         ];
