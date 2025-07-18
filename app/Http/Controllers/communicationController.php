@@ -1027,56 +1027,67 @@ class CommunicationController extends Controller
             ], 404);
         }
     }
+    //_______________________________________________________________________
 
-    //___________________________________________________________________________________________
     public function getReactions(Request $request)
     {
         try {
-
             $validator = Validator::make($request->all(), [
-                'reactable_id' => 'required|integer|exists:reactables,reactable_id',
+                'reactable_id' => 'required|integer',
                 'reactable_type' => 'required|string|in:event,comment',
             ]);
-
 
             if ($validator->fails()) {
                 return response()->json($validator->errors(), 422);
             }
 
-            // Determine reactable model and relationship
+
             $reactableType = $request->reactable_type === 'event'
                 ? Event::class
                 : Comment::class;
 
 
-
-
             $reactable = $reactableType::with(['reactions.users' => function ($query) {
-                $query->select('users.id', 'users.name', 'users.middleName', 'users.lastName', 'users.email') // Only get necessary user fields
-                    ->withPivot('reaction_id', 'created_at', 'updated_at');
+                $query->select('users.id', 'users.name', 'users.middleName', 'users.lastName', 'users.email', 'users.role');
             }])->findOrFail($request->reactable_id);
 
-            // Format the reactions with user info
-            $formattedReactions = $reactable->reactions->map(function ($reaction) {
-                return [
-                    'user' => $reaction->users->map(function ($user) {
-                        return [
-                            'id' => $user->id,
-                            'name' => $user->name,
-                            'middle_name' => $user->middleName,
-                            'last_name' => $user->lastName,
-                            'email' => $user->email,
 
-                        ];
-                    }),
-                    'reaction_id' => $reaction->pivot->reaction_id,
-                    'reaction_type' => $reaction->type,
-                    'created_at' => $reaction->pivot->created_at,
-                    'updated_at' => $reaction->pivot->updated_at,
+            $reactionEntries = DB::table('reactables')
+                ->where('reactable_id', $request->reactable_id)
+                ->where('reactable_type', $reactableType)
+                ->join('users', 'reactables.user_id', '=', 'users.id')
+                ->join('reactions', 'reactables.reaction_id', '=', 'reactions.id')
+                ->select(
+                    'users.id as user_id',
+                    'users.name as user_name',
+                    'users.middleName as middle_name',
+                    'users.lastName as last_name',
+                    'users.email as email',
+                    'users.role as user_role',
+                    'reactions.id as reaction_id',
+                    'reactions.type as reaction_type',
+                    'reactables.created_at',
+                    'reactables.updated_at'
+                )
+                ->get();
+
+
+            $formattedReactions = $reactionEntries->map(function ($entry) {
+                return [
+                    'user' => [
+                        'id' => $entry->user_id,
+                        'name' => $entry->user_name,
+                        'middleName' => $entry->middle_name,
+                        'lastName' => $entry->last_name,
+                        'email' => $entry->email,
+                        'role' => $entry->user_role,
+                    ],
+                    'reaction_id' => $entry->reaction_id,
+                    'reaction_type' => $entry->reaction_type,
+                    'created_at' => $entry->created_at,
+                    'updated_at' => $entry->updated_at,
                 ];
             });
-
-
 
             return response()->json([
                 'status' => true,
