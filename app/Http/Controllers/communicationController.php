@@ -476,7 +476,7 @@ class CommunicationController extends Controller
                 return [
                     'id' => $event->id,
                     'user_id' => $event->user_id,
-                    'full_name' => trim("{$event->user->name} {$event->user->middleName} {$event->user->lastName}"),
+                    'publisherName' => trim("{$event->user->name} {$event->user->middleName} {$event->user->lastName}"),
                     'email' => $event->user->email,
                     'event_name' => $event->event_name,
                     'post' => $event->post,
