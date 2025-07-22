@@ -833,7 +833,7 @@ class CommunicationController extends Controller
             if ($alreadyReported) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'the comment has been reported already !!! by '
+                    'message' => 'the comment has been reported !!'
                 ], 409); // 409 = Conflict
             }
 

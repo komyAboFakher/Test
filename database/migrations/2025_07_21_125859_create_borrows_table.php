@@ -13,12 +13,16 @@ return new class extends Migration
     {
         Schema::create('borrows', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('book_id')->constrained('libraries')->onDelete('cascade');
-            $table->date('borrow_date');
-            $table->date('due_date');  //'retrieve_date'
+            $table->string('serrial_number');
+            $table->enum('borrow_status', ['pending', 'accepted', 'rejected'])->default('pending');
+
+            //////////////////////////////////////////////////////////////////////////////
+            $table->date('borrow_date')->nullable();
+            $table->date('due_date')->nullable();  //'retrieve_date'
             $table->date('returned_date')->nullable(); //actual return date
-            $table->enum('status', ['borrowed', 'returned', 'overdue', 'lost'])->default('borrowed');
+            $table->enum('book_status', ['borrowed', 'returned', 'overdue', 'lost'])->nullable();
             $table->text('notes')->nullable();
             $table->timestamps();
         });

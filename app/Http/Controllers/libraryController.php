@@ -6,6 +6,7 @@ use App\Models\Borrow;
 use App\Models\Library;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Validator;
 
@@ -15,6 +16,8 @@ class libraryController extends Controller
     {
         try {
 
+            $currentUser = Auth()->user();
+
 
             $validator = Validator::make(
                 $request->all(),
@@ -22,9 +25,9 @@ class libraryController extends Controller
                     'title' => 'required|string',
                     'author' => 'required|string',
                     'category' => 'required|string',
-                    'publisher' => 'nullable|string',
+                    'publisher' => 'required|string',
                     'serial_number' => 'required|string|unique:libraries,serial_number',
-                    'shelf_location' => 'nullable|string',
+                    'shelf_location' => 'required|string',
                     'description' => 'nullable|string',
                 ],
                 [
@@ -40,6 +43,7 @@ class libraryController extends Controller
             }
 
             $book = Library::create([
+                'user_id' => $currentUser->id,
                 'title' => $request->title,
                 'author' => $request->author,
                 'category' => $request->category,
@@ -66,25 +70,17 @@ class libraryController extends Controller
     public function updateBook(Request $request, $bookID)
     {
         try {
+            $currentUser = Auth()->user()->id;
             $updatedBook = Library::findOrFail($bookID);
             $validator = Validator::make(
                 $request->all(),
                 [
-                    'title' => 'sometimes|string|max:255',
-                    'author' => 'sometimes|string|max:255',
-                    'category' => 'sometimes|string|max:100',
+                    'title' => 'nullable|string|max:255',
+                    'author' => 'nullable|string|max:255',
+                    'category' => 'nullable|string|max:100',
                     'publisher' => 'nullable|string|max:255',
-                    'serial_number' => [
-                        'sometimes',
-                        'string',
-                        'max:50',
-                        Rule::unique('libraries')->ignore($updatedBook->id)
-                    ],
                     'shelf_location' => 'nullable|string|max:50',
                     'description' => 'nullable|string'
-                ],
-                [
-                    'serial_number.unique' => 'This serial number is already in use'
                 ]
             );
 
@@ -97,11 +93,11 @@ class libraryController extends Controller
 
 
             $updatedBook->fill($request->only([
+                'user_id' => $currentUser,
                 'title',
                 'author',
                 'category',
                 'publisher',
-                'serial_number',
                 'shelf_location',
                 'description'
             ]))->save();
@@ -126,7 +122,7 @@ class libraryController extends Controller
         try {
             $deletedBook = Library::findOrFail($bookID);
             // check if the book is borrowed by someone !!
-            if ($deletedBook->borrow()->where('status', 'borrowed')->exists()) {
+            if ($deletedBook->borrow()->where('book_status', 'borrowed')->exists()) {
                 return response()->json([
                     'status' => false,
                     'message' => 'Cannot delete book: It is currently borrowed'
@@ -146,25 +142,145 @@ class libraryController extends Controller
         }
     }
     //______________________________________________
-    public function borrow(Request $request)
+
+    public function showBooks()
+    {
+        try {
+            $books = Library::with('borrow.user')
+                ->get()
+                ->map(function ($library) {
+
+
+                    return [
+                        'title' => $library->title,
+                        'author' => $library->author,
+                        'category' => $library->category,
+                        'publisher' => $library->publisher,
+                        'serial_number' => $library->serrial_number,
+                        'shelf_location' => $library->shelf_location,
+                        'description' => $library->description,
+                        'created_at' => $library->created_at,
+                        'updated_at' => $library->updated_at,
+                    ];
+                });
+            return response()->json([
+
+                'status' => true,
+                'message' => 'books :',
+                'data' => $books
+            ], 201);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'message' => $th->getMessage()
+            ], 500);
+        }
+    }
+    //______________________________________________________________________________
+
+    public function showBookBySerrialNumber(Request $request)
+    {
+
+        try {
+            $validator = Validator::make(
+                $request->all(),
+                [
+                    'serrial_number' => 'required|integer|exists:libraries,serrial_number'
+                ],
+                [
+                    'serrial_number.exists' => 'the serrial number does not exist'
+                ]
+            );
+
+            $book = Library::findOrFail($request->serrial_number);
+            return response()->json([
+                'status' => true,
+                'message' => 'the book info',
+                'book' => $book,
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'message' => $th->getMessage()
+            ], 500);
+        }
+    }
+
+    //______________________________________________________________________________
+
+    public function showBookBorrowers(Request $request)
     {
         try {
 
             $validator = Validator::make(
                 $request->all(),
                 [
-                    'user_id' => 'required|integer|exists:users,id',
-                    'book_id' => 'required|integer|exists:libraries,id',
-                    'borrow_date' => 'required|date|after_or_equal:today',
-                    'due_date' => 'required|date|after:borrow_date',
-                    //'returned_date' => 'nullable|date|after_or_equal:borrow_date',
-                    //'status' => 'sometimes|string|in:borrowed,returned,overdue,lost',
-                    'notes' => 'nullable|string',
+                    'serrial_number' => 'required|integer|exists:libraries,serrial_number'
                 ],
                 [
-                    'book_id.exists' => 'The specified book does not exist',
-                    'due_date.after' => 'Due date must be after borrow date',
-                    //'returned_date.after_or_equal' => 'Due date must be after borrow date',
+                    'serrial_number.exists' => 'the serrial number does not exist'
+                ]
+            );
+            $books = Library::with('borrow.user')
+                ->where('serrial_number', $request->serrial_number)
+                ->get()
+                ->map(function ($library) {
+
+
+                    return [
+                        'title' => $library->title,
+                        'author' => $library->author,
+                        'category' => $library->category,
+                        'publisher' => $library->publisher,
+                        'serial_number' => $library->serrial_number,
+                        'shelf_location' => $library->shelf_location,
+                        'description' => $library->description,
+                        'created_at' => $library->created_at,
+                        'updated_at' => $library->updated_at,
+                        'borrower_info' => $library->borrow->map(function ($borrow) {
+                            return [
+                                'id' => $borrow->user_id,
+                                'full_name' => trim(implode(' ', array_filter([$borrow->user->name, $borrow->user->middleName, $borrow->user->lastName]))),
+                                'borrower_role' => $borrow->user->role,
+                                'borrower_phone_number' => $borrow->user->phoneNumber,
+                                'borrower_email' => $borrow->user->email,
+                                'borrow_date' => $borrow->borrow_date,
+                                'due_date' => $borrow->due_date,
+                                'returned_date' => $borrow->returned_date,
+                                'book_status' => $borrow->book_status,
+                                'notes' => $borrow->notes,
+                            ];
+                        })
+                    ];
+                });
+            return response()->json([
+
+                'status' => true,
+                'message' => 'books :',
+                'data' => $books
+            ], 201);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'message' => $th->getMessage()
+            ], 500);
+        }
+    }
+
+    //______________________________________________________________________________
+    public function borrow(Request $request)
+    {
+        try {
+
+            $currentUser = Auth()->user()->id;
+            $validator = Validator::make(
+                $request->all(),
+                [
+                    'serrial_number' => 'required|string|exists:libraries,serrial_number',
+                ],
+                [
+                    'serrial_number.exists' => 'The specified serrial number does not exist',
+
                 ]
             );
 
@@ -175,29 +291,27 @@ class libraryController extends Controller
                 ], 422);
             }
 
-            $book = Library::findOrFail($request->book_id);
-            if ($book->borrow()->whereNull('returned_date')->exists()) {
+            $book = Library::where('serrial_number', $request->serrial_number)->firstOrFail();
+            if ($book->borrow()->where('book_status', 'borrowed')->exists()) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'This book is currently borrowed'
-                ], 409); // 409 Conflict
+                    'message' => 'This book is currently borrowed !!'
+                ], 409);
             }
 
+            //if(){}
+
             $borrow = Borrow::create([
-                'user_id' => $request->user_id,
-                'book_id' => $request->book_id,
-                'borrow_date' => $request->borrow_date,
-                'due_date' => $request->due_date,
-                //'returned_date' => $request->returned_date,
-                //'status' =>  'borrowed', //default status
-                'notes' => $request->notes,
+                'user_id' => $currentUser,
+                'book_id' => $book->id,
+                'serrial_number' => $book->serrial_number,
             ]);
 
             return response()->json([
 
                 'status' => true,
-                'message' => 'the book borrowed successfully !!',
-                'data' => $borrow->load('user', 'book')
+                'message' => 'the book borrow order made successfully !!',
+                'data' => $borrow
             ], 201);
         } catch (\Throwable $th) {
             return response()->json([
@@ -214,17 +328,17 @@ class libraryController extends Controller
 
         try {
 
+            $currentUser = Auth()->user();
             $validator = Validator::make(
                 $request->all(),
                 [
                     'borrow_id' => 'required|integer|exists:borrows,id',
-                    'user_id' => 'sometimes|integer|exists:users,id',
-                    'book_id' => 'sometimes|integer|exists:libraries,id',
-                    'borrow_date' => 'sometimes|date|after_or_equal:today',
-                    'due_date' => 'sometimes|date|after:borrow_date',
-                    'returned_date' => 'sometimes|date|after_or_equal:borrow_date',
-                    'status' => [
-                        'sometimes',
+                    'borrow_status' => 'nullable|string|in:pending,accepted,rejected',
+                    'borrow_date' => 'nullable|date|after_or_equal:today',
+                    'due_date' => 'nullable|date|after:borrow_date',
+                    'returned_date' => 'nullable|date|after_or_equal:borrow_date',
+                    'book_status' => [
+                        'nullable',
                         'string',
                         Rule::in(['borrowed', 'returned', 'overdue', 'lost'])
                     ],
@@ -232,10 +346,10 @@ class libraryController extends Controller
                 ],
                 [
                     'borrow_id.exists' => 'The specified borrowing record does not exist',
-                    'book_id.exists' => 'The specified book does not exist',
+                    'borrow_status.in' => 'The borrow status must be pending or accepted or rejected ',
                     'due_date.after' => 'Due date must be after borrow date',
                     'returned_date.after_or_equal' => 'Due date must be after borrow date',
-                    'status.in' => 'Invalid status. Allowed values: borrowed, returned, overdue, lost'
+                    'book_status.in' => 'the book status must be borrowed, returned, overdue or lost'
                 ]
             );
 
@@ -252,12 +366,11 @@ class libraryController extends Controller
             $borrow->fill($request->only([
 
                 'borrow_id',
-                'user_id',
-                'book_id',
+                'borrow_status',
                 'borrow_date',
                 'due_date',
                 'returned_date',
-                'status',
+                'book_status',
                 'notes'
             ]));
 
@@ -280,7 +393,7 @@ class libraryController extends Controller
 
                 'status' => true,
                 'message' => 'updated successfully!!',
-                'data' => $borrow->load('user', 'book')
+                'data' => $borrow
             ], 201);
         } catch (\Throwable $th) {
             return response()->json([
@@ -290,49 +403,5 @@ class libraryController extends Controller
         }
     }
     //______________________________________________
-    public function showBook()
-    {
-        try {
-            $books = Library::with('borrow.user')
-                ->get()
-                ->map(function ($library) {
-                    return [
-                        'title' => $library->title,
-                        'author' => $library->author,
-                        'category' => $library->category,
-                        'publisher' => $library->publisher,
-                        'serial_number' => $library->serial_number,
-                        'shelf_location' => $library->shelf_location,
-                        'description' => $library->description,
-                        'created_at' => $library->created_at,
-                        'updated_at' => $library->updated_at,
-                        'borrower_info' => $library->borrow->map(function ($borrow) {
-                            return [
-                                'id' => $borrow->user_id,
-                                'full_name' => trim(implode(' ', array_filter([$borrow->user->name, $borrow->user->middleName, $borrow->user->lastName]))),
-                                'borrower_role' => $borrow->user->role,
-                                'borrower_phone_number' => $borrow->user->phoneNumber,
-                                'borrower_email' => $borrow->user->email,
-                                'borrow_date' => $borrow->borrow_date,
-                                'due_date' => $borrow->due_date,
-                                'returned_date' => $borrow->returned_date,
-                                'status' => $borrow->status,
-                                'notes' => $borrow->notes,
-                            ];
-                        })
-                    ];
-                });
-            return response()->json([
 
-                'status' => true,
-                'message' => 'books :',
-                'data' => $books
-            ], 201);
-        } catch (\Throwable $th) {
-            return response()->json([
-                'status' => false,
-                'message' => $th->getMessage()
-            ], 500);
-        }
-    }
 }

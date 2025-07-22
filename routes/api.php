@@ -116,7 +116,7 @@ route::get('/getTeacherExamSchedule', [TimetablesManagementController::class, 'g
 //marks management
 Route::post('/getEmptyExcelCheatForMarks', [marksController::class, 'getEmptyExcelCheatForMarks'])->middleware('auth:sanctum', 'teacher');
 Route::post('/uploadMarkExcelCheat', [marksController::class, 'uploadMarkExcelCheat'])->middleware('auth:sanctum', 'teacher');
-Route::post('/studentGetResult', [marksController::class, 'studentGetResult'])->middleware('auth:sanctum', 'student');
+Route::post('/studentGetResult', [marksController::class, 'studentGetResult'])->middleware('auth:sanctum');
 Route::get('/getTeacherClasses', [marksController::class, 'getTeacherClasses'])->middleware('auth:sanctum', 'teacher'); //done
 
 
@@ -176,13 +176,15 @@ Route::get('/getMyMedicalFiles', [NurseController::class, 'getMyMedicalFiles']);
 
 // library management at the school
 
-Route::post('/createBook', [libraryController::class, 'createBook']);
-Route::post('/updateBook/{bookID}', [libraryController::class, 'updateBook']);
-Route::delete('/deleteBook/{bookID}', [libraryController::class, 'deleteBook']);
-Route::get('/showBook', [libraryController::class, 'showBook']);
+Route::post('/createBook', [libraryController::class, 'createBook'])->middleware(['auth:sanctum','supervisor']);
+Route::post('/updateBook/{bookID}', [libraryController::class, 'updateBook'])->middleware(['auth:sanctum','supervisor']);
+Route::delete('/deleteBook/{bookID}', [libraryController::class, 'deleteBook'])->middleware(['auth:sanctum','supervisor']);
+Route::get('/showBooks', [libraryController::class, 'showBooks'])->middleware(['auth:sanctum']);
+Route::post('/showBookBySerrialNumber', [libraryController::class, 'showBookBySerrialNumber'])->middleware(['auth:sanctum']);
+Route::post('/showBookBorrowers', [libraryController::class, 'showBookBorrowers'])->middleware(['auth:sanctum']);
 //borrow management
-Route::post('/borrow', [libraryController::class, 'borrow']);
-Route::post('/modifyBorrow', [libraryController::class, 'modifyBorrow']);
+Route::post('/borrow', [libraryController::class, 'borrow'])->middleware(['auth:sanctum']);
+Route::post('/modifyBorrow', [libraryController::class, 'modifyBorrow'])->middleware(['auth:sanctum']);
 
 // public relations managements
 Route::post('/publish', [PrController::class, 'publish']);

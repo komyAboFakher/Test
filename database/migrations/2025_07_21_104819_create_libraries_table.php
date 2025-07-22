@@ -13,12 +13,13 @@ return new class extends Migration
     {
         Schema::create('libraries', function (Blueprint $table) {
             $table->id();
-            $table->string('title'); 
-            $table->string('author'); 
-            $table->string('category')->nullable();
-            $table->string('publisher')->nullable();
-            $table->string('serial_number')->unique()->nullable();
-            $table->string('shelf_location')->nullable(); 
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->string('title');
+            $table->string('author');
+            $table->string('category');
+            $table->string('publisher');
+            $table->string('serrial_number')->unique();
+            $table->string('shelf_location');
             $table->text('description')->nullable();
             $table->timestamps();
         });

@@ -123,6 +123,11 @@ class User extends Authenticatable
     {
         return $this->hasMany(Borrow::class, 'user_id');
     }
+    //________________________________________________________________________
+    public function library()
+    {
+        return $this->hasMany(Library::class, 'user_id');
+    }
     //_________________________________________________________________________
 
     public function report()
