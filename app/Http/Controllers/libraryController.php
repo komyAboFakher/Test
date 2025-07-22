@@ -292,6 +292,7 @@ class libraryController extends Controller
             }
 
             $book = Library::where('serrial_number', $request->serrial_number)->firstOrFail();
+            
             if ($book->borrow()->where('book_status', 'borrowed')->exists()) {
                 return response()->json([
                     'status' => false,
@@ -299,7 +300,21 @@ class libraryController extends Controller
                 ], 409);
             }
 
-            //if(){}
+            $alreadyHasIt = Borrow::where('user_id', $currentUser)
+                ->where('book_id', $book->id)
+                ->whereIn('book_status', ['borrowed'])
+                ->orWhere(function ($q) {
+                    $q->where('borrow_status', 'pending');
+                })
+                ->exists();
+
+            if ($alreadyHasIt) {
+                return response()->json([
+                    'status'  => false,
+                    'message' => 'You already have an active or pending order for this book.'
+                ], 409);
+            }
+
 
             $borrow = Borrow::create([
                 'user_id' => $currentUser,
