@@ -2630,7 +2630,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "4|mLwbkDDGATNh5K0gGmeJZtNh9CEnHFkpCvxlyz5t23aeaae4",
+									"value": "2|F7BUVgmoqRB2ErY81WSkH4hnIHkT467NtFtB43II21437fea",
 									"type": "string"
 								}
 							]
@@ -2790,7 +2790,14 @@
 					"name": "Delete Comment",
 					"request": {
 						"auth": {
-							"type": "noauth"
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "2|F7BUVgmoqRB2ErY81WSkH4hnIHkT467NtFtB43II21437fea",
+									"type": "string"
+								}
+							]
 						},
 						"method": "DELETE",
 						"header": [
@@ -2806,19 +2813,19 @@
 							}
 						],
 						"url": {
-							"raw": "http://127.0.0.1:8000/api/deleteComment/1",
+							"raw": "http://26.131.177.200:8000/api/deleteComment/2",
 							"protocol": "http",
 							"host": [
-								"127",
-								"0",
-								"0",
-								"1"
+								"26",
+								"131",
+								"177",
+								"200"
 							],
 							"port": "8000",
 							"path": [
 								"api",
 								"deleteComment",
-								"1"
+								"2"
 							]
 						}
 					},
@@ -3028,7 +3035,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "1|qAWPTpxtSLaReO1K3MxQe47qKzkSvwjsZW4Y4LoP5bb89639",
+									"value": "2|F7BUVgmoqRB2ErY81WSkH4hnIHkT467NtFtB43II21437fea",
 									"type": "string"
 								}
 							]
@@ -3048,7 +3055,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"reaction\": \"sad\",\r\n    \"reactable_id\": 1,\r\n    \"reactable_type\": \"event\"\r\n}",
+							"raw": "{\r\n    \"reaction\": \"love\",\r\n    \"reactable_id\": 5,\r\n    \"reactable_type\": \"comment\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -3101,7 +3108,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \r\n    \"reactable_id\": 2,\r\n    \"reactable_type\": \"comment\"\r\n}",
+							"raw": "{\r\n    \r\n    \"reactable_id\": 1,\r\n    \"reactable_type\": \"event\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -3445,7 +3452,14 @@
 					"name": "create book",
 					"request": {
 						"auth": {
-							"type": "noauth"
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "4|mLwbkDDGATNh5K0gGmeJZtNh9CEnHFkpCvxlyz5t23aeaae4",
+									"type": "string"
+								}
+							]
 						},
 						"method": "POST",
 						"header": [
@@ -3486,6 +3500,11 @@
 								{
 									"key": "publisher",
 									"value": "Jaramana-Farms Street",
+									"type": "text"
+								},
+								{
+									"key": "shelf_location",
+									"value": "in my ass",
 									"type": "text"
 								}
 							]
@@ -3590,7 +3609,14 @@
 					"name": "delete book",
 					"request": {
 						"auth": {
-							"type": "noauth"
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "4|mLwbkDDGATNh5K0gGmeJZtNh9CEnHFkpCvxlyz5t23aeaae4",
+									"type": "string"
+								}
+							]
 						},
 						"method": "DELETE",
 						"header": [
@@ -3628,7 +3654,14 @@
 					"name": "borrow book",
 					"request": {
 						"auth": {
-							"type": "noauth"
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "1|qAWPTpxtSLaReO1K3MxQe47qKzkSvwjsZW4Y4LoP5bb89639",
+									"type": "string"
+								}
+							]
 						},
 						"method": "POST",
 						"header": [
@@ -3644,34 +3677,8 @@
 							}
 						],
 						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "user_id",
-									"value": "2",
-									"type": "text"
-								},
-								{
-									"key": "book_id",
-									"value": "3",
-									"type": "text"
-								},
-								{
-									"key": "borrow_date",
-									"value": "2025-6-26",
-									"type": "text"
-								},
-								{
-									"key": "due_date",
-									"value": "2025-6-28",
-									"type": "text"
-								},
-								{
-									"key": "notes",
-									"value": "no discription !!",
-									"type": "text"
-								}
-							]
+							"mode": "raw",
+							"raw": "\r\n{\r\n  \"serrial_number\": \"00003\"\r\n}"
 						},
 						"url": {
 							"raw": "http://26.131.177.200:8000/api/borrow",
@@ -3695,7 +3702,14 @@
 					"name": "modify the borrowing",
 					"request": {
 						"auth": {
-							"type": "noauth"
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "4|mLwbkDDGATNh5K0gGmeJZtNh9CEnHFkpCvxlyz5t23aeaae4",
+									"type": "string"
+								}
+							]
 						},
 						"method": "POST",
 						"header": [
@@ -3715,17 +3729,37 @@
 							"formdata": [
 								{
 									"key": "borrow_id",
-									"value": "5",
+									"value": "1",
+									"type": "text"
+								},
+								{
+									"key": "borrow_status",
+									"value": "accepted",
+									"type": "text"
+								},
+								{
+									"key": "borrow_date",
+									"value": "2025-7-21",
+									"type": "text"
+								},
+								{
+									"key": "due_date",
+									"value": "2025-7-25",
 									"type": "text"
 								},
 								{
 									"key": "returned_date",
-									"value": "2025-6-30",
+									"value": "2025-7-26",
 									"type": "text"
 								},
 								{
-									"key": "status",
+									"key": "book_status",
 									"value": "overdue",
+									"type": "text"
+								},
+								{
+									"key": "notes",
+									"value": "kkkkkkkkkkkkkkk",
 									"type": "text"
 								}
 							]
@@ -3752,7 +3786,14 @@
 					"name": "show the books",
 					"request": {
 						"auth": {
-							"type": "noauth"
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "2|F7BUVgmoqRB2ErY81WSkH4hnIHkT467NtFtB43II21437fea",
+									"type": "string"
+								}
+							]
 						},
 						"method": "GET",
 						"header": [
@@ -3768,7 +3809,7 @@
 							}
 						],
 						"url": {
-							"raw": "http://26.131.177.200:8000/api/showBook",
+							"raw": "http://26.131.177.200:8000/api/showBooks",
 							"protocol": "http",
 							"host": [
 								"26",
@@ -3779,7 +3820,113 @@
 							"port": "8000",
 							"path": [
 								"api",
-								"showBook"
+								"showBooks"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "show book by serrial number ",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "2|F7BUVgmoqRB2ErY81WSkH4hnIHkT467NtFtB43II21437fea",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"serrial_number\": \"00003\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://26.131.177.200:8000/api/showBookBySerrialNumber",
+							"protocol": "http",
+							"host": [
+								"26",
+								"131",
+								"177",
+								"200"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"showBookBySerrialNumber"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "showBookBorrowers",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "2|F7BUVgmoqRB2ErY81WSkH4hnIHkT467NtFtB43II21437fea",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"serrial_number\": \"00003\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://26.131.177.200:8000/api/showBookBorrowers",
+							"protocol": "http",
+							"host": [
+								"26",
+								"131",
+								"177",
+								"200"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"showBookBorrowers"
 							]
 						}
 					},
