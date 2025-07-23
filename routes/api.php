@@ -37,6 +37,10 @@ Route::post('/sendForgetPasswordOtp', [authController::class, 'sendForgetPasswor
 Route::post('/confirmForgetPasswordOtp', [authController::class, 'confirmForgetPasswordOtp']); //done w request
 Route::post('/resetPassword', [authController::class, 'resetPassword']); //done w request
 
+//pin code for users
+Route::post('/createOrUpdatePinCode',[authController::class,'createOrUpdatePinCode'])->middleware('auth:sanctum');
+Route::post('/checkPinCode',[authController::class,'checkPinCode'])->middleware('auth:sanctum');
+Route::delete('/deletePinCode',[authController::class,'deletePinCode'])->middleware('auth:sanctum');
 
 //student attendance management
 //1-
@@ -74,6 +78,8 @@ Route::delete('/deleteClass', [classesManagementController::class, 'deleteClass'
 Route::post('/assignTeacherToClass', [classesManagementController::class, 'assignTeacherToClass'])->middleware('auth:sanctum', 'supervisor'); //done w request //dont froget to make it assign a specific tracher to three classes in the maximum
 Route::delete('/unassignTeacherToClass', [classesManagementController::class, 'unassignTeacherToClass'])->middleware('auth:sanctum', 'supervisor'); //done w request 
 Route::post('/overWriteTeacherToClass', [classesManagementController::class, 'overWriteTeacherToClass'])->middleware('auth:sanctum', 'supervisor'); //done w request
+Route::get('/getStudentTeachersAndMates', [classesManagementController::class,'getStudentTeachersAndMates'])->middleware('auth:sanctum','student');//done
+Route::get('/getTeacherClasses', [classesManagementController::class, 'getTeacherClasses'])->middleware('auth:sanctum', 'teacher'); //done
 
 // for gaith, by KOMY 
 
@@ -117,7 +123,6 @@ route::get('/getTeacherExamSchedule', [TimetablesManagementController::class, 'g
 Route::post('/getEmptyExcelCheatForMarks', [marksController::class, 'getEmptyExcelCheatForMarks'])->middleware('auth:sanctum', 'teacher');
 Route::post('/uploadMarkExcelCheat', [marksController::class, 'uploadMarkExcelCheat'])->middleware('auth:sanctum', 'teacher');
 Route::post('/studentGetResult', [marksController::class, 'studentGetResult'])->middleware('auth:sanctum');
-Route::get('/getTeacherClasses', [marksController::class, 'getTeacherClasses'])->middleware('auth:sanctum', 'teacher'); //done
 
 
 //events management

@@ -9,12 +9,13 @@ use App\Models\Teacher;
 use App\Models\schoolClass;
 use App\Models\TeacherClass;
 use Illuminate\Http\Request;
+use PhpParser\Node\Expr\FuncCall;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use App\Models\SchoolClass as ModelsSchoolClass;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use PhpParser\Node\Expr\FuncCall;
 
 class classesManagementController extends Controller
 {
@@ -1010,6 +1011,89 @@ class classesManagementController extends Controller
         }
     }
     //_________________________________________________________________
+    
+public function getStudentTeachersAndMates(){
+    try{
+            // 1. Get the authenticated user.
+            $user = Auth::user();
 
+            // 2. Find the student record associated with the user.
+            // A middleware should already confirm the user is a student.
+            $student = Student::where('user_id', $user->id)->first();
+            $classId = $student->class_id;
+
+            // 3. Get the Classmates.
+            // Find all students in the same class, but exclude the current student's ID.
+            // We use with('user') to also load the user details (like name, email) for each student.
+            $classmates = Student::where('class_id', $classId)
+                                 ->where('id', '!=', $student->id)
+                                 ->with('user') // Assumes a 'user' relationship is defined on the Student model
+                                 ->get();
+
+            // 4. Get the Teachers and their Subjects for the class.
+            // We fetch the 'TeacherClass' entries and eager load the related teacher (with their user) and the subject.
+            $teacherClassEntries = TeacherClass::where('class_id', $classId)
+                                     ->with(['teacher.user', 'subject'])
+                                     ->get();
+
+            // We now transform this collection to create our desired output.
+            // We want a list of teachers, with the subject name injected into each teacher object.
+            $teachers = $teacherClassEntries->map(function ($entry) {
+                // Check if the relationships loaded correctly to prevent errors
+                if ($entry->teacher && $entry->subject) {
+                    // Get the teacher model instance
+                    $teacherData = $entry->teacher;
+                    // Add the subject name to the teacher object. 'Subject' is the column name from your ERD.
+                    $teacherData->subject_name = $entry->subject->Subject;
+                    return $teacherData;
+                }
+                return null;
+            })->filter()->values(); // ->filter() removes any nulls, ->values() re-indexes the array.
+
+
+            // 5. Return a successful response with the requested structure.
+            return response()->json([
+                'status' => true,
+                'message' => 'Data retrieved successfully!',
+                'teachers' => $teachers,
+                'students' => $classmates,
+            ]);
+    }catch(\Throwable $th){
+        return response()->json([
+            'status'=>false,
+            'message'=>$th->getMessage(),
+        ]);
+    }
+}
+
+
+    public function getTeacherClasses()
+    {
+        try {
+            $user = Auth::user();
+            $teacher = Teacher::where('user_id', $user->id)->first();
+            $teacherClasses = TeacherClass::select(
+                'teacher_classes.teacher_id',
+                'teacher_classes.class_id',
+                'classes.className',
+                'teacher_classes.subject_id',
+                'subjects.subjectName'
+            )
+                ->join('classes', 'teacher_classes.class_id', '=', 'classes.id')
+                ->join('subjects', 'teacher_classes.subject_id', '=', 'subjects.id')
+                ->where('teacher_id', $teacher->id)
+                ->get();
+
+            return response()->json([
+                'status' => true,
+                'data' => $teacherClasses
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'message' => $th->getMessage(),
+            ], 404);
+        }
+    }
 
 }

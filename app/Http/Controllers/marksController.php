@@ -18,37 +18,6 @@ use Illuminate\Database\Events\TransactionRolledBack;
 
 class marksController extends Controller
 {
-    // MAJD //get the teacher's classses based on teacher id
-
-    public function getTeacherClasses()
-    {
-        try {
-            $user = Auth::user();
-            $teacher = Teacher::where('user_id', $user->id)->first();
-            $teacherClasses = TeacherClass::select(
-                'teacher_classes.teacher_id',
-                'teacher_classes.class_id',
-                'classes.className',
-                'teacher_classes.subject_id',
-                'subjects.subjectName'
-            )
-                ->join('classes', 'teacher_classes.class_id', '=', 'classes.id')
-                ->join('subjects', 'teacher_classes.subject_id', '=', 'subjects.id')
-                ->where('teacher_id', $teacher->id)
-                ->get();
-
-            return response()->json([
-                'status' => true,
-                'data' => $teacherClasses
-            ]);
-        } catch (\Throwable $th) {
-            return response()->json([
-                'status' => false,
-                'message' => $th->getMessage(),
-            ], 404);
-        }
-    }
-    // MAJD // generating epmty excel cheat that has the students info for the teacher and download it to the device.
 
     public function getEmptyExcelCheatForMarks(Request $request)
     {

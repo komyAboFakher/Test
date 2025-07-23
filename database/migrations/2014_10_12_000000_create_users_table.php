@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('phoneNumber')->unique();
             $table->string('email')->unique();
             $table->string('password');
+            $table->string('pinCode')->nullable();
             $table->enum('role',['parent','student','teacher','supervisor','dean'])->default('student');
             $table->rememberToken();
             $table->timestamps();
