@@ -77,6 +77,12 @@ class User extends Authenticatable
         return $this->belongsToMany(Permission::class, 'user_permissions', 'user_id');
     }
     //_________________________________________________________________________
+    public function UserPermission()
+    {
+
+        return $this->hasMany(UserPermission::class);
+  }
+    //_________________________________________________________________________
     public function Parent()
     {
         return $this->hasOne(Parent::class);
