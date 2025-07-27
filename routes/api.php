@@ -13,6 +13,7 @@ use App\Http\Controllers\classesManagementController;
 use App\Http\Controllers\StudentAttendanceController;
 use App\Http\Controllers\SubjectsManagementController;
 use App\Http\Controllers\ComplaintManagementController;
+use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\TimetablesManagementController;
 
 /*
@@ -114,10 +115,12 @@ route::get('/getTeacherExamSchedule', [TimetablesManagementController::class, 'g
 
 //////////////////////////////////////////////////////////KOMAY STUFF/////////////////////////////////////////////////////
 //marks management
-Route::post('/getEmptyExcelCheatForMarks', [marksController::class, 'getEmptyExcelCheatForMarks'])->middleware('auth:sanctum', 'teacher');
-Route::post('/uploadMarkExcelCheat', [marksController::class, 'uploadMarkExcelCheat'])->middleware('auth:sanctum', 'teacher');
-Route::post('/studentGetResult', [marksController::class, 'studentGetResult'])->middleware('auth:sanctum');
+Route::post('/getEmptyExcelCheatForMarks', [marksController::class, 'getEmptyExcelCheatForMarks'])->middleware('auth:sanctum', 'teacher');// done
+Route::post('/uploadMarkExcelCheat', [marksController::class, 'uploadMarkExcelCheat'])->middleware('auth:sanctum', 'teacher'); // the seconde version is not finished yet
 Route::get('/getTeacherClasses', [marksController::class, 'getTeacherClasses'])->middleware('auth:sanctum', 'teacher'); //done
+Route::post('/getMarksProfile', [marksController::class, 'getMarksProfile'])->middleware('auth:sanctum'); // done
+Route::post('/getClassMarks', [marksController::class, 'getClassMarks'])->middleware('auth:sanctum','teacher');
+Route::post('/studentGetResult', [marksController::class, 'studentGetResult'])->middleware('auth:sanctum');
 
 
 //events management
@@ -176,15 +179,21 @@ Route::get('/getMyMedicalFiles', [NurseController::class, 'getMyMedicalFiles']);
 
 // library management at the school
 
-Route::post('/createBook', [libraryController::class, 'createBook'])->middleware(['auth:sanctum','supervisor']);
-Route::post('/updateBook/{bookID}', [libraryController::class, 'updateBook'])->middleware(['auth:sanctum','supervisor']);
-Route::delete('/deleteBook/{bookID}', [libraryController::class, 'deleteBook'])->middleware(['auth:sanctum','supervisor']);
+Route::post('/createBook', [libraryController::class, 'createBook'])->middleware(['auth:sanctum', 'library']);
+Route::post('/updateBook/{bookID}', [libraryController::class, 'updateBook'])->middleware(['auth:sanctum', 'supervisor']);
+Route::delete('/deleteBook/{bookID}', [libraryController::class, 'deleteBook'])->middleware(['auth:sanctum', 'supervisor']);
+Route::post('/getBorrowOrder', [libraryController::class, 'getBorrowOrder'])->middleware(['auth:sanctum', 'supervisor']);
 Route::get('/showBooks', [libraryController::class, 'showBooks'])->middleware(['auth:sanctum']);
 Route::post('/showBookBySerrialNumber', [libraryController::class, 'showBookBySerrialNumber'])->middleware(['auth:sanctum']);
-Route::post('/showBookBorrowers', [libraryController::class, 'showBookBorrowers'])->middleware(['auth:sanctum']);
+Route::post('/showBookBorrowers', [libraryController::class, 'showBookBorrowers'])->middleware(['auth:sanctum','supervisor']);
 //borrow management
 Route::post('/borrow', [libraryController::class, 'borrow'])->middleware(['auth:sanctum']);
-Route::post('/modifyBorrow', [libraryController::class, 'modifyBorrow'])->middleware(['auth:sanctum']);
+Route::post('/modifyBorrow', [libraryController::class, 'modifyBorrow'])->middleware(['auth:sanctum','supervisor']);
+
+// permissions managements
+
+Route::post('assignPermission',[PermissionController::class,'assignPermission'])->middleware(['auth:sanctum','dean']);
+Route::post('unassignPermission',[PermissionController::class,'unassignPermission'])->middleware(['auth:sanctum','dean']);
 
 // public relations managements
 Route::post('/publish', [PrController::class, 'publish']);

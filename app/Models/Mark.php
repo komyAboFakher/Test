@@ -34,6 +34,6 @@ class Mark extends Model
     }
     public function Students()
     {
-        return $this->belongsTo(Student::class);
+        return $this->belongsTo(Student::class,'student_id');
     }
 }

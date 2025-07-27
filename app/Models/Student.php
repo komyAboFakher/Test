@@ -41,7 +41,7 @@ class Student extends Model
 
     public function Marks()
     {
-        return $this->hasMany(Mark::class);
+        return $this->hasMany(Mark::class, 'student_id');
     }
     //__________________________________________________________________________
 
