@@ -13,8 +13,14 @@ class Permission extends Model
         'description',
     ];
 
-    public function users()
-    {
-        return $this->belongsToMany(User::class, 'user_permissions', 'user_id');
-    }
+   // public function users()
+   // {
+   //     return $this->belongsToMany(User::class, 'user_permissions', 'user_id');
+   // }
+
+
+
+    public function userPermission(){
+    return $this->hasMany(UserPermission::class);
+   }
 }

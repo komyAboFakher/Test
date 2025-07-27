@@ -13,12 +13,22 @@ class UserPermission extends Model
         'permission_id',
     ];
 
-    public function permissions()
+    //public function permissions()
+    //{
+    //    return $this->belongsTo(Permission::class, 'permission_id');
+    //}
+    //public function users()
+    //{
+    //    return $this->belongsTo(User::class, 'user_id');
+    //}
+
+
+    public function User()
     {
-        return $this->belongsTo(Permission::class, 'permission_id');
+        return $this->belongsToMany(User::class);
     }
-    public function users()
+    public function Permission()
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTomany(Permission::class);
     }
 }
