@@ -18,6 +18,7 @@ use Illuminate\Database\Events\TransactionRolledBack;
 
 class marksController extends Controller
 {
+<<<<<<< HEAD
 
 
     public function getTeacherClasses()
@@ -51,6 +52,8 @@ class marksController extends Controller
 
 
     // MAJD // generating epmty excel cheat that has the students info for the teacher and download it to the device.
+=======
+>>>>>>> 887d19f861512212090a0fc41dfef5f6427d08de
 
     public function getEmptyExcelCheatForMarks(Request $request)
     {

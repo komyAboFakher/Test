@@ -721,4 +721,118 @@ class authController extends Controller
             ]);
         }
     }
+
+    
+public function createOrUpdatePinCode(Request $request){
+    try{
+        //validation
+        $validation=Validator::make($request->all(),[
+            'pinCode'=>'required|string|digits:4|same:confirmedPinCode',
+            'confirmedPinCode'=>'required|string'
+        ]);
+
+        if($validation->fails()){
+            return response()->json([
+                'status'=>false,
+                'message'=>$validation->errors(),
+            ],422);
+        }
+        //getting the user id
+        $authUser=Auth::user();
+        $user=User::where('id',$authUser->id)->first();
+        $user->pinCode=Hash::make($request->pinCode);
+        $user->save();
+        //returning success message
+        return response()->json([
+            'status'=>true,
+            'message'=>'PIN Code created successfully!',
+        ]);
+
+    }catch(\Throwable $th){
+        return response()->json([
+            'status'=>false,
+            'message'=>$th->getMessage(),
+        ],500);
+    }
+}
+
+public function checkPinCode(Request $request){
+    try{
+        //validation
+        $validation=Validator::make($request->all(),[
+            'pinCode'=>'required|string|digits:4'
+        ]);
+
+        if($validation->fails()){
+            return response()->json([
+                'status'=>false,
+                'message'=>$validation->errors(),
+            ],422);
+        }
+        //getting the user id
+        $user=Auth::user();
+
+        if(!$user){
+            return response()->json([
+                'status'=>false,
+                'message'=>'unauthenticated',
+            ],401);
+        }        
+
+        if(Hash::check($request->pinCode , $user->pinCode)){
+            return response()->json([
+                'status'=>true,
+                'message'=>'the PIN CODE is verfied successfully!'
+            ],200);
+        }else{
+            return response()->json([
+                'status'=>false,
+                'message'=>'the PIN CODE you have provided doesnt match our record!' ,
+            ],401);
+        }
+        }catch(\Throwable $th){
+        return response()->json([
+            'status'=>false,
+            'message'=>$th->getMessage(),
+        ],500);
+    }
+}
+
+public function deletePinCode(){
+    try{
+        //getting the suer
+        $authUser=Auth::user();
+
+        if(!$authUser){
+            return response()->json([
+                'status'=>false,
+                'message'=>'unauthenticated',
+            ]);
+        }
+        $user=User::where('id',$authUser->id)->first();
+        
+        //deleting the pin code
+        if($user->pinCode != null){
+            $user->pinCode=null;
+            $user->save();
+                    
+            //returnin success message
+            return response()->json([
+                'status'=>true,
+                'message'=>'your pin code has been deleted successfully!',
+            ]);
+        }else{
+            return response()->json([
+                'status'=>true,
+                'message'=>'you already doesnt have a pin code',
+            ]);
+        }
+
+    }catch(\Throwable $th){
+        return response()->json([
+            'status'=>false,
+            'message'=>$th->getMessage(),
+        ]);
+    }
+}
 }
