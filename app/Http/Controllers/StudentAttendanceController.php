@@ -376,15 +376,14 @@ class StudentAttendanceController extends Controller
             //increasing by one
             if ($absence->absence_num != 5) {
                 $absence->absence_num += 1;
-            } else {
+            } elseif ($absence->absence_num == 5 && $absence->warning != 0) {
+                $absence->warning -= 1;
+                $absence->absence_num = 5;
+            }else{
                 return response()->json([
-                    'status' => false,
-                    'message' => 'the absence num to this student is 5 already we can increase it due to school policy',
-                ], 422);
-            }
-            if ($absence->absence_num == 5) {
-                $absence->warning += 1;
-                $absence->num = 0;
+                    'status'=>false,
+                    'message'=>'we cant increase the students absence num due to school policy!',
+                ],422);
             }
             $absence->save();
             //returning success message
@@ -417,23 +416,23 @@ class StudentAttendanceController extends Controller
             //getting the absence 
             $absence = absenceStudent::where('student_id', $request->studentId)->first();
             //increasing by one
-            if ($absence->absence_num != 0) {
+            if ($absence->absence_num > 1) {
                 $absence->absence_num -= 1;
+            } elseif ($absence->absence_num == 1 && $absence->warning != 3) {
+                $absence->warning += 1;
+                $absence->absence_num = 5;
             } else {
                 return response()->json([
                     'status' => false,
-                    'message' => 'the absence num to this student is 5 already we can increase it due to school policy',
+                    'message' => 'this student already have 3 warnings we cant increase it he has succeeded the limit',
                 ], 422);
             }
-            if ($absence->absence_num == 0 && $absence->warning != 0) {
-                $absence->warning -= 1;
-                $absence->num = 5;
-            }
+
             $absence->save();
             //returning success message
             return response()->json([
                 'status' => true,
-                'message' => 'the absence num has been increased by one successfully!',
+                'message' => 'the absence num has been descreased by one successfully!',
             ]);
         } catch (\Throwable $th) {
             return response()->json([

@@ -14,9 +14,10 @@ class TeacherClass extends Model
         'subject_id',
     ];
 
-    public function Teachers(){
+    public function Teacher(){
         return $this ->belongsTo(Teacher::class,'teacher_id');
     }
+    
     public function SchoolClasses(){
         return $this ->belongsto(SchoolClass::class,'class_id');
     }

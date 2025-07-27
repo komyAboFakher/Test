@@ -44,11 +44,11 @@ Route::delete('/deletePinCode',[authController::class,'deletePinCode'])->middlew
 
 //student attendance management
 //1-
-Route::get('/studentsAttendanceForm', [StudentAttendanceController::class, 'studentsAttendanceForm'])->middleware('auth:sanctum', 'teacher'); //retrieving student data by class name to the teacher check the attendance //done w request
+Route::post('/studentsAttendanceForm', [StudentAttendanceController::class, 'studentsAttendanceForm'])->middleware('auth:sanctum', 'teacher'); //retrieving student data by class name to the teacher check the attendance //done w request
 Route::post('/studentsAttendanceSubmit', [StudentAttendanceController::class, 'studentsAttendanceSubmit'])->middleware('auth:sanctum', 'teacher'); //done w request
 //2-for supervisor
-Route::get('/checkStudentAbsenceReport', [StudentAttendanceController::class, 'checkStudentAbsenceReport'])->middleware('auth:sanctum', 'supervisor'); //checking attendance report //done w request
-Route::get('/checkStudentWarnings', [StudentAttendanceController::class, 'checkStudentWarnings'])->middleware('auth:sanctum', 'supervisor'); //checking student warnings and how many day they did no attend //done w request
+Route::post('/checkStudentAbsenceReport', [StudentAttendanceController::class, 'checkStudentAbsenceReport'])->middleware('auth:sanctum', 'supervisor'); //checking attendance report //done w request
+Route::post('/checkStudentWarnings', [StudentAttendanceController::class, 'checkStudentWarnings'])->middleware('auth:sanctum', 'supervisor'); //checking student warnings and how many day they did no attend //done w request
 Route::post('/submitDailyReports', [StudentAttendanceController::class, 'submitDailyReports'])->middleware('auth:sanctum', 'supervisor'); //giving the supervisor the ability to submit all the daily reports //done w request
 Route::post('/incrementStudentAbsence', [StudentAttendanceController::class, 'incrementStudentAbsence'])->middleware('auth:sanctum', 'supervisor'); //giving the supervisor the ability to increment student absence num by one //done w request
 Route::post('/decrementStudentAbsence', [StudentAttendanceController::class, 'decrementStudentAbsence'])->middleware('auth:sanctum', 'supervisor'); //giving the supervisor the ability to decrement student absence num by one //done 
