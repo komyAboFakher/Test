@@ -19,6 +19,39 @@ use Illuminate\Database\Events\TransactionRolledBack;
 class marksController extends Controller
 {
 
+
+    public function getTeacherClasses()
+    {
+        try {
+            $user = Auth::user();
+            $teacher = Teacher::where('user_id', $user->id)->first();
+            $teacherClasses = TeacherClass::select(
+                'teacher_classes.teacher_id',
+                'teacher_classes.class_id',
+                'classes.className',
+                'teacher_classes.subject_id',
+                'subjects.subjectName'
+            )
+                ->join('classes', 'teacher_classes.class_id', '=', 'classes.id')
+                ->join('subjects', 'teacher_classes.subject_id', '=', 'subjects.id')
+                ->where('teacher_id', $teacher->id)
+                ->get();
+
+            return response()->json([
+                'status' => true,
+                'data' => $teacherClasses
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'message' => $th->getMessage(),
+            ], 404);
+        }
+    }
+
+
+    // MAJD // generating epmty excel cheat that has the students info for the teacher and download it to the device.
+
     public function getEmptyExcelCheatForMarks(Request $request)
     {
 
@@ -604,6 +637,127 @@ class marksController extends Controller
             ], 404);
         }
     }
+
+    //___________________________________________________________________________________________
+
+    public function getMarksProfile(Request $request)
+    {
+        try {
+            $validator = Validator::Make(
+                $request->all(),
+                [
+
+                    'student_id' => 'required|integer|exists:students,id',
+                    'semester' => 'required|string|in:First,Second'
+
+                ],
+                [
+                    'semester.in' => 'the semester must be First or Second!!'
+                ]
+            );
+
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Validation error',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $marks = Mark::where('student_id', $request->student_id)
+                ->where('semester', $request->semester)
+                ->get()
+                ->groupBy('type')  // Group by mark type
+                ->map(function ($group) {
+                    return $group->map(function ($mark) {
+                        return [
+                            //'id' => $mark->id,
+                            //'class_id' => $mark->class_id,
+                            //'teacher_id' => $mark->teacher_id,
+                            //'student_id' => $mark->student_id,
+                            //'subject_id' => $mark->subject_id,
+                            'subject_name' => $mark->Subject->subjectName,
+                            'min_mark' => $mark->Subject->minMark,
+                            'max_mark' => $mark->Subject->maxMark,
+                            'mark' => $mark->mark,
+                            'success' => $mark->success,
+                            'created_at' => $mark->created_at,
+                            'updated_at' => $mark->updated_at,
+                        ];
+                    });
+                });
+
+            return response()->json([
+                'status' => true,
+                'message' => $marks
+            ]);
+
+
+
+            return response()->json([
+                "status" => true,
+                "message" => $marks
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'message' => $th->getMessage(),
+            ], 404);
+        }
+    }
+    //___________________________________________________________________________________________
+    public function getClassMarks(Request $request)
+    {
+        try {
+
+            $currentUser = auth()->user()->teacher->id;
+            $validator = Validator::make($request->all(), [
+                'class_id' => 'required|integer|exists:classes,id',
+                'semester' => 'required|string|in: First,Secnod'
+            ], [
+                'semester.in' => 'semester must be First or Second'
+            ]);
+
+            $subjectID = TeacherClass::where('teacher_id', $currentUser)->where('class_id', $request->class_id)->firstOrFail();
+
+            $marks = mark::with('Students.Users')
+                ->where('class_id', $request->class_id)
+                ->where('semester', $request->semester)
+                ->where('subject_id', $subjectID->subject_id)
+                ->get()
+                ->groupBy('type')
+                ->map(function ($group) {
+                    return $group->map(function ($mark) {
+                        return [
+
+                            'student_id' => $mark->student_id,
+                            'teacher_id' => $mark->teacher_id,
+                            'full_name' => trim($mark->Students->Users->name . ' ' . $mark->Students->Users->middleName . ' ' . $mark->Students->Users->lastName),
+                            'subject_name' => $mark->Subject->subjectName,
+                            'min_mark' => $mark->Subject->minMark,
+                            'max_mark' => $mark->Subject->maxMark,
+                            'mark' => $mark->mark,
+                            'success' => $mark->success,
+                            'created_at' => $mark->created_at,
+                            'updated_at' => $mark->updated_at,
+                        ];
+                    });
+                });
+
+            return response()->json([
+                'status' => true,
+                'message' => $marks
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'message' => $th->getMessage(),
+            ], 404);
+        }
+    }
+    //___________________________________________________________________________________________
+
 }
 
 

@@ -40,7 +40,7 @@ class Kernel extends HttpKernel
 
         'api' => [
             // \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
-            \Illuminate\Routing\Middleware\ThrottleRequests::class.':api',
+            \Illuminate\Routing\Middleware\ThrottleRequests::class . ':api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
     ];
@@ -64,13 +64,14 @@ class Kernel extends HttpKernel
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'dean' => \App\Http\Middleware\deanMiddleware::class,
-        'supervisor'=>\App\Http\Middleware\supervisorMiddleware::class,
-        'teacher'=>\App\Http\Middleware\teacherMiddleware::class,
-        'student'=>\App\Http\Middleware\studentMiddleware::class,
-        'parent'=>\App\Http\Middleware\parentMiddleware::class,
+        'supervisor' => \App\Http\Middleware\supervisorMiddleware::class,
+        'teacher' => \App\Http\Middleware\teacherMiddleware::class,
+        'student' => \App\Http\Middleware\studentMiddleware::class,
+        'parent' => \App\Http\Middleware\parentMiddleware::class,
         'EnsureSingleLogin' => \App\Http\Middleware\EnsureSingleLogin::class,
         'komy' => \App\Http\Middleware\komy::class,
         'gaith' => \App\Http\Middleware\gaith::class,
+        'library' => \App\Http\Middleware\HasLibraryPermission::class,
 
 
     ];

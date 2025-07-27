@@ -8,19 +8,27 @@ use Illuminate\Database\Eloquent\Model;
 class UserPermission extends Model
 {
     use HasFactory;
-    Protected $table='user_permissions';
-
-    protected $fillable=[
+    protected $fillable = [
         'user_id',
         'permission_id',
     ];
 
-    public function User(){
+    //public function permissions()
+    //{
+    //    return $this->belongsTo(Permission::class, 'permission_id');
+    //}
+    //public function users()
+    //{
+    //    return $this->belongsTo(User::class, 'user_id');
+    //}
+
+
+    public function User()
+    {
         return $this->belongsToMany(User::class);
     }
-    public function Permission(){
+    public function Permission()
+    {
         return $this->belongsTomany(Permission::class);
     }
-
-    
 }

@@ -26,12 +26,12 @@ class libraryController extends Controller
                     'author' => 'required|string',
                     'category' => 'required|string',
                     'publisher' => 'required|string',
-                    'serial_number' => 'required|string|unique:libraries,serial_number',
+                    'serrial_number' => 'required|string|unique:libraries,serrial_number',
                     'shelf_location' => 'required|string',
                     'description' => 'nullable|string',
                 ],
                 [
-                    'serial_number.unique' => 'This serial number already exists'
+                    'serrial_number.unique' => 'This serrial number already exists'
                 ]
             );
 
@@ -48,7 +48,7 @@ class libraryController extends Controller
                 'author' => $request->author,
                 'category' => $request->category,
                 'publisher' => $request->publisher,
-                'serial_number' => $request->serial_number,
+                'serrial_number' => $request->serrial_number,
                 'shelf_location' => $request->shelf_location,
                 'description' => $request->description,
             ]);
@@ -156,7 +156,7 @@ class libraryController extends Controller
                         'author' => $library->author,
                         'category' => $library->category,
                         'publisher' => $library->publisher,
-                        'serial_number' => $library->serrial_number,
+                        'serrial_number' => $library->serrial_number,
                         'shelf_location' => $library->shelf_location,
                         'description' => $library->description,
                         'created_at' => $library->created_at,
@@ -232,7 +232,7 @@ class libraryController extends Controller
                         'author' => $library->author,
                         'category' => $library->category,
                         'publisher' => $library->publisher,
-                        'serial_number' => $library->serrial_number,
+                        'serrial_number' => $library->serrial_number,
                         'shelf_location' => $library->shelf_location,
                         'description' => $library->description,
                         'created_at' => $library->created_at,
@@ -268,6 +268,36 @@ class libraryController extends Controller
     }
 
     //______________________________________________________________________________
+    public function getBorrowOrder(Request $request)
+    {
+        try {
+
+            $validator = Validator::make($request->all(), [
+                'serrial_number' => 'required|string|exists:borrows,serrial_number'
+            ]);
+
+            $borrow = Borrow::where('serrial_number', $request->serrial_number)
+                ->where('book_status', ['borrowed'])
+                ->firstOrFail();
+
+            if (!$borrow) {
+                return response()->json([
+                    "message" => "there is no such borrow order !!!"
+                ]);
+            }
+
+            return response()->json([
+                "status" => true,
+                "message" => $borrow->load('user')
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'message' => $th->getMessage()
+            ], 500);
+        }
+    }
+    //______________________________________________________________________________
     public function borrow(Request $request)
     {
         try {
@@ -292,7 +322,7 @@ class libraryController extends Controller
             }
 
             $book = Library::where('serrial_number', $request->serrial_number)->firstOrFail();
-            
+
             if ($book->borrow()->where('book_status', 'borrowed')->exists()) {
                 return response()->json([
                     'status' => false,

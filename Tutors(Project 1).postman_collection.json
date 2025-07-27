@@ -1695,7 +1695,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "3|p29BUWp047BAmLc3lYlYAoj0iVrrh0lttCZPPcDa8963e5b2",
+									"value": "4|mLwbkDDGATNh5K0gGmeJZtNh9CEnHFkpCvxlyz5t23aeaae4",
 									"type": "string"
 								}
 							]
@@ -1718,7 +1718,7 @@
 							"formdata": [
 								{
 									"key": "student_id",
-									"value": "5",
+									"value": "77",
 									"type": "text"
 								}
 							]
@@ -1749,7 +1749,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "1|ZxcHWyBFO2ISWD6FAQDd0wxLkNYYCw5Ep7LENsvV151ce851",
+									"value": "4|mLwbkDDGATNh5K0gGmeJZtNh9CEnHFkpCvxlyz5t23aeaae4",
 									"type": "string"
 								}
 							]
@@ -1772,7 +1772,7 @@
 							"formdata": [
 								{
 									"key": "teacher_id",
-									"value": "2",
+									"value": "90",
 									"type": "text"
 								}
 							]
@@ -3442,6 +3442,102 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "get Marks Profile ",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "2|F7BUVgmoqRB2ErY81WSkH4hnIHkT467NtFtB43II21437fea",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "\r\n{\r\n  \"student_id\": 78,\r\n  \"semester\": \"Second\"\r\n}"
+						},
+						"url": {
+							"raw": "http://26.131.177.200:8000/api/getMarksProfile",
+							"protocol": "http",
+							"host": [
+								"26",
+								"131",
+								"177",
+								"200"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"getMarksProfile"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get Class Marks (teacher)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "2|F7BUVgmoqRB2ErY81WSkH4hnIHkT467NtFtB43II21437fea",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "\r\n{\r\n  \"class_id\": 3,\r\n  \"semester\": \"Second\"\r\n}"
+						},
+						"url": {
+							"raw": "http://26.131.177.200:8000/api/getClassMarks",
+							"protocol": "http",
+							"host": [
+								"26",
+								"131",
+								"177",
+								"200"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"getClassMarks"
+							]
+						}
+					},
+					"response": []
 				}
 			]
 		},
@@ -3658,7 +3754,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "1|qAWPTpxtSLaReO1K3MxQe47qKzkSvwjsZW4Y4LoP5bb89639",
+									"value": "4|mLwbkDDGATNh5K0gGmeJZtNh9CEnHFkpCvxlyz5t23aeaae4",
 									"type": "string"
 								}
 							]
@@ -3729,7 +3825,7 @@
 							"formdata": [
 								{
 									"key": "borrow_id",
-									"value": "1",
+									"value": "",
 									"type": "text"
 								},
 								{
@@ -3739,7 +3835,7 @@
 								},
 								{
 									"key": "borrow_date",
-									"value": "2025-7-21",
+									"value": "2025-7-22",
 									"type": "text"
 								},
 								{
@@ -3749,12 +3845,12 @@
 								},
 								{
 									"key": "returned_date",
-									"value": "2025-7-26",
+									"value": "",
 									"type": "text"
 								},
 								{
 									"key": "book_status",
-									"value": "overdue",
+									"value": "borrowed",
 									"type": "text"
 								},
 								{
@@ -3927,6 +4023,54 @@
 							"path": [
 								"api",
 								"showBookBorrowers"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get Borrow Order",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "4|mLwbkDDGATNh5K0gGmeJZtNh9CEnHFkpCvxlyz5t23aeaae4",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "\r\n{\r\n  \"serrial_number\": \"00003\"\r\n}"
+						},
+						"url": {
+							"raw": "http://26.131.177.200:8000/api/getBorrowOrder",
+							"protocol": "http",
+							"host": [
+								"26",
+								"131",
+								"177",
+								"200"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"getBorrowOrder"
 							]
 						}
 					},
@@ -4151,6 +4295,59 @@
 							"path": [
 								"api",
 								"deleteSubject"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "permission management",
+			"item": [
+				{
+					"name": "assign permission",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "1|qAWPTpxtSLaReO1K3MxQe47qKzkSvwjsZW4Y4LoP5bb89639",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"user_id\": 108,\r\n    \"permission\": \"Library\"\r\n}"
+						},
+						"url": {
+							"raw": "http://26.131.177.200:8000/api/assignPermission",
+							"protocol": "http",
+							"host": [
+								"26",
+								"131",
+								"177",
+								"200"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"assignPermission"
 							]
 						}
 					},

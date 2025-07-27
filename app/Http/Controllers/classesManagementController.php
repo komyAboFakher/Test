@@ -710,6 +710,7 @@ class classesManagementController extends Controller
             $response = [
                 'student_id' => $student->id,
                 'full_name' => trim("{$student->name} {$student->middleName} {$student->lastName}"),
+                'class_name' => $student->student->SchoolClass->className,
                 'email' => $student->email,
                 'phone' => $student->phoneNumber,
                 'photo' => $student->student->photo ?? null,
@@ -746,6 +747,11 @@ class classesManagementController extends Controller
                 ], 422);
             }
 
+            $classes = Teacher::where('user_id', $request->teacher_id)->with('SchoolClasses')->firstOrFail();
+
+
+
+
             $teacher = User::with('teacher')
                 ->where('id', $request->teacher_id)
                 ->where('role', 'teacher')
@@ -763,10 +769,12 @@ class classesManagementController extends Controller
                 'full_name' => trim("{$teacher->name} {$teacher->middleName} {$teacher->lastName}"),
                 'email' => $teacher->email,
                 'phone' => $teacher->phoneNumber,
-                'subject' => $user->teacher->subject->subjectName ?? null,
                 'photo' => $teacher->teacher->photo ?? null,
                 'certification' => $teacher->teacher->certification ?? null,
                 'salary' => $teacher->teacher->salary ?? null,
+                'subject' => $teacher->teacher->subject ?? null,
+                'classes' => $classes->SchoolClasses->pluck('className')->toArray(),
+
 
 
             ];
