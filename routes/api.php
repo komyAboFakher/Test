@@ -122,7 +122,7 @@ route::get('/getTeacherExamSchedule', [TimetablesManagementController::class, 'g
 //////////////////////////////////////////////////////////KOMAY STUFF/////////////////////////////////////////////////////
 //marks management
 Route::post('/getEmptyExcelCheatForMarks', [marksController::class, 'getEmptyExcelCheatForMarks'])->middleware('auth:sanctum', 'teacher');// done
-Route::post('/uploadMarkExcelCheat', [marksController::class, 'uploadMarkExcelCheat'])->middleware('auth:sanctum', 'teacher'); // the seconde version is not finished yet
+Route::post('/uploadMarkExcelCheat', [marksController::class, 'uploadMarkExcelCheat2'])->middleware('auth:sanctum', 'teacher'); // the seconde version is not finished yet
 Route::get('/getTeacherClasses', [marksController::class, 'getTeacherClasses'])->middleware('auth:sanctum', 'teacher'); //done
 Route::post('/getMarksProfile', [marksController::class, 'getMarksProfile'])->middleware('auth:sanctum'); // done
 Route::post('/getClassMarks', [marksController::class, 'getClassMarks'])->middleware('auth:sanctum','teacher');

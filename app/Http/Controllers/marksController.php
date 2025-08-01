@@ -401,6 +401,209 @@ class marksController extends Controller
 
     //____________________________________________________________________________________________________
 
+    public function uploadMarkExcelCheat2(Request $request)
+    {
+        try {
+
+            $currentUser = auth()->user()->teacher;
+
+            $request->validate(
+                [
+                    'excel_file' => 'required|file|mimes:xlsx,xls',
+                    'class_id'   => 'required|integer|exists:classes,id',
+                ],
+                [
+                    'excel_file' => 'only xlsx and xls wil be accepted !!'
+                ]
+            );
+
+            $classID   = $request->input('class_id');
+
+            // creating a path for the uploaded file !!!
+
+
+
+
+
+            // check the min mark in the subjects table to determine the success mark
+            $teacherClass = TeacherClass::where('teacher_id', $currentUser->id)
+                ->where('class_id', $classID)
+                ->first();
+
+            $minMark = null;
+
+            if ($teacherClass) {
+                $minMark = Subject::where('id', $teacherClass->subject_id)->value('minMark');
+            }
+
+            //$minMark = Subject::where('id', $subjectID)->value('minMark');
+
+            // Define allowed values from database enums
+            $allowedSemesters = ['First', 'Second'];
+            $allowedExamTypes = ['final', 'mid-term', 'quizz'];
+            $anyChangesMade = false;
+
+
+
+            // Read the uploaded Excel file.
+
+            $file = $request->file('excel_file');
+            $rows = (new \Rap2hpoutre\FastExcel\FastExcel())->import($file->getRealPath());
+
+
+
+
+            // Convert each row to an array and make keys lowercase for consistency.
+
+
+            $rowsArr = [];
+            foreach ($rows as $row) {
+                $row = (array)$row;
+                $row = array_change_key_case($row, CASE_LOWER);
+                $rowsArr[] = $row;
+            }
+
+            $dataRows = [];
+            $isFirstRow = true;
+
+
+            // The first row is the header row 
+
+            foreach ($rowsArr as $row) {
+
+
+
+                if ($isFirstRow) {
+
+                    // read the header row then skip it!!!
+
+                    if (isset($row['student id']) && strtolower(trim($row['student id'])) === 'student id') {
+                        $isFirstRow = false;
+                        continue;
+                    }
+                }
+                $isFirstRow = false;
+
+                // from now on, every row should be student.
+
+                if (!isset($row['student id']) || !is_numeric($row['student id'])) {
+                    throw new \Exception("Invalid student ID in row.");
+                }
+                $dataRows[] = $row;
+            }
+
+            // just for debugging
+
+            if (empty($dataRows)) {
+                $firstFewRows = array_slice($rowsArr, 0, 5);
+                throw new \Exception('No student records found. First few rows: ' . json_encode($firstFewRows));
+            }
+
+            // inserting the students record into the marks table
+
+            DB::beginTransaction();
+
+            foreach ($dataRows as $row) {
+                $studentID = $row['student id'];
+
+                // Convert mark to string as it stored in our table
+
+                $mark = isset($row['mark']) ? (string)$row['mark'] : '';
+                //check if the mark is empty, with no value
+                //if (!$mark) {
+                //    return response()->json([
+                //        'status' => false,
+                //        'message' => 'the mark cannot be empty !!',
+                //    ]);
+                //}
+
+
+                // Validate and format semester
+                $semester = ucfirst(strtolower($row['semester'] ?? ''));
+                if (!in_array($semester, $allowedSemesters)) {
+                    throw new \Exception("Invalid semester value: {$row['semester']}. Allowed values: " . implode(', ', $allowedSemesters));
+                }
+
+                // Validate and format exam type
+                $type = strtolower($row['type'] ?? '');
+                if (!in_array($type, $allowedExamTypes)) {
+                    throw new \Exception("Invalid exam type: {$row['type']}. Allowed values: " . implode(', ', $allowedExamTypes));
+                }
+
+                //based on the min mark in the subjects table
+                $success = ($mark >= $minMark);
+
+
+                $existing = Mark::where([
+                    'class_id' => $classID,
+                    'teacher_id' => $currentUser->id,
+                    'student_id' => $studentID,
+                    'type' => $type,
+                    'semester' => $semester,
+                    'subject_id' => $teacherClass->subject_id
+                ])->first();
+
+                if ($existing) {
+                    $needsUpdate = ($existing->mark != $mark) || ($existing->semester != $semester) || ($existing->type != $type);
+
+                    if ($needsUpdate) {
+                        $anyChangesMade = true;
+                        $existing->update([
+                            'mark' => $mark,
+                            'success' => $success,
+                            'semester' => $semester,
+                            'type' => $type
+                        ]);
+                    }
+                } else {
+                    $anyChangesMade = true;
+                    Mark::create([
+                        'class_id' => $classID,
+                        'teacher_id' => $currentUser->id,
+                        'student_id' => $studentID,
+                        'subject_id' => $teacherClass->subject_id,
+                        'mark' => $mark,
+                        'success' => $success,
+                        'semester' => $semester,
+                        'type' => $type
+                    ]);
+                }
+                $changedStudentIds[] = $studentID;
+            }
+
+            $directory = 'full_mark_excels';
+            Storage::disk('public')->makeDirectory($directory);
+
+            // Store the file and get full storage path
+            $fileName =  $request->file('excel_file')->getClientOriginalName();
+            $filePath = $request->file('excel_file')->storeAs(
+                $directory,
+                $fileName,
+                'public'
+            );
+
+            // Get absolute storage path
+            $fileUrl = asset("storage/{$directory}/{$fileName}");
+
+
+
+            DB::commit();
+            ////////////////////////////////////////////////////////////
+            return response()->json([
+                'status'         => true,
+                'message'        => 'Marks inserted successfully !!!',
+                'file_url' => $fileUrl,
+                'imported_count' => count($dataRows),
+            ], 200);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status'  => false,
+                'message' => $th->getMessage(),
+            ], 500);
+        }
+    }
+    //____________________________________________________________________________________________________
+
     public function upload(Request $request)
     {
         try {

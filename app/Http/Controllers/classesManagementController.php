@@ -558,7 +558,7 @@ class classesManagementController extends Controller
             $classes = TeacherClass::with([
 
                 'SchoolClasses.students.users:id,name,middleName,lastName,email,phoneNumber',
-                //'SchoolClasses:id,className'
+                'SchoolClasses:id,className'
             ])
                 ->where('teacher_id', $teacher->id)
                 ->get()
@@ -567,7 +567,8 @@ class classesManagementController extends Controller
 
                         'students' => $teacherClass->SchoolClasses->students->map(function ($student) {
                             return [
-                                'student_id' => $student->user_id,
+                                'user_id' => $student->user_id,
+                                //'user_id' => $student->students->id,
                                 'full_name' => trim("{$student->users->name} {$student->users->middleName} {$student->users->lastName}"),
                                 'email' => $student->users->email,
                                 'phone' => $student->users->phoneNumber,
