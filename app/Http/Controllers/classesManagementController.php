@@ -532,7 +532,7 @@ class classesManagementController extends Controller
                         'gpa' => $user->student->Gpa,
                         'class_id' => $user->student->class_id ?? '',
                         'class_name' => $user->student->schoolClass->className ?? '',
-                        'absences number' => $user->student->AbsenceStudent->absence_num ?? ''
+                        'absences_number' => $user->student->AbsenceStudent->absence_num ?? ''
                     ];
                 });
 
@@ -709,7 +709,8 @@ class classesManagementController extends Controller
             }
 
             $response = [
-                'student_id' => $student->id,
+                'student_id' => $student->student->id,
+                'user_id' => $student->id,
                 'full_name' => trim("{$student->name} {$student->middleName} {$student->lastName}"),
                 'class_name' => $student->student->SchoolClass->className ?? null,
                 'email' => $student->email,
