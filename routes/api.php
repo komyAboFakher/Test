@@ -162,15 +162,15 @@ Route::post('/getReactions', [communicationController::class, 'getReactions'])->
 
 //complains managements
 
-Route::post('/addComplaint', [ComplaintManagementController::class, 'addComplaint']);
-Route::post('/updateComplaint', [ComplaintManagementController::class, 'updateComplaint']);
-Route::delete('/deleteComplaint', [ComplaintManagementController::class, 'deleteComplaint']);
+Route::post('/addComplaint', [ComplaintManagementController::class, 'addComplaint'])->middleware(['auth:sanctum']);
+Route::post('/updateComplaint', [ComplaintManagementController::class, 'updateComplaint'])->middleware(['auth:sanctum']);
+Route::delete('/deleteComplaint', [ComplaintManagementController::class, 'deleteComplaint'])->middleware(['auth:sanctum']);
 // for the guy who made complaints
-Route::get('/getMyComplaints', [ComplaintManagementController::class, 'getMyComplaints']);
+Route::get('/getMyComplaints', [ComplaintManagementController::class, 'getMyComplaints'])->middleware(['auth:sanctum']);
 // for the complaints reviewer
-Route::get('/getAllComplaints', [ComplaintManagementController::class, 'getAllComplaints']);
-Route::post('/modifyComplaint', [ComplaintManagementController::class, 'modifyComplaint']);
-Route::delete('/softDeleteComplaint', [ComplaintManagementController::class, 'softDeleteComplaint']);
+Route::get('/getAllComplaints', [ComplaintManagementController::class, 'getAllComplaints'])->middleware(['auth:sanctum','dean']);
+Route::post('/modifyComplaint', [ComplaintManagementController::class, 'modifyComplaint'])->middleware(['auth:sanctum','dean']);
+Route::delete('/softDeleteComplaint', [ComplaintManagementController::class, 'softDeleteComplaint'])->middleware(['auth:sanctum','dean']);
 
 //nursing
 
@@ -186,15 +186,16 @@ Route::get('/getMyMedicalFiles', [NurseController::class, 'getMyMedicalFiles']);
 // library management at the school
 
 Route::post('/createBook', [libraryController::class, 'createBook'])->middleware(['auth:sanctum', 'library']);
-Route::post('/updateBook/{bookID}', [libraryController::class, 'updateBook'])->middleware(['auth:sanctum', 'supervisor']);
-Route::delete('/deleteBook/{bookID}', [libraryController::class, 'deleteBook'])->middleware(['auth:sanctum', 'supervisor']);
-Route::post('/getBorrowOrder', [libraryController::class, 'getBorrowOrder'])->middleware(['auth:sanctum', 'supervisor']);
+Route::post('/updateBook/{bookID}', [libraryController::class, 'updateBook'])->middleware(['auth:sanctum', 'library']);
+Route::delete('/deleteBook/{bookID}', [libraryController::class, 'deleteBook'])->middleware(['auth:sanctum', 'library']);
+Route::get('/getBorrowOrder', [libraryController::class, 'getBorrowOrder'])->middleware(['auth:sanctum', 'library']);
 Route::get('/showBooks', [libraryController::class, 'showBooks'])->middleware(['auth:sanctum']);
 Route::post('/showBookBySerrialNumber', [libraryController::class, 'showBookBySerrialNumber'])->middleware(['auth:sanctum']);
-Route::post('/showBookBorrowers', [libraryController::class, 'showBookBorrowers'])->middleware(['auth:sanctum','supervisor']);
+Route::post('/showBookBorrowers', [libraryController::class, 'showBookBorrowers'])->middleware(['auth:sanctum','library']);
 //borrow management
 Route::post('/borrow', [libraryController::class, 'borrow'])->middleware(['auth:sanctum']);
-Route::post('/modifyBorrow', [libraryController::class, 'modifyBorrow'])->middleware(['auth:sanctum','supervisor']);
+Route::post('/modifyBorrow', [libraryController::class, 'modifyBorrow'])->middleware(['auth:sanctum','library']);
+// books 
 
 // permissions managements
 

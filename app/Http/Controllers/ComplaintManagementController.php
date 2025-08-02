@@ -9,13 +9,14 @@ use Illuminate\Support\Facades\Validator;
 
 class ComplaintManagementController extends Controller
 {
-        public function addComplaint(Request $request)
+    public function addComplaint(Request $request)
     {
 
         try {
 
+            $currentUser = auth()->user()->id;
             $validator = Validator::make($request->all(), [
-                'user_id' => 'required|integer',
+                //'user_id' => 'required|integer',
                 'complaint' => 'required|string',
                 'category' => 'nullable|string',
             ]);
@@ -28,7 +29,7 @@ class ComplaintManagementController extends Controller
             }
 
             $complaint = Complaint::create([
-                'user_id' => $request->user_id,
+                'user_id' => $currentUser,
                 'complaint' => $request->complaint,
                 'category' => $request->status,
             ]);
@@ -54,7 +55,7 @@ class ComplaintManagementController extends Controller
             $complaint = Complaint::findOrFail($complaintID);
 
             $validator = Validator::make($request->all(), [
-                'user_id' => 'required|integer',
+                //'user_id' => 'required|integer',
                 'complaint' => 'string',
                 'category' => 'string',
             ]);
@@ -103,11 +104,16 @@ class ComplaintManagementController extends Controller
     }
     //_________________________________________________________________________
     // for the student or the one who made complaint whoever he was.
-    public function getMyComplaints($userID)
+    public function getMyComplaints(Request $request)
     {
 
         try {
-            if (!is_numeric($userID)) {
+
+
+
+            $currentUser = auth()->user()->id;
+
+            if (!is_numeric($currentUser)) {
                 return response()->json([
                     'status' => false,
                     'message' => 'Invalid user ID format'
@@ -116,7 +122,7 @@ class ComplaintManagementController extends Controller
 
 
             $complaints = Complaint::with(['User'])
-                ->where('user_id', $userID)
+                ->where('user_id', $currentUser)
                 ->orderBy('created_at', 'desc')
                 ->paginate(10);
 
@@ -130,7 +136,6 @@ class ComplaintManagementController extends Controller
                 return response()->json([
                     'status' => true,
                     'message' => 'No complaints found for this user',
-                    'events' => []
                 ]);
             }
         } catch (\Throwable $th) {
@@ -186,9 +191,12 @@ class ComplaintManagementController extends Controller
             $complaint = Complaint::findOrFail($complaintID);
 
             $validator = Validator::make($request->all(), [
-                'status' => 'required|string',
-                'priority' => 'required|string',
+                'status' => 'required|string|in:processing,resolved,rejected',
+                'priority' => 'required|string|in:low,high,medium',
                 'notes' => 'nullable|string'
+            ], [
+                'status.in' => 'the status must be processing, resolved or rejected',
+                'priority.in' => 'the priority must be low, high or medium',
             ]);
 
             if ($validator->fails()) {

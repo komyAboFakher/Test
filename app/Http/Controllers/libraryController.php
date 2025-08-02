@@ -146,12 +146,13 @@ class libraryController extends Controller
     public function showBooks()
     {
         try {
-            $books = Library::with('borrow.user')
+            $books = Library::with('borrow')
                 ->get()
                 ->map(function ($library) {
 
 
                     return [
+                        'book_id'=>$library->id,
                         'title' => $library->title,
                         'author' => $library->author,
                         'category' => $library->category,
@@ -161,6 +162,7 @@ class libraryController extends Controller
                         'description' => $library->description,
                         'created_at' => $library->created_at,
                         'updated_at' => $library->updated_at,
+                        'book_status' => $library->borrow->pluck('book_status'),
                     ];
                 });
             return response()->json([
@@ -272,13 +274,15 @@ class libraryController extends Controller
     {
         try {
 
-            $validator = Validator::make($request->all(), [
-                'serrial_number' => 'required|string|exists:borrows,serrial_number'
-            ]);
+            //$validator = Validator::make($request->all(), [
+            //    'serrial_number' => 'required|string|exists:borrows,serrial_number'
+            //]);
 
-            $borrow = Borrow::where('serrial_number', $request->serrial_number)
-                ->where('book_status', ['borrowed'])
-                ->firstOrFail();
+            //$borrow = Borrow::where('serrial_number', $request->serrial_number)
+            //    ->where('book_status', ['borrowed'])
+            //    ->firstOrFail();
+
+            $borrow = Borrow::all();
 
             if (!$borrow) {
                 return response()->json([
@@ -379,9 +383,8 @@ class libraryController extends Controller
                 [
                     'borrow_id' => 'required|integer|exists:borrows,id',
                     'borrow_status' => 'nullable|string|in:pending,accepted,rejected',
-                    'borrow_date' => 'nullable|date|after_or_equal:today',
-                    'due_date' => 'nullable|date|after:borrow_date',
-                    'returned_date' => 'nullable|date|after_or_equal:borrow_date',
+                    'due_date' => 'nullable|date|after:today',
+                    'returned_date' => 'nullable|date|after_or_equal:today',
                     'book_status' => [
                         'nullable',
                         'string',
@@ -412,7 +415,7 @@ class libraryController extends Controller
 
                 'borrow_id',
                 'borrow_status',
-                'borrow_date',
+                'borrow_date' => today(),
                 'due_date',
                 'returned_date',
                 'book_status',
@@ -432,7 +435,7 @@ class libraryController extends Controller
 
 
 
-            $borrow->save();
+            $borrow->update();
 
             return response()->json([
 
