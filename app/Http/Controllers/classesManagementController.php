@@ -711,7 +711,7 @@ class classesManagementController extends Controller
             $response = [
                 'student_id' => $student->id,
                 'full_name' => trim("{$student->name} {$student->middleName} {$student->lastName}"),
-                'class_name' => $student->student->SchoolClass->className,
+                'class_name' => $student->student->SchoolClass->className ?? null,
                 'email' => $student->email,
                 'phone' => $student->phoneNumber,
                 'photo' => $student->student->photo ?? null,
