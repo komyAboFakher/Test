@@ -4,18 +4,20 @@ namespace App\Http\Controllers;
 
 use App\Models\Complaint;
 use Illuminate\Http\Request;
+use Blaspsoft\Blasp\Facades\Blasp;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Validator;
 
 class ComplaintManagementController extends Controller
 {
-        public function addComplaint(Request $request)
+    public function addComplaint(Request $request)
     {
 
         try {
 
+            $currentUser = auth()->user()->id;
             $validator = Validator::make($request->all(), [
-                'user_id' => 'required|integer',
+                //'user_id' => 'required|integer',
                 'complaint' => 'required|string',
                 'category' => 'nullable|string',
             ]);
@@ -27,10 +29,19 @@ class ComplaintManagementController extends Controller
                 ], 422);
             }
 
+            $blaspResult = Blasp::check($request->complaint);
+
+            if ($blaspResult->hasProfanity()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Please avoid using inappropriate language ',
+                ], 403);
+            }
+
             $complaint = Complaint::create([
-                'user_id' => $request->user_id,
+                'user_id' => $currentUser,
                 'complaint' => $request->complaint,
-                'category' => $request->status,
+                'category' => $request->category,
             ]);
 
             return response()->json([
@@ -47,14 +58,15 @@ class ComplaintManagementController extends Controller
         }
     }
     //__________________________________________________________________________
-    public function updateComplaint(Request $request, $complaintID)
+    public function updateComplaint(Request $request)
     {
 
         try {
-            $complaint = Complaint::findOrFail($complaintID);
+
 
             $validator = Validator::make($request->all(), [
-                'user_id' => 'required|integer',
+                //'user_id' => 'required|integer',
+                'complaint_id' => 'required|integer|exists:complaints,id',
                 'complaint' => 'string',
                 'category' => 'string',
             ]);
@@ -66,6 +78,17 @@ class ComplaintManagementController extends Controller
                 ], 422);
             }
 
+
+            $complaint = Complaint::findOrFail($request->complaint_id);
+
+            $blaspResult = Blasp::check($request->complaint);
+
+            if ($blaspResult->hasProfanity()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Please avoid using inappropriate language ',
+                ], 403);
+            }
 
             $updateData = $request->only(['complaint', 'category']);
             $complaint->update($updateData);
@@ -87,8 +110,16 @@ class ComplaintManagementController extends Controller
     {
 
         try {
+            $currentUser = auth()->user()->id;
             $complaint = Complaint::findOrFail($complaintID);
-            $complaint->forceDelete();
+            if ($complaint->user_id != $currentUser) {
+                return response()->json([
+                    "message" => "you can not delete complaints other than yours !!!"
+                ]);
+            } else {
+                $complaint->forceDelete();
+            }
+
 
             return response()->json([
                 'status' => true,
@@ -103,11 +134,16 @@ class ComplaintManagementController extends Controller
     }
     //_________________________________________________________________________
     // for the student or the one who made complaint whoever he was.
-    public function getMyComplaints($userID)
+    public function getMyComplaints(Request $request)
     {
 
         try {
-            if (!is_numeric($userID)) {
+
+
+
+            $currentUser = auth()->user()->id;
+
+            if (!is_numeric($currentUser)) {
                 return response()->json([
                     'status' => false,
                     'message' => 'Invalid user ID format'
@@ -115,22 +151,19 @@ class ComplaintManagementController extends Controller
             }
 
 
-            $complaints = Complaint::with(['User'])
-                ->where('user_id', $userID)
-                ->orderBy('created_at', 'desc')
-                ->paginate(10);
+            $complaints = Complaint::where('user_id', $currentUser)->get();
+
 
             return response()->json([
                 'status' => true,
                 'message' => 'the complaints : ',
-                'data' => $complaints->load('user')
+                'data' => $complaints
             ]);
 
             if ($complaints->isEmpty()) {
                 return response()->json([
                     'status' => true,
                     'message' => 'No complaints found for this user',
-                    'events' => []
                 ]);
             }
         } catch (\Throwable $th) {
@@ -142,21 +175,71 @@ class ComplaintManagementController extends Controller
     }
     //_________________________________________________________________________
     // for the reviwer.
-    public function getAllComplaints()
+    public function getAllComplaints(Request $request)
     {
 
 
         try {
 
+            $validator = Validator::make($request->all(), [
+                "withTrash" => "required|string|in:yes,no"
+            ]);
 
-            $complaints = Complaint::with(['User'])
-                ->orderBy('created_at', 'desc')
-                ->paginate(10);
+            // withTrashed() and onlyTrashed()
+
+            if ($request->withTrash == 'yes') {
+
+                $complaints = Complaint::onlyTrashed()->with(['User'])
+
+                    //->orderBy('created_at', 'desc')
+                    ->get()
+                    ->groupBy('priority')
+                    ->map(function ($group) {
+                        return $group->map(function ($complaint) {
+                            return [
+                                'complaint_id' => $complaint->id,
+                                'complaint' => $complaint->complaint,
+                                'category' => $complaint->category ?? null,
+                                'status' => $complaint->status,
+                                'priority' => $complaint->priority,
+                                'notes' => $complaint->notes ?? null,
+                                'created_at' => $complaint->created_at,
+                                'updated_at' => $complaint->updated_at,
+                                'full_name' => trim($complaint->user->name . ' ' . $complaint->user->middleName . ' ' . $complaint->user->lastName),
+                                'email' => $complaint->user->email
+                            ];
+                        });
+                    });
+            } else {
+
+                $complaints = Complaint::with(['User'])
+
+                    //->orderBy('created_at', 'desc')
+                    ->get()
+                    ->groupBy('priority')
+                    ->map(function ($group) {
+                        return $group->map(function ($complaint) {
+                            return [
+                                'complaint_id' => $complaint->id,
+                                'complaint' => $complaint->complaint,
+                                'category' => $complaint->category ?? null,
+                                'status' => $complaint->status,
+                                'priority' => $complaint->priority,
+                                'notes' => $complaint->notes ?? null,
+                                'created_at' => $complaint->created_at,
+                                'updated_at' => $complaint->updated_at,
+                                'full_name' => trim($complaint->user->name . ' ' . $complaint->user->middleName . ' ' . $complaint->user->lastName),
+                                'email' => $complaint->user->email
+                            ];
+                        });
+                    });
+            }
+
 
             return response()->json([
                 'status' => true,
                 'message' => 'the complaints : ',
-                'data' => $complaints->load('user')
+                'data' => $complaints
             ]);
 
             if ($complaints->isEmpty()) {
@@ -178,17 +261,21 @@ class ComplaintManagementController extends Controller
     to manage the complaint priority form medium(default) to ('low','high'), in addition to some Notes might 
     the reviewer write down for the complainer, like the reason of rejection ETC...
     */
-    public function modifyComplaint(Request $request, $complaintID)
+    public function modifyComplaint(Request $request)
     {
 
 
         try {
-            $complaint = Complaint::findOrFail($complaintID);
+
 
             $validator = Validator::make($request->all(), [
-                'status' => 'required|string',
-                'priority' => 'required|string',
+                'complaint_id' => 'required|integer|exists:complaints,id',
+                'status' => 'required|string|in:processing,resolved,rejected',
+                'priority' => 'nullable|string|in:low,high,medium',
                 'notes' => 'nullable|string'
+            ], [
+                'status.in' => 'the status must be processing, resolved or rejected',
+                'priority.in' => 'the priority must be low, high or medium',
             ]);
 
             if ($validator->fails()) {
@@ -198,6 +285,7 @@ class ComplaintManagementController extends Controller
                 ], 422);
             }
 
+            $complaint = Complaint::findOrFail($request->complaint_id);
 
             $updateData = $request->only(['status', 'priority', 'notes']);
             $complaint->update($updateData);
@@ -205,7 +293,7 @@ class ComplaintManagementController extends Controller
             return response()->json([
                 'status' => true,
                 'message' => 'the complaint modified successfully !!',
-                'data' => $complaint->load('user')
+                'data' => $complaint
             ]);
         } catch (\Throwable $th) {
             return response()->json([

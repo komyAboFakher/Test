@@ -531,7 +531,7 @@ class classesManagementController extends Controller
                         'gpa' => $user->student->Gpa,
                         'class_id' => $user->student->class_id ?? '',
                         'class_name' => $user->student->schoolClass->className ?? '',
-                        'absences number' => $user->student->AbsenceStudent->absence_num ?? ''
+                        'absences_number' => $user->student->AbsenceStudent->absence_num ?? ''
                     ];
                 });
 
@@ -557,7 +557,7 @@ class classesManagementController extends Controller
             $classes = TeacherClass::with([
 
                 'SchoolClasses.students.users:id,name,middleName,lastName,email,phoneNumber',
-                //'SchoolClasses:id,className'
+                'SchoolClasses:id,className'
             ])
                 ->where('teacher_id', $teacher->id)
                 ->get()
@@ -566,7 +566,8 @@ class classesManagementController extends Controller
 
                         'students' => $teacherClass->SchoolClasses->students->map(function ($student) {
                             return [
-                                'student_id' => $student->user_id,
+                                'user_id' => $student->user_id,
+                                //'user_id' => $student->students->id,
                                 'full_name' => trim("{$student->users->name} {$student->users->middleName} {$student->users->lastName}"),
                                 'email' => $student->users->email,
                                 'phone' => $student->users->phoneNumber,
@@ -707,9 +708,10 @@ class classesManagementController extends Controller
             }
 
             $response = [
-                'student_id' => $student->id,
+                'student_id' => $student->student->id,
+                'user_id' => $student->id,
                 'full_name' => trim("{$student->name} {$student->middleName} {$student->lastName}"),
-                'class_name' => $student->student->SchoolClass->className,
+                'class_name' => $student->student->SchoolClass->className ?? null,
                 'email' => $student->email,
                 'phone' => $student->phoneNumber,
                 'photo' => $student->student->photo ?? null,

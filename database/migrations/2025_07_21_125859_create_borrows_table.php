@@ -19,7 +19,7 @@ return new class extends Migration
             $table->enum('borrow_status', ['pending', 'accepted', 'rejected'])->default('pending');
 
             //////////////////////////////////////////////////////////////////////////////
-            $table->date('borrow_date')->nullable();
+            $table->date('borrow_date');
             $table->date('due_date')->nullable();  //'retrieve_date'
             $table->date('returned_date')->nullable(); //actual return date
             $table->enum('book_status', ['borrowed', 'returned', 'overdue', 'lost'])->nullable();
