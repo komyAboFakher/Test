@@ -104,7 +104,7 @@ class StudentAttendanceController extends Controller
                 }
                 return [
                     'studentId'   => $student->id,
-                    'studentName' => $student->users->name . ' ' . $student->users->middleName . ' ' . $student->users->lastName, // Assuming 'name' is the column in your 'users' table
+                    'studentName' => $student->users->full_name // Assuming 'name' is the column in your 'users' table
                 ];
             })->filter(); // Use filter() to remove any students who might not have a user record
 
