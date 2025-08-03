@@ -21,7 +21,7 @@ class Student extends Model
     ];
     //_________________________________________________________________________
 
-    public function User()
+    public function Users()
     {
         return $this->belongsTo(User::class, 'user_id');
     }

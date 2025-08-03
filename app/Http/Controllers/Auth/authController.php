@@ -147,9 +147,7 @@ class authController extends Controller
     {
         try {
             //validation
-            $validateUser = Validator::make(
-                $request->all(),
-                [
+            $validateUser = Validator::make($request->all(),[
                     //student validation
                     'name' => 'required|string|max:255|regex:/^[a-zA-Z]+$/',
                     'middleName' => 'required|string|max:255|regex:/^[a-zA-Z]+$/',
@@ -258,9 +256,7 @@ class authController extends Controller
     {
         try {
             //validation
-            $validateUser = Validator::make(
-                $request->all(),
-                [
+            $validateUser = Validator::make($request->all(),[
                     'name' => 'required|string|max:255|regex:/^[a-zA-Z]+$/',
                     'middleName' => 'required|string|max:255|regex:/^[a-zA-Z]+$/',
                     'lastName' => 'required|string|max:255|regex:/^[a-zA-Z]+$/',

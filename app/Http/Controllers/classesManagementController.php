@@ -516,7 +516,6 @@ class classesManagementController extends Controller
     public function getPaginateStudents()
     {
         try {
-
             //get the students from the student table, then User() relation to get the info
             $students = User::with(['student.SchoolClass:id,className'])
                 ->where('role', 'student')
@@ -1035,13 +1034,13 @@ public function getStudentTeachersAndMates(){
             // We use with('user') to also load the user details (like name, email) for each student.
             $classmates = Student::where('class_id', $classId)
                                  ->where('id', '!=', $student->id)
-                                 ->with('user') // Assumes a 'user' relationship is defined on the Student model
+                                 ->with('users') // Assumes a 'user' relationship is defined on the Student model
                                  ->get();
 
             // 4. Get the Teachers and their Subjects for the class.
             // We fetch the 'TeacherClass' entries and eager load the related teacher (with their user) and the subject.
             $teacherClassEntries = TeacherClass::where('class_id', $classId)
-                                     ->with(['teacher.user', 'subject'])
+                                     ->with(['teachers.user', 'subject'])
                                      ->get();
 
             // We now transform this collection to create our desired output.
