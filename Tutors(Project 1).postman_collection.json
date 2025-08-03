@@ -1526,7 +1526,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "4|pYnioOpwNFL7XWrgl6sdcPZbTGHIldndch3HfqUab3418278",
+									"value": "1|qAWPTpxtSLaReO1K3MxQe47qKzkSvwjsZW4Y4LoP5bb89639",
 									"type": "string"
 								}
 							]
@@ -1563,14 +1563,14 @@
 					"response": []
 				},
 				{
-					"name": "get all teacher classes with their students(teacher)",
+					"name": "get all teacher students(teacher)",
 					"request": {
 						"auth": {
 							"type": "bearer",
 							"bearer": [
 								{
 									"key": "token",
-									"value": "5|tBaJPCTsvf1Bcbek2XzyxLuDf0sqa5hE1avr3IiRa8b8ae12",
+									"value": "2|F7BUVgmoqRB2ErY81WSkH4hnIHkT467NtFtB43II21437fea",
 									"type": "string"
 								}
 							]
@@ -2118,7 +2118,14 @@
 					"name": "get class teachers",
 					"request": {
 						"auth": {
-							"type": "noauth"
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "4|mLwbkDDGATNh5K0gGmeJZtNh9CEnHFkpCvxlyz5t23aeaae4",
+									"type": "string"
+								}
+							]
 						},
 						"method": "POST",
 						"header": [
@@ -2135,7 +2142,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"class_id\": 27\r\n}",
+							"raw": "{\r\n    \"class_id\": 2\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -3276,7 +3283,7 @@
 								{
 									"key": "excel_file",
 									"type": "file",
-									"src": "postman-cloud:///1f05d54b-8024-4d40-92dc-23f5d56eaf6e"
+									"src": "postman-cloud:///1f06efd9-f801-4d00-800c-538b42b91d0b"
 								}
 							]
 						},
@@ -3423,16 +3430,16 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n\r\n\"classID\": 3,\r\n\"semester\": \"Second\",\r\n\"type\": \"mid-term\"\r\n\r\n\r\n\r\n\r\n}"
+							"raw": "{\r\n\r\n\"classID\": 3,\r\n\"semester\": \"First\",\r\n\"type\": \"final\"\r\n}"
 						},
 						"url": {
-							"raw": "http://26.131.177.200:8000/api/getEmptyExcelCheatForMarks",
+							"raw": "http://127.0.0.1:8000/api/getEmptyExcelCheatForMarks",
 							"protocol": "http",
 							"host": [
-								"26",
-								"131",
-								"177",
-								"200"
+								"127",
+								"0",
+								"0",
+								"1"
 							],
 							"port": "8000",
 							"path": [
@@ -3552,7 +3559,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "4|mLwbkDDGATNh5K0gGmeJZtNh9CEnHFkpCvxlyz5t23aeaae4",
+									"value": "2|F7BUVgmoqRB2ErY81WSkH4hnIHkT467NtFtB43II21437fea",
 									"type": "string"
 								}
 							]
@@ -3589,8 +3596,8 @@
 									"type": "text"
 								},
 								{
-									"key": "serial_number",
-									"value": "00003",
+									"key": "serrial_number",
+									"value": "00005",
 									"type": "text"
 								},
 								{
@@ -3774,7 +3781,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "\r\n{\r\n  \"serrial_number\": \"00003\"\r\n}"
+							"raw": "\r\n{\r\n  \"serrial_number\": \"00004\"\r\n}"
 						},
 						"url": {
 							"raw": "http://26.131.177.200:8000/api/borrow",
@@ -3825,7 +3832,7 @@
 							"formdata": [
 								{
 									"key": "borrow_id",
-									"value": "",
+									"value": "10",
 									"type": "text"
 								},
 								{
@@ -3834,13 +3841,8 @@
 									"type": "text"
 								},
 								{
-									"key": "borrow_date",
-									"value": "2025-7-22",
-									"type": "text"
-								},
-								{
 									"key": "due_date",
-									"value": "2025-7-25",
+									"value": "2025-8-5",
 									"type": "text"
 								},
 								{
@@ -3930,7 +3932,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "2|F7BUVgmoqRB2ErY81WSkH4hnIHkT467NtFtB43II21437fea",
+									"value": "4|mLwbkDDGATNh5K0gGmeJZtNh9CEnHFkpCvxlyz5t23aeaae4",
 									"type": "string"
 								}
 							]
@@ -3983,7 +3985,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "2|F7BUVgmoqRB2ErY81WSkH4hnIHkT467NtFtB43II21437fea",
+									"value": "4|mLwbkDDGATNh5K0gGmeJZtNh9CEnHFkpCvxlyz5t23aeaae4",
 									"type": "string"
 								}
 							]
@@ -4041,7 +4043,7 @@
 								}
 							]
 						},
-						"method": "POST",
+						"method": "GET",
 						"header": [
 							{
 								"key": "Content-Type",
@@ -4054,10 +4056,6 @@
 								"type": "text"
 							}
 						],
-						"body": {
-							"mode": "raw",
-							"raw": "\r\n{\r\n  \"serrial_number\": \"00003\"\r\n}"
-						},
 						"url": {
 							"raw": "http://26.131.177.200:8000/api/getBorrowOrder",
 							"protocol": "http",
@@ -4348,6 +4346,328 @@
 							"path": [
 								"api",
 								"assignPermission"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "complaints management",
+			"item": [
+				{
+					"name": "add complaint",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "3|QHDWIhQvIV4e0NQLKbVk7cTpY8XLet93V75h18JS00da4827",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "\r\n{\r\n  \"complaint\": \" i like to eat in the class\",\r\n  \"category\": \"academic\"\r\n}"
+						},
+						"url": {
+							"raw": "http://26.131.177.200:8000/api/addComplaint",
+							"protocol": "http",
+							"host": [
+								"26",
+								"131",
+								"177",
+								"200"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"addComplaint"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update complaint",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "3|QHDWIhQvIV4e0NQLKbVk7cTpY8XLet93V75h18JS00da4827",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "\r\n{\r\n  \"complaint_id\": 2,\r\n  \"complaint\": \"the teacher is worthless\",\r\n  \"category\": \"academic\"\r\n}"
+						},
+						"url": {
+							"raw": "http://26.131.177.200:8000/api/updateComplaint",
+							"protocol": "http",
+							"host": [
+								"26",
+								"131",
+								"177",
+								"200"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"updateComplaint"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get my complaints",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "3|QHDWIhQvIV4e0NQLKbVk7cTpY8XLet93V75h18JS00da4827",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://26.131.177.200:8000/api/getMyComplaints",
+							"protocol": "http",
+							"host": [
+								"26",
+								"131",
+								"177",
+								"200"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"getMyComplaints"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get  all complaints for dean",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "1|qAWPTpxtSLaReO1K3MxQe47qKzkSvwjsZW4Y4LoP5bb89639",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"withTrash\": \"yes\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://26.131.177.200:8000/api/getAllComplaints",
+							"protocol": "http",
+							"host": [
+								"26",
+								"131",
+								"177",
+								"200"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"getAllComplaints"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "modify complaint for dean",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "1|qAWPTpxtSLaReO1K3MxQe47qKzkSvwjsZW4Y4LoP5bb89639",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"complaint_id\": 2,\r\n    \"status\": \"processing\",\r\n    \"priority\": \"low\",\r\n    \"notes\": \"it is not important in the right time\"\r\n}"
+						},
+						"url": {
+							"raw": "http://26.131.177.200:8000/api/modifyComplaint",
+							"protocol": "http",
+							"host": [
+								"26",
+								"131",
+								"177",
+								"200"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"modifyComplaint"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "delete my complaint",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "4|mLwbkDDGATNh5K0gGmeJZtNh9CEnHFkpCvxlyz5t23aeaae4",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://26.131.177.200:8000/api/deleteComplaint/2",
+							"protocol": "http",
+							"host": [
+								"26",
+								"131",
+								"177",
+								"200"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"deleteComplaint",
+								"2"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "soft delete for the dean",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "1|qAWPTpxtSLaReO1K3MxQe47qKzkSvwjsZW4Y4LoP5bb89639",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"complaint_ids\": []\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://26.131.177.200:8000/api/softDeleteComplaint",
+							"protocol": "http",
+							"host": [
+								"26",
+								"131",
+								"177",
+								"200"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"softDeleteComplaint"
 							]
 						}
 					},

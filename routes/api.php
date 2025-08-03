@@ -164,11 +164,11 @@ Route::post('/getReactions', [communicationController::class, 'getReactions'])->
 
 Route::post('/addComplaint', [ComplaintManagementController::class, 'addComplaint'])->middleware(['auth:sanctum']);
 Route::post('/updateComplaint', [ComplaintManagementController::class, 'updateComplaint'])->middleware(['auth:sanctum']);
-Route::delete('/deleteComplaint', [ComplaintManagementController::class, 'deleteComplaint'])->middleware(['auth:sanctum']);
+Route::delete('/deleteComplaint/{complaintID}', [ComplaintManagementController::class, 'deleteComplaint'])->middleware(['auth:sanctum']);
 // for the guy who made complaints
 Route::get('/getMyComplaints', [ComplaintManagementController::class, 'getMyComplaints'])->middleware(['auth:sanctum']);
 // for the complaints reviewer
-Route::get('/getAllComplaints', [ComplaintManagementController::class, 'getAllComplaints'])->middleware(['auth:sanctum','dean']);
+Route::post('/getAllComplaints', [ComplaintManagementController::class, 'getAllComplaints'])->middleware(['auth:sanctum','dean']);
 Route::post('/modifyComplaint', [ComplaintManagementController::class, 'modifyComplaint'])->middleware(['auth:sanctum','dean']);
 Route::delete('/softDeleteComplaint', [ComplaintManagementController::class, 'softDeleteComplaint'])->middleware(['auth:sanctum','dean']);
 
