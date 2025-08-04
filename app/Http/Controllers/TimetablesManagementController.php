@@ -9,6 +9,8 @@ use App\Models\schoolClass;
 use App\Models\ExamSchedule;
 use Illuminate\Http\Request;
 use App\Models\ScheduleBrief;
+use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
@@ -16,63 +18,138 @@ use Symfony\Component\HttpKernel\EventListener\ResponseListener;
 
 class TimetablesManagementController extends Controller
 {
+    // public function createWeeklySchedule(Request $request)
+    // {
+    //     try {
+    //         //validation
+    //         $validation = Validator::make($request->all(), [
+    //             'classId' => 'required|integer|exists:classes,id',
+    //             'day' => 'required|string|in:sunday,monday,tuesday,wednesday,thursday,friday,saturday',
+    //             'semester' => 'required|string|in:first,second',
+    //             'year' => 'required|string|regex:/^\d{4}\/\d{4}$/',
+    //             'subject' => 'required|string',
+    //             'session' => 'required|string|in:1,2,3,4,5,6,7',
+    //         ]);
+    //         if ($validation->fails()) {
+    //             return Response()->json([
+    //                 'status' => false,
+    //                 'message' => $validation->errors(),
+    //             ], 422);
+    //         }
+    //         //we need to get subject id
+    //         //we want to get the class name
+    //         $class = schoolClass::where('id', $request->classId)->first();
+    //         $classParts = explode('-', $class->className);
+    //         $grade = $classParts[0];
+    //         $subject = Subject::where('grade', $grade)->where('subjectName', $request->subject)->first();
+    //         //we want to create a brief
+    //         //we should make it create only one brief
+    //         $brief = ScheduleBrief::firstOrcreate([
+    //             'class_id' => $request->classId,
+    //             'day' => $request->day,
+    //             'semester' => $request->semester,
+    //             'year' => $request->year,
+    //         ]);
+    //         //now its time to create schedule sessions
+    //         $sessions = Session::firstOrcreate([
+    //             'class_id' => $request->classId,
+    //             'schedule_brief_id' => $brief->id,
+    //             'subject_id' => $subject->id,
+    //             'cancelled' => false,
+    //             'session' => $request->session,
+    //         ]);
+    //         //returning fail message
+    //         if (!$brief && !$sessions) {
+    //             return response()->json([
+    //                 'status' => false,
+    //                 'message' => 'the schedule is not created',
+    //             ], 422);
+    //         }
+    //         //returning success message
+    //         return response()->json([
+    //             'status' => true,
+    //             'message' => 'schedule has been created successfully!',
+    //         ], 200);
+    //     } catch (\Throwable $th) {
+    //         return response()->json([
+    //             'status' => false,
+    //             'message' => $th->getMessage(),
+    //         ], 500);
+    //     }
+    // }
+
+
     public function createWeeklySchedule(Request $request)
     {
-        try {
-            //validation
-            $validation = Validator::make($request->all(), [
-                'classId' => 'required|integer|exists:classes,id',
-                'day' => 'required|string|in:sunday,monday,tuesday,wednesday,thursday,friday,saturday',
-                'semester' => 'required|string|in:first,second',
-                'year' => 'required|string|regex:/^\d{4}\/\d{4}$/',
-                'subject' => 'required|string',
-                'session' => 'required|string|in:1,2,3,4,5,6,7',
-            ]);
-            if ($validation->fails()) {
-                return Response()->json([
-                    'status' => false,
-                    'message' => $validation->errors(),
-                ], 422);
-            }
-            //we need to get subject id
-            //we want to get the class name
-            $class = schoolClass::where('id', $request->classId)->first();
-            $classParts = explode('-', $class->className);
-            $grade = $classParts[0];
-            $subject = Subject::where('grade', $grade)->where('subjectName', $request->subject)->first();
-            //we want to create a brief
-            //we should make it create only one brief
-            $brief = ScheduleBrief::firstOrcreate([
-                'class_id' => $request->classId,
-                'day' => $request->day,
-                'semester' => $request->semester,
-                'year' => $request->year,
-            ]);
-            //now its time to create schedule sessions
-            $sessions = Session::firstOrcreate([
-                'class_id' => $request->classId,
-                'schedule_brief_id' => $brief->id,
-                'subject_id' => $subject->id,
-                'cancelled' => false,
-                'session' => $request->session,
-            ]);
-            //returning fail message
-            if (!$brief && !$sessions) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'the schedule is not created',
-                ], 422);
-            }
-            //returning success message
+        $allowedSubjects = config('subjects.allowed');
+        //validation
+        $validation = Validator::make($request->all(), [
+            'classId' => 'required|integer|exists:classes,id',
+            'semester' => 'required|string|in:first,second',
+            'year' => 'required|string|regex:/^\d{4}\/\d{4}$/',
+            'schedule' => 'required|array',
+            'schedule.*.day' => 'required|string|in:sunday,monday,tuesday,wednesday,thursday',
+            'schedule.*.session' => 'required|string|in:1,2,3,4,5,6,7',
+            'schedule.*.subject' => ['required', 'string', Rule::in($allowedSubjects)],
+        ]);
+        if($validation->fails()){
+            return response()->json([
+                'status'=>false,
+                'message'=>$validation->errors(),
+            ],422);
+        }
+        try{
+            DB::transaction(function() use($request){
+                $class=schoolClass::find($request->classId);
+                $classParts=explode('-',$class->className);
+                $grade=$classParts[0];
+                //use chache to avoid reading the same brief or subject repeadetly
+                $briefsCache=[];
+                $subjectsCache=[];
+
+                foreach($request->schedule as $item){
+                    $day=$item['day'];
+
+                    //create orfind the schedule brief effeciently
+                    if(!isset($briefsCache[$day])){
+                        $briefsCache[$day] = ScheduleBrief::firstOrCreate([
+                        'class_id' => $request->classId,
+                        'day' => $day,
+                        'semester' => $request->semester,
+                        'year' => $request->year,
+                        ]);
+                    }
+
+                    $brief=$briefsCache[$day];
+
+                    //find the subject id effeciently
+                    $subjectName=$item['subject'];
+                    if(!isset($subjectsCache[$subjectName])){
+                        $subject = Subject::where('grade', $grade)->where('subjectName', $subjectName)->firstOrFail();
+                        $subjectsCache[$subjectName] = $subject->id;
+                    }
+                    $subjectId=$subjectsCache[$subjectName];
+                                    // 5. Create the session
+                    Session::create([
+                        'class_id' => $request->classId,
+                        'schedule_brief_id' => $brief->id,
+                        'subject_id' => $subjectId,
+                        'cancelled' => false,
+                        'session' => $item['session'],
+                    ]);
+                }
+            });
+
             return response()->json([
                 'status' => true,
-                'message' => 'schedule has been created successfully!',
+                'message' => 'Schedule has been created successfully!',
             ], 200);
-        } catch (\Throwable $th) {
+
+        }catch(\Throwable $th){
             return response()->json([
-                'status' => false,
-                'message' => $th->getMessage(),
-            ], 500);
+                'status'=>false,
+                'message'=>$th->getMessage(),
+            ],500);
         }
     }
 

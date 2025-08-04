@@ -94,17 +94,17 @@ class StudentAttendanceController extends Controller
             }
 
             // 3. Get all students from that class and eager load their user data
-            $students = Student::with('user')->where('class_id', $class->id)->get();
+            $students = Student::with('Users')->where('class_id', $class->id)->get();
 
             // 4. Transform the student data into the desired format
             $studentList = $students->map(function ($student) {
                 // Check if user relation is loaded to prevent errors
-                if (!$student->user) {
+                if (!$student->users) {
                     return null;
                 }
                 return [
                     'studentId'   => $student->id,
-                    'studentName' => $student->user->name, // Assuming 'name' is the column in your 'users' table
+                    'studentName' => $student->users->full_name // Assuming 'name' is the column in your 'users' table
                 ];
             })->filter(); // Use filter() to remove any students who might not have a user record
 
