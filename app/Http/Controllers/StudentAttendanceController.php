@@ -549,5 +549,6 @@ class StudentAttendanceController extends Controller
                 'message' => $th->getMessage(),
             ]);
         }
+    
     }
 }
