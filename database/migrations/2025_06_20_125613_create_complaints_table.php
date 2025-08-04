@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('category')->nullable();
             $table->enum('status', ['pending', 'processing', 'resolved', 'rejected'])->default('pending');
             $table->enum('priority', ['low', 'medium', 'high'])->default('medium');
+            $table->dateTime('seen_at')->nullable();
             $table->text('notes')->nullable();
             $table->softDeletes();
             $table->timestamps();

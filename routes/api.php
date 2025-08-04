@@ -169,8 +169,11 @@ Route::delete('/deleteComplaint/{complaintID}', [ComplaintManagementController::
 Route::get('/getMyComplaints', [ComplaintManagementController::class, 'getMyComplaints'])->middleware(['auth:sanctum']);
 // for the complaints reviewer
 Route::post('/getAllComplaints', [ComplaintManagementController::class, 'getAllComplaints'])->middleware(['auth:sanctum','dean']);
+Route::get('/getUnSeenComplaints', [ComplaintManagementController::class, 'getUnSeenComplaints'])->middleware(['auth:sanctum','dean']);
 Route::post('/modifyComplaint', [ComplaintManagementController::class, 'modifyComplaint'])->middleware(['auth:sanctum','dean']);
+Route::post('/seenAt', [ComplaintManagementController::class, 'seenAt'])->middleware(['auth:sanctum','dean']);
 Route::delete('/softDeleteComplaint', [ComplaintManagementController::class, 'softDeleteComplaint'])->middleware(['auth:sanctum','dean']);
+Route::post('/restore', [ComplaintManagementController::class, 'restore'])->middleware(['auth:sanctum','dean']);
 
 //nursing
 
@@ -181,7 +184,6 @@ Route::delete('/deleteMedicalFile', [NurseController::class, 'deleteMedicalFile'
 Route::get('/getMedicalFiles', [NurseController::class, 'getMedicalFiles']);
 // for the students, so they can see their medical file
 Route::get('/getMyMedicalFiles', [NurseController::class, 'getMyMedicalFiles']);
-
 
 // library management at the school
 
@@ -203,10 +205,10 @@ Route::post('assignPermission',[PermissionController::class,'assignPermission'])
 Route::post('unassignPermission',[PermissionController::class,'unassignPermission'])->middleware(['auth:sanctum','dean']);
 
 // public relations managements
-Route::post('/publish', [PrController::class, 'publish']);
-Route::post('/updatePublish', [PrController::class, 'updatePublish']);
-Route::post('/deletePublish', [PrController::class, 'deletePublish']);
-Route::post('/showPublish', [PrController::class, 'showPublish']);
+//Route::post('/publish', [PrController::class, 'publish']);
+//Route::post('/updatePublish', [PrController::class, 'updatePublish']);
+//Route::post('/deletePublish', [PrController::class, 'deletePublish']);
+//Route::post('/showPublish', [PrController::class, 'showPublish']);
 
 
 

@@ -16,6 +16,7 @@ class Complaint extends Model
         'category',
         'status',
         'priority',
+        'seen_at',
         'notes'
     ];
 
