@@ -415,31 +415,30 @@ class ComplaintManagementController extends Controller
     {
         try {
 
-            $complaints = Complaint::where('seen_at', null)
-                ->get()
-                ->groupBy('priority')
-                ->map(function ($group) {
-                    return $group->map(function ($complaint) {
-
-                        return [
-                            'complaint_id' => $complaint->id,
-                            'complaint' => $complaint->complaint,
-                            'category' => $complaint->category ?? null,
-                            'status' => $complaint->status,
-                            'priority' => $complaint->priority,
-                            'notes' => $complaint->notes ?? null,
-                            'seen_at' => $complaint->seen_at ?? null,
-                            'created_at' => $complaint->created_at,
-                            'updated_at' => $complaint->updated_at,
-                            'full_name' => trim($complaint->user->name . ' ' . $complaint->user->middleName . ' ' . $complaint->user->lastName),
-                            'email' => $complaint->user->email
-                        ];
-                    });
-                });
+            $complaints = Complaint::where('seen_at', null)->get();
+            //->groupBy('priority')
+            //->map(function ($group) {
+            //    return $group->map(function ($complaint) {
+            //
+            //        return [
+            //            'complaint_id' => $complaint->id,
+            //            'complaint' => $complaint->complaint,
+            //            'category' => $complaint->category ?? null,
+            //            'status' => $complaint->status,
+            //            'priority' => $complaint->priority,
+            //            'notes' => $complaint->notes ?? null,
+            //            'seen_at' => $complaint->seen_at ?? null,
+            //            'created_at' => $complaint->created_at,
+            //            'updated_at' => $complaint->updated_at,
+            //            'full_name' => trim($complaint->user->name . ' ' . $complaint->user->middleName . ' ' . $complaint->user->lastName),
+            //            'email' => $complaint->user->email
+            //        ];
+            //    });
+            //});
 
             return response()->json([
                 "status" => true,
-                "message" => $complaints
+                "count" => $complaints->count()
             ]);
         } catch (\Throwable $th) {
             return response()->json([
