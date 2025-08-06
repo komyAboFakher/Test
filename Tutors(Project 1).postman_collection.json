@@ -3276,14 +3276,9 @@
 							"mode": "formdata",
 							"formdata": [
 								{
-									"key": "class_id",
-									"value": "3",
-									"type": "text"
-								},
-								{
 									"key": "excel_file",
 									"type": "file",
-									"src": "postman-cloud:///1f06efd9-f801-4d00-800c-538b42b91d0b"
+									"src": "postman-cloud:///1f07189e-3b00-4fb0-9f37-2c0c83a87740"
 								}
 							]
 						},
@@ -4384,7 +4379,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "\r\n{\r\n  \"complaint\": \" i like to eat in the class\",\r\n  \"category\": \"academic\"\r\n}"
+							"raw": "\r\n{\r\n  \"complaint\": \" test\",\r\n  \"category\": \"academic\"\r\n}"
 						},
 						"url": {
 							"raw": "http://26.131.177.200:8000/api/addComplaint",
@@ -4524,7 +4519,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"withTrash\": \"yes\"\r\n}",
+							"raw": "{\r\n    \"withTrash\": \"no\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -4577,7 +4572,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"complaint_id\": 2,\r\n    \"status\": \"processing\",\r\n    \"priority\": \"low\",\r\n    \"notes\": \"it is not important in the right time\"\r\n}"
+							"raw": "{\r\n    \"complaint_id\": 2,\r\n    \"status\": \"resolved\",\r\n    \"priority\": \"low\",\r\n    \"notes\": \"it is not important in the right time\"\r\n}"
 						},
 						"url": {
 							"raw": "http://26.131.177.200:8000/api/modifyComplaint",
@@ -4648,7 +4643,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"complaint_ids\": []\r\n}",
+							"raw": "{\r\n    \"complaint_ids\": [4]\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -4668,6 +4663,146 @@
 							"path": [
 								"api",
 								"softDeleteComplaint"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "seen at for dean",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "1|qAWPTpxtSLaReO1K3MxQe47qKzkSvwjsZW4Y4LoP5bb89639",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"ids\": [2,4,5]\r\n}"
+						},
+						"url": {
+							"raw": "http://26.131.177.200:8000/api/seenAt",
+							"protocol": "http",
+							"host": [
+								"26",
+								"131",
+								"177",
+								"200"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"seenAt"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "restore  complaints",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "1|qAWPTpxtSLaReO1K3MxQe47qKzkSvwjsZW4Y4LoP5bb89639",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"complaint_id\": 4\r\n}"
+						},
+						"url": {
+							"raw": "http://26.131.177.200:8000/api/restore",
+							"protocol": "http",
+							"host": [
+								"26",
+								"131",
+								"177",
+								"200"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"restore"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get the unseen complaints",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "1|qAWPTpxtSLaReO1K3MxQe47qKzkSvwjsZW4Y4LoP5bb89639",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://26.131.177.200:8000/api/getUnSeenComplaints",
+							"protocol": "http",
+							"host": [
+								"26",
+								"131",
+								"177",
+								"200"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"getUnSeenComplaints"
 							]
 						}
 					},
