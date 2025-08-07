@@ -7,6 +7,7 @@ use App\Models\Student;
 use App\Models\Subject;
 use App\Models\Teacher;
 use App\Models\schoolClass;
+use App\Models\FullMarkFile;
 use App\Models\TeacherClass;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -266,13 +267,28 @@ class marksController extends Controller
                 }
 
                 $minMark = Subject::where('id', $teacherClass->subject_id)->value('minMark');
+                $maxMark = Subject::where('id', $teacherClass->subject_id)->value('maxMark');
 
+                // check if the mark is empty
                 $mark = isset($row['mark']) ? (string)$row['mark'] : '';
                 if (!$mark) {
                     return response()->json([
                         'status' => false,
                         'message' => "Mark cannot be empty for student ID {$studentID} !!",
-                    ]);
+                    ], 422);
+                }
+
+                // check if the mark is negative number
+                if ($mark < 0) {
+                    return response()->json([
+                        "message" => "mark can not be a negative number !!"
+                    ], 422);
+                }
+                // check if the mark is greater than max mark
+                if ($mark > $maxMark) {
+                    return response()->json([
+                        "message" => "mark can not be greater than " . $maxMark
+                    ], 422);
                 }
 
                 $semester = ucfirst(strtolower($row['semester'] ?? ''));
@@ -332,12 +348,29 @@ class marksController extends Controller
 
             DB::commit();
 
-            // Store file
+            // Store file locally 
             $directory = 'full_mark_excels';
             Storage::disk('public')->makeDirectory($directory);
             $fileName = $file->getClientOriginalName();
             $filePath = $file->storeAs($directory, $fileName, 'public');
             $fileUrl = asset("storage/{$directory}/{$fileName}");
+
+
+            // store the path for the teacher
+            FullMarkFile::updateOrcreate(
+                [
+                    'teacher_id' => $currentUser->id,
+                    'class_id' => $classID,
+                    'subject_id' => $teacherClass->subject_id,
+                ],
+                [
+
+                    'file_name' => $fileName,
+                    'file_path' => $filePath,
+
+                ]
+            );
+
 
             // Final response
             return response()->json([
@@ -357,9 +390,57 @@ class marksController extends Controller
         }
     }
 
+    //______________________________________________________________________________________
+    public function index(Request $request)
+    {
+        try {
+
+            $currentUser = auth()->user()->teacher->id;
+            $request->validate([
+                'class_id' => 'required|exists:classes,id',
+            ]);
+
+            $subjectID = TeacherClass::where('teacher_id', $currentUser)->where('class_id', $request->class_id)->firstOrFail();
+
+            if (!$subjectID) {
+                return response()->json([
+                    "message" => "teacher is not assigned to this class "
+                ], 422);
+            }
+
+            $files = FullMarkFile::where('teacher_id', $currentUser)
+                ->where('class_id', $request->class_id)
+                ->where('subject_id', $subjectID->subject_id)
+                ->latest()
+                ->get()
+                ->map(function ($file) {
+                    return [
+                        'file_name' => $file->file_name,
+                        'url' => asset("storage/{$file->file_path}"),
+                        'uploaded_at' => $file->created_at->toDateTimeString(),
+                    ];
+                });
+
+            if (!$files) {
+                return response()->json([
+                    "message" => "there are no uploaded files lately !!"
+                ], 422);
+            }
+
+            return response()->json([
+                "message" => $files
+            ]);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return response()->json([
+                'status' => false,
+                'message' => $th->getMessage(),
+            ], 500);
+        }
+    }
 
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //______________________________________________________________________________________________-
 
     public function getTeacherClasses()
     {

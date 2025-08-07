@@ -30,6 +30,12 @@ class Teacher extends Model
     }
     //_______________________________________________________________________________________
 
+    public function FullMarkFile()
+    {
+        return $this->hasMany(FullMarkFile::class, 'teacher_id');
+    }
+    //_______________________________________________________________________________________
+
     public function AbsenceTeacher()
     {
         return $this->hasOne(AbsenceTeacher::class);
