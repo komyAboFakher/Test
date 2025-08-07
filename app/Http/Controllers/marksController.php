@@ -357,14 +357,11 @@ class marksController extends Controller
 
 
             // store the path for the teacher
-            FullMarkFile::updateOrcreate(
+            FullMarkFile::firstOrCreate(
                 [
                     'teacher_id' => $currentUser->id,
                     'class_id' => $classID,
                     'subject_id' => $teacherClass->subject_id,
-                ],
-                [
-
                     'file_name' => $fileName,
                     'file_path' => $filePath,
 
