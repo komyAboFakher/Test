@@ -393,7 +393,7 @@ class ComplaintManagementController extends Controller
                 'complaint_id' => 'required|integer|exists:complaints,id'
             ]);
 
-            $complaint = Complaint::find($request->complaint_id);
+            $complaint = Complaint::withTrashed()->find($request->complaint_id);
             if (!$complaint->deleted_at) {
                 return response()->json([
                     "message" => "the complaint is not deleted"
