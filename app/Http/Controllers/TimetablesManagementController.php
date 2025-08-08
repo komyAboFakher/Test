@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Session;
 use App\Models\Student;
 use App\Models\Subject;
+use App\Models\Academic;
 use App\Models\schoolClass;
 use App\Models\ExamSchedule;
 use Illuminate\Http\Request;
@@ -77,7 +78,155 @@ class TimetablesManagementController extends Controller
     //         ], 500);
     //     }
     // }
+    public function teachersAndTheirSessions(Request $request){
+        try{
+            //validation
+            $validation=Validator::make($request->all(),[
+                'className'=>['regex:/^\d{1,2}-[A-Z]$/', 'exists:classes,className']
+            ]);
+            if($validation->fails()){
+                return response()->json([
+                    'status'=>false,
+                    'message'=>$validation->errors(),
+                ],422);
+            }
+            //now we will get the teacherIds of this class
+            $teachersIds = DB::table('teacher_Classes')
+                ->where('class_id', function ($query) use ($request) {
+                    $query->select('id')
+                        ->from('classes')
+                        ->where('className', $request->className)
+                        ->limit(1);
+                })
+                ->pluck('teacher_id');
 
+            $schedules = Session::query()
+                ->join('schedule_briefs', 'sessions.schedule_brief_id', '=', 'schedule_briefs.id') 
+                ->whereIn('sessions.teacher_id', $teachersIds)
+                ->select('sessions.teacher_id as teacher_id', 'sessions.Session as session', 'schedule_briefs.day as day')
+                ->get()
+                ->all();
+
+            return response()->json([
+                'status'=>true,
+                'schedules'=>$schedules
+            ],200);
+
+        }catch(\Throwable $th){
+            return response()->json([
+                'status'=>false,
+                'message'=>$th->getMessage()
+            ],500);
+        }
+    }
+
+    public function deleteWeeklySchecdule(Request $request){
+        try{
+            //validation
+            $validation=Validator::make($request->all(),[
+                'className'=>['regex:/^\d{1,2}-[A-Z]$/', 'exists:classes,className']
+            ]);
+
+            if($validation->fails()){
+                return response()->json([
+                    'status'=>false,
+                    'message'=>$validation->errors(),
+                ],422);
+            }
+
+            //we wanna check if there is already a schedule for this spesefic class
+                //first of all we wanna get the class id
+                $classId=schoolClass::where('className',$request->className)->first();
+                //now we wanna get their briefs
+                $brief=ScheduleBrief::where('class_id',$classId)->delete();
+
+            //returning success message
+            return response()->json([
+                'staus'=>true,
+                'message'=>'schedule of class '. $request->className .' has been deleted succefully!',
+            ]);
+            }catch(\Throwable $th){
+                return response()->json([
+                    'status'=>false,
+                    'message'=>$th->getMessage(),
+                ],500);
+            }
+    }
+
+    public function generateWeeklySchedule(Request $request){
+        try{
+            //validation
+            $validation=Validator::make($request->all(),[
+                'className'=>['regex:/^\d{1,2}-[A-Z]$/', 'exists:classes,className']
+            ]);
+
+            if($validation->fails()){
+                return response()->json([
+                    'status'=>false,
+                    'message'=>$validation->errors(),
+                ],422);
+            }
+
+            //we wanna check if there is already a schedule for this spesefic class
+                //first of all we wanna get the class id
+                $classId=schoolClass::where('className',$request->className)->first();
+                //now we wanna get their briefs
+                $existingbrief=ScheduleBrief::where('class_id',$classId)->first();
+                //now there is the check
+                if($existingbrief){
+                    return response()->json([
+                        'status'=>false,
+                        'message'=>"the class already has a timetable delete it before genrating it!",
+                    ],422);
+                }
+            //now we will get the teacherIds of this class
+            $teachersIds = DB::table('teacher_Classes')
+                ->where('class_id', function ($query) use ($request) {
+                    $query->select('id')
+                        ->from('classes')
+                        ->where('className', $request->className)
+                        ->limit(1);
+                })
+                ->pluck('teacher_id');
+
+            $schedules = Session::query()
+                ->join('schedule_briefs', 'sessions.schedule_brief_id', '=', 'schedule_briefs.id') 
+                ->whereIn('sessions.teacher_id', $teachersIds)
+                ->select('sessions.teacher_id as teacher_id', 'sessions.Session as session', 'schedule_briefs.day as day')
+                ->get()
+                ->all();
+
+            $weekDays=['sunday','monday','tuesday','wednesday','thursday'];
+            $academicYear=Academic::value('academicYear');
+            $academicSemester=Academic::value('academicSemester');
+            for($i = 0 ; $i < 5; $i++){
+                //first of all we wanna create a schedule brief
+                $brief=ScheduleBrief::create([
+                    'class_id'=>$classId,
+                    'day'=>$weekDays[$i],
+                    'semester'=>$academicSemester,
+                    'year'=>$academicYear,
+                ]);
+                //now we wwant to create 7 sessions for this day brief
+                for($i = 0; $i < 7; $i++){
+
+                    $session=Session::firstOrCreate([
+                        'class_id'=>$classId,        
+                        'teacher_id',        
+                        'schedule_brief_id'=>$brief->id,        
+                        'subject_id',        
+                        'cancelled'=>false,        
+                        'session'=>$i,        
+                    ]);
+                }
+            }
+        }catch(\Throwable $th){
+            return response()->json([
+                'status'=>false,
+                'message'=>$th->getMessage()
+            ],500);
+        }
+    }
 
     public function createWeeklySchedule(Request $request)
     {

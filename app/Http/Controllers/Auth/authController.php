@@ -17,6 +17,7 @@ use App\Models\TeacherClass;
 use Illuminate\Http\Request;
 use App\Models\AbsenceStudent;
 use App\Mail\LoginNotification;
+use Illuminate\Validation\Rule;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
@@ -255,6 +256,7 @@ class authController extends Controller
     public function createTeacher(Request $request)
     {
         try {
+            $allowedSubjects = config('subjects.allowed');
             //validation
             $validateUser = Validator::make($request->all(),[
                     'name' => 'required|string|max:255|regex:/^[a-zA-Z]+$/',
@@ -269,6 +271,7 @@ class authController extends Controller
                     'role' => 'required|string|in:teacher',
                     'certification' => 'required|mimes:pdf|max:2048',
                     'photo' => 'mimes:png|max:2048',
+                    'subject' => ['required', 'string', Rule::in($allowedSubjects)],
                     'salary' => 'numeric|min:0',
                 ]
             );

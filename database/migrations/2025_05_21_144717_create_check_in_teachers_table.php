@@ -18,7 +18,7 @@ return new class extends Migration
             $table->date('date');
             $table->boolean('checked');
             $table->enum('sessions',['1','2','3','4','5','6','7']);
-            $table->timestamp('deleted_at');
+            $table->timestamp('deleted_at')->nullable();
             $table->timestamps();
         });
     }

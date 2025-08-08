@@ -31,7 +31,7 @@ Route::post('/login', [authController::class, 'login'])->middleware('EnsureSingl
 Route::post('/createDean', [authController::class, 'createDean']); //done w request
 Route::post('/createUser', [authController::class, 'createUser'])->middleware('auth:sanctum', 'dean'); //done w request
 Route::post('/createTeacher', [authController::class, 'createTeacher'])->middleware('auth:sanctum', 'dean'); //done w request
-Route::post('/createSupervisor', [authController::class, 'createSupervisor'])->middleware('auth:sanctum', 'dean'); //done w request
+Route::post('/createSupervisor', [authController::class, 'createSupervisor']);//->middleware('auth:sanctum', 'dean'); //done w request
 //and modify the create func to intiate student, teacher, parent and supervisor tables
 Route::delete('/logout', [authController::class, 'logout'])->middleware('auth:sanctum'); //done w request
 Route::post('/sendForgetPasswordOtp', [authController::class, 'sendForgetPasswordOtp']); //done w request
@@ -113,6 +113,9 @@ Route::post('/save-fcm-token', [fcmController::class, 'saveFcmToken']);
 route::put('/createWeeklySchedule', [TimetablesManagementController::class, 'createWeeklySchedule'])->middleware('auth:sanctum', 'supervisor'); //done w request
 route::put('/uploadExamSchedule', [TimetablesManagementController::class, 'uploadExamSchedule'])->middleware('auth:sanctum', 'supervisor'); //done
 route::get('/getStudentWeeklySchedule', [TimetablesManagementController::class, 'getStudentWeeklySchedule'])->middleware('auth:sanctum', 'student'); //done w request
+route::post('/teachersAndTheirSessions', [TimetablesManagementController::class, 'teachersAndTheirSessions']);//->middleware('auth:sanctum', 'supervisor'); //
+route::post('/generateWeeklySchedule', [TimetablesManagementController::class, 'generateWeeklySchedule']);//->middleware('auth:sanctum', 'supervisor'); //
+route::post('/deleteWeeklySchecdule', [TimetablesManagementController::class, 'deleteWeeklySchecdule']);//->middleware('auth:sanctum', 'supervisor'); //
 //needs to be done
 route::get('/getStudentExamSchedule', [TimetablesManagementController::class, 'getStudentExamSchedule'])->middleware('auth:sanctum', 'student'); //
 route::get('/getTeacherWeeklySchedule', [TimetablesManagementController::class, 'getTeacherWeeklySchedule'])->middleware('auth:sanctum', 'teacher'); //pdf ?= true => to give the ability to download the schedule as pdf and if it false i will only return the data

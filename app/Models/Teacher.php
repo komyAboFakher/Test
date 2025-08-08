@@ -30,6 +30,12 @@ class Teacher extends Model
     }
     //_______________________________________________________________________________________
 
+    public function Session()
+    {
+        return $this->hasMany(Session::class);
+    }
+    //_______________________________________________________________________________________
+
     public function AbsenceTeacher()
     {
         return $this->hasOne(AbsenceTeacher::class);

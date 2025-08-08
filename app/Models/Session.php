@@ -10,6 +10,7 @@ class Session extends Model
     use HasFactory;
     Protected $fillable=[
         'class_id',        
+        'teacher_id',        
         'schedule_brief_id',        
         'subject_id',        
         'cancelled',        
@@ -24,5 +25,8 @@ class Session extends Model
     }
         public function scheduleBrief(){
         return $this->belongsTo(scheduleBrief::class);
+    }
+        public function teacher(){
+        return $this->belongsTo(Teacher::class);
     }
 }

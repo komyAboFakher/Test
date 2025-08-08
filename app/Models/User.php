@@ -50,7 +50,7 @@ class User extends Authenticatable
     ///////////////////////////////////////////////////the realations///////////////////////////////////////////
 
 
-        protected function fullName(): Attribute
+    protected function fullName(): Attribute
     {
         return Attribute::make(
             get: fn ($value, $attributes) => trim(implode(' ', [
