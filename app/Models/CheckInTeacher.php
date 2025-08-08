@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CheckInTeacher extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
     Protected $fillable=[
         'teacher_id',
         'student_id',
