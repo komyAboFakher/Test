@@ -220,7 +220,7 @@ class StudentAttendanceController extends Controller
 
             // 4. Fetch attendance records for those students on the given date
             // Eager load relationships to get student names efficiently
-            $absenceRecords = CheckInTeacher::with('student.user')
+            $absenceRecords = CheckInTeacher::with('student.users')
                 ->where('date', $request->date)
                 ->whereIn('student_id', $studentIds) // Use whereIn with the student IDs
                 ->get();
