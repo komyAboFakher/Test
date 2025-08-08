@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Complaint;
 use Illuminate\Http\Request;
 use Blaspsoft\Blasp\Facades\Blasp;
+use DateTime;
+use Dotenv\Parser\Value;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Validator;
 
@@ -203,6 +205,7 @@ class ComplaintManagementController extends Controller
                                 'status' => $complaint->status,
                                 'priority' => $complaint->priority,
                                 'notes' => $complaint->notes ?? null,
+                                'seen_at' => $complaint->seen_at ?? null,
                                 'created_at' => $complaint->created_at,
                                 'updated_at' => $complaint->updated_at,
                                 'full_name' => trim($complaint->user->name . ' ' . $complaint->user->middleName . ' ' . $complaint->user->lastName),
@@ -226,6 +229,7 @@ class ComplaintManagementController extends Controller
                                 'status' => $complaint->status,
                                 'priority' => $complaint->priority,
                                 'notes' => $complaint->notes ?? null,
+                                'seen_at' => $complaint->seen_at ?? null,
                                 'created_at' => $complaint->created_at,
                                 'updated_at' => $complaint->updated_at,
                                 'full_name' => trim($complaint->user->name . ' ' . $complaint->user->middleName . ' ' . $complaint->user->lastName),
@@ -337,6 +341,114 @@ class ComplaintManagementController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to soft-delete complaints: ' . $th->getMessage(),
+            ], 500);
+        }
+    }
+    //__________________________________________________________________________________
+
+    public function seenAt(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'ids' => 'required|array',
+                'ids.*' => 'required|integer|exists:complaints,id'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $seenIds = [];
+            foreach ($request->ids as $id) {
+                $complaint = Complaint::findOrFail($id);
+                if ($complaint->seen_at) {
+                    continue;
+                }
+                $complaint->seen_at = now();
+                $complaint->status = 'processing';
+                $complaint->save();
+                $seenIds[] = $id;
+            }
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Complaints have been seen successfully',
+                'seen_complaints' => $seenIds
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to seen At ' . $th->getMessage(),
+            ], 500);
+        }
+    }
+    //________________________________________________________________________
+    public function restore(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'complaint_id' => 'required|integer|exists:complaints,id'
+            ]);
+
+            $complaint = Complaint::withTrashed()->find($request->complaint_id);
+            if (!$complaint->deleted_at) {
+                return response()->json([
+                    "message" => "the complaint is not deleted"
+                ]);
+            }
+            $complaint->restore();
+
+
+            return response()->json([
+                "status" => true,
+                "message" => 'the complaint has been restored',
+                "complaint" => $complaint
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to restore complaint ' . $th->getMessage(),
+            ], 500);
+        }
+    }
+    //____________________________________________________________________________
+
+    public function getUnSeenComplaints()
+    {
+        try {
+
+            $complaints = Complaint::where('seen_at', null)->get();
+            //->groupBy('priority')
+            //->map(function ($group) {
+            //    return $group->map(function ($complaint) {
+            //
+            //        return [
+            //            'complaint_id' => $complaint->id,
+            //            'complaint' => $complaint->complaint,
+            //            'category' => $complaint->category ?? null,
+            //            'status' => $complaint->status,
+            //            'priority' => $complaint->priority,
+            //            'notes' => $complaint->notes ?? null,
+            //            'seen_at' => $complaint->seen_at ?? null,
+            //            'created_at' => $complaint->created_at,
+            //            'updated_at' => $complaint->updated_at,
+            //            'full_name' => trim($complaint->user->name . ' ' . $complaint->user->middleName . ' ' . $complaint->user->lastName),
+            //            'email' => $complaint->user->email
+            //        ];
+            //    });
+            //});
+
+            return response()->json([
+                "status" => true,
+                "count" => $complaints->count()
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to restore complaint ' . $th->getMessage(),
             ], 500);
         }
     }

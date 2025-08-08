@@ -125,7 +125,8 @@ route::get('/getTeacherExamSchedule', [TimetablesManagementController::class, 'g
 //////////////////////////////////////////////////////////KOMAY STUFF/////////////////////////////////////////////////////
 //marks management
 Route::post('/getEmptyExcelCheatForMarks', [marksController::class, 'getEmptyExcelCheatForMarks'])->middleware('auth:sanctum', 'teacher');// done
-Route::post('/uploadMarkExcelCheat', [marksController::class, 'uploadMarkExcelCheat2'])->middleware('auth:sanctum', 'teacher'); // the seconde version is not finished yet
+Route::post('/uploadMarkExcelCheat', [marksController::class, 'upload'])->middleware('auth:sanctum', 'teacher'); // done
+Route::post('/browseOldExcelFiles', [marksController::class, 'index'])->middleware('auth:sanctum', 'teacher'); // done
 Route::get('/getTeacherClasses', [marksController::class, 'getTeacherClasses'])->middleware('auth:sanctum', 'teacher'); //done
 Route::post('/getMarksProfile', [marksController::class, 'getMarksProfile'])->middleware('auth:sanctum'); // done
 Route::post('/getClassMarks', [marksController::class, 'getClassMarks'])->middleware('auth:sanctum','teacher');
@@ -172,8 +173,11 @@ Route::delete('/deleteComplaint/{complaintID}', [ComplaintManagementController::
 Route::get('/getMyComplaints', [ComplaintManagementController::class, 'getMyComplaints'])->middleware(['auth:sanctum']);
 // for the complaints reviewer
 Route::post('/getAllComplaints', [ComplaintManagementController::class, 'getAllComplaints'])->middleware(['auth:sanctum','dean']);
+Route::get('/getUnSeenComplaints', [ComplaintManagementController::class, 'getUnSeenComplaints'])->middleware(['auth:sanctum','dean']);
 Route::post('/modifyComplaint', [ComplaintManagementController::class, 'modifyComplaint'])->middleware(['auth:sanctum','dean']);
+Route::post('/seenAt', [ComplaintManagementController::class, 'seenAt'])->middleware(['auth:sanctum','dean']);
 Route::delete('/softDeleteComplaint', [ComplaintManagementController::class, 'softDeleteComplaint'])->middleware(['auth:sanctum','dean']);
+Route::post('/restore', [ComplaintManagementController::class, 'restore'])->middleware(['auth:sanctum','dean']);
 
 //nursing
 
@@ -184,7 +188,6 @@ Route::delete('/deleteMedicalFile', [NurseController::class, 'deleteMedicalFile'
 Route::get('/getMedicalFiles', [NurseController::class, 'getMedicalFiles']);
 // for the students, so they can see their medical file
 Route::get('/getMyMedicalFiles', [NurseController::class, 'getMyMedicalFiles']);
-
 
 // library management at the school
 
@@ -206,10 +209,10 @@ Route::post('assignPermission',[PermissionController::class,'assignPermission'])
 Route::post('unassignPermission',[PermissionController::class,'unassignPermission'])->middleware(['auth:sanctum','dean']);
 
 // public relations managements
-Route::post('/publish', [PrController::class, 'publish']);
-Route::post('/updatePublish', [PrController::class, 'updatePublish']);
-Route::post('/deletePublish', [PrController::class, 'deletePublish']);
-Route::post('/showPublish', [PrController::class, 'showPublish']);
+//Route::post('/publish', [PrController::class, 'publish']);
+//Route::post('/updatePublish', [PrController::class, 'updatePublish']);
+//Route::post('/deletePublish', [PrController::class, 'deletePublish']);
+//Route::post('/showPublish', [PrController::class, 'showPublish']);
 
 
 
