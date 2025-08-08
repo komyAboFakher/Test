@@ -230,12 +230,12 @@ class StudentAttendanceController extends Controller
                 return [
                     'session'  => $sessionNumber,
                     'students' => $recordsInSession->map(function ($record) {
-                        if (!$record->student || !$record->student->user) {
+                        if (!$record->student || !$record->student->users) {
                             return null;
                         }
                         return [
                             'studentId' => $record->student->id,
-                            'full_name' => $record->student->user->name,
+                            'full_name' => $record->student->users->name,
                         ];
                     })->filter()->values(),
                 ];
