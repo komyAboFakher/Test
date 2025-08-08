@@ -30,15 +30,14 @@ class Teacher extends Model
     }
     //_______________________________________________________________________________________
 
-<<<<<<< HEAD
     public function Session()
     {
         return $this->hasMany(Session::class);
-=======
+    }
+    //_______________________________________________________________________________________
     public function FullMarkFile()
     {
         return $this->hasMany(FullMarkFile::class, 'teacher_id');
->>>>>>> 13253bf9a1bfc418b52a26f96ae8665f28a31d9f
     }
     //_______________________________________________________________________________________
 
