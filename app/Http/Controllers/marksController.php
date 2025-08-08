@@ -405,6 +405,9 @@ class marksController extends Controller
                 ], 422);
             }
 
+           
+
+
             $files = FullMarkFile::where('teacher_id', $currentUser)
                 ->where('class_id', $request->class_id)
                 ->where('subject_id', $subjectID->subject_id)
