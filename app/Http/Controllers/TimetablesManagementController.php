@@ -249,7 +249,7 @@ class TimetablesManagementController extends Controller
         }
         try{
             DB::transaction(function() use($request){
-                $academics=Academic::all();
+                $academics=Academic::firstOrFail();
                 $class=schoolClass::find($request->classId);
                 $classParts=explode('-',$class->className);
                 $grade=$classParts[0];
