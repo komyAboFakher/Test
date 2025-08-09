@@ -152,7 +152,7 @@ class libraryController extends Controller
 
 
                     return [
-                        'book_id'=>$library->id,
+                        'book_id' => $library->id,
                         'title' => $library->title,
                         'author' => $library->author,
                         'category' => $library->category,
@@ -334,13 +334,31 @@ class libraryController extends Controller
                 ], 409);
             }
 
-            $alreadyHasIt = Borrow::where('user_id', $currentUser)
-                ->where('book_id', $book->id)
-                ->whereIn('book_status', ['borrowed'])
-                ->orWhere(function ($q) {
-                    $q->where('borrow_status', 'pending');
-                })
-                ->exists();
+            if ($book->borrow()->where('borrow_status', 'pending')->exists()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'somebody else have a pending order on that book !!'
+                ], 409);
+            }
+
+            //wrong !!!!
+            // $alreadyHasIt = Borrow::where('user_id', $currentUser)
+            //     ->where('book_id', $book->id)
+            //     ->whereIn('book_status', ['borrowed'])
+            //     ->orWhere(function ($q) {
+            //         $q->where('borrow_status', 'pending');
+            //     })
+            //     ->exists();
+
+
+            $alreadyHasIt = Borrow::where(function ($query) use ($currentUser, $book) {
+                $query->where('user_id', $currentUser)
+                    ->where('book_id', $book->id)
+                    ->where(function ($q) {
+                        $q->whereIn('book_status', ['borrowed'])
+                            ->orWhere('borrow_status', 'pending');
+                    });
+            })->exists();
 
             if ($alreadyHasIt) {
                 return response()->json([
