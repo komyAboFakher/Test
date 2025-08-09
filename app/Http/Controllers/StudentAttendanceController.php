@@ -235,7 +235,7 @@ class StudentAttendanceController extends Controller
                         }
                         return [
                             'studentId' => $record->student->id,
-                            'full_name' => $record->student->users->name,
+                            'full_name' => $record->student->users->full_name,
                         ];
                     })->filter()->values(),
                 ];
