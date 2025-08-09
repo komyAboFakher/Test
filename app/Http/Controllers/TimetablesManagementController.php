@@ -234,8 +234,8 @@ class TimetablesManagementController extends Controller
         //validation
         $validation = Validator::make($request->all(), [
             'classId' => 'required|integer|exists:classes,id',
-            'semester' => 'required|string|in:first,second',
-            'year' => 'required|string|regex:/^\d{4}\/\d{4}$/',
+            // 'semester' => 'required|string|in:first,second',
+            // 'year' => 'required|string|regex:/^\d{4}\/\d{4}$/',
             'schedule' => 'required|array',
             'schedule.*.day' => 'required|string|in:sunday,monday,tuesday,wednesday,thursday',
             'schedule.*.session' => 'required|string|in:1,2,3,4,5,6,7',
@@ -249,6 +249,7 @@ class TimetablesManagementController extends Controller
         }
         try{
             DB::transaction(function() use($request){
+                $academics=Academic::all();
                 $class=schoolClass::find($request->classId);
                 $classParts=explode('-',$class->className);
                 $grade=$classParts[0];
@@ -264,8 +265,8 @@ class TimetablesManagementController extends Controller
                         $briefsCache[$day] = ScheduleBrief::firstOrCreate([
                         'class_id' => $request->classId,
                         'day' => $day,
-                        'semester' => $request->semester,
-                        'year' => $request->year,
+                        'semester' => $academics->academic_semester,
+                        'year' => $academics->academic_year,
                         ]);
                     }
 
@@ -278,7 +279,7 @@ class TimetablesManagementController extends Controller
                         $subjectsCache[$subjectName] = $subject->id;
                     }
                     $subjectId=$subjectsCache[$subjectName];
-                                    // 5. Create the session
+                    // 5. Create the session
                     Session::create([
                         'class_id' => $request->classId,
                         'schedule_brief_id' => $brief->id,

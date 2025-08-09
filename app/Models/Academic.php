@@ -10,7 +10,7 @@ class Academic extends Model
     use HasFactory;
 
     protected $fillable=[
-        'academicSemester',
-        'academicYear',
+        'academic_semester',
+        'academic_year',
     ];
 }

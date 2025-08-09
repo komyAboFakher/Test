@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('academics', function (Blueprint $table) {
             $table->id();
-            $table->string('academic semester');
-            $table->string('academic year');
+            $table->string('academic_semester');
+            $table->string('academic_year');
             $table->timestamps();
         });
     }
