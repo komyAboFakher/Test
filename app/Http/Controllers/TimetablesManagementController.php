@@ -169,7 +169,7 @@ class TimetablesManagementController extends Controller
 
             //we wanna check if there is already a schedule for this spesefic class
                 //first of all we wanna get the class id
-                $classId=schoolClass::where('className',$request->className)->first();
+                $classId=schoolClass::where('className',$request->className)->value('id');
                 //now we wanna get their briefs
                 $existingbrief=ScheduleBrief::where('class_id',$classId)->first();
                 //now there is the check
@@ -245,6 +245,15 @@ class TimetablesManagementController extends Controller
             return response()->json([
                 'status'=>false,
                 'message'=>$validation->errors(),
+            ],422);
+        }
+        //now we wanna get their briefs
+        $existingbrief=ScheduleBrief::where('class_id',$request->classId)->first();
+        //now there is the check
+        if($existingbrief){
+            return response()->json([
+                'status'=>false,
+                'message'=>"the class already has a timetable delete it before genrating it!",
             ],422);
         }
         try{

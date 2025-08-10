@@ -15,6 +15,7 @@ use App\Models\CheckInTeacher;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Psy\VersionUpdater\Checker;
 
 class StudentAttendanceController extends Controller
 {
@@ -94,7 +95,7 @@ class StudentAttendanceController extends Controller
             }
 
             // 3. Get all students from that class and eager load their user data
-            $students = Student::with('Users')->where('class_id', $class->id)->get();
+            $students = Student::with('Users')->where('class_id', $class->id)->where('expelled',0)->get();
 
             // 4. Transform the student data into the desired format
             $studentList = $students->map(function ($student) {
@@ -136,6 +137,13 @@ class StudentAttendanceController extends Controller
                     'errors' => $validateSession->errors(),
                 ], 422);
             }
+            //first of all we wanna get any student and get their classs name
+            $validatedData=$validateSession->validated();
+            if(!empty($validatedData['students'])){
+                $firstStudentId=$validatedData['students'][0]['studentId'];
+
+                $classId=Student::where('id',$firstStudentId)->value('class_id');
+            }
             //getting user id to get teacher id
             $user = Auth::user();
             $teacher = Teacher::where('user_id', $user->id)->first();
@@ -165,11 +173,19 @@ class StudentAttendanceController extends Controller
                 }
             }
 
+            //now we need to track skips
+            $lastSessionReport = CheckInTeacher::where('sessions', $temp)  
+                ->where('class_id', $classId)
+                ->whereDate('created_at', now()) 
+                ->pluck('student_id'); 
+            //now we wanna check if there is a new absent student in this session
+            
             //loging absence
             foreach ($request->students as $student) {
                 CheckInTeacher::create([
                     'teacher_id' => $teacher->id,
                     'student_id' => $student['studentId'],
+                    'class_id' => $classId,
                     'date' => now(),
                     'checked' => false,
                     'sessions' => $request->session,
@@ -189,6 +205,7 @@ class StudentAttendanceController extends Controller
             ], 500);
         }
     }
+
     public function checkStudentAbsenceReport(Request $request)
     {
         try {

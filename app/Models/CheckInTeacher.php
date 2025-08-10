@@ -12,6 +12,7 @@ class CheckInTeacher extends Model
     Protected $fillable=[
         'teacher_id',
         'student_id',
+        'class_id',
         'date',
         'checked',
         'sessions',

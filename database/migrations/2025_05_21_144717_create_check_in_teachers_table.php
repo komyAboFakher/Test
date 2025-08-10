@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignid('teacher_id')->constrained()->onDelete('cascade');
             $table->foreignid('student_id')->constrained()->onDelete('cascade');
+            $table->foreignid('class_id')->constrained()->onDelete('cascade');
             $table->date('date');
             $table->boolean('checked');
             $table->enum('sessions',['1','2','3','4','5','6','7']);
