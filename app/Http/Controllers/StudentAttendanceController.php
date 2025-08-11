@@ -128,7 +128,7 @@ class StudentAttendanceController extends Controller
             $validateSession = Validator::make($request->all(), [
                 'session' =>  'required|integer|min:1|max:7',
                 'students' => 'required|array',
-                'students.*.studentId' => 'required|integer|exists:students,id',
+                'students.*.studentId' => 'required|integer|exists:students,id'
             ]);
             if ($validateSession->fails()) {
                 return response()->json([
