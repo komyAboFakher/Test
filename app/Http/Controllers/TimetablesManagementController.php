@@ -10,6 +10,7 @@ use App\Models\schoolClass;
 use App\Models\ExamSchedule;
 use Illuminate\Http\Request;
 use App\Models\ScheduleBrief;
+use App\Models\TeacherClass;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -238,7 +239,7 @@ class TimetablesManagementController extends Controller
             // 'year' => 'required|string|regex:/^\d{4}\/\d{4}$/',
             'schedule' => 'required|array',
             'schedule.*.day' => 'required|string|in:sunday,monday,tuesday,wednesday,thursday',
-            'schedule.*.session' => 'required|string|in:1,2,3,4,5,6,7',
+            'schedule.*.session' => 'required|numeric|in:1,2,3,4,5,6,7',
             'schedule.*.subject' => ['required', 'string', Rule::in($allowedSubjects)],
         ]);
         if($validation->fails()){
@@ -288,11 +289,14 @@ class TimetablesManagementController extends Controller
                         $subjectsCache[$subjectName] = $subject->id;
                     }
                     $subjectId=$subjectsCache[$subjectName];
+                    //we need to get the teacher id
+                    $teacherId=TeacherClass::where('class_id',$request->classId)->where('subject_id',$subjectId)->value('teacher_id');
                     // 5. Create the session
                     Session::create([
                         'class_id' => $request->classId,
                         'schedule_brief_id' => $brief->id,
                         'subject_id' => $subjectId,
+                        'teacher_id' => $teacherId,
                         'cancelled' => false,
                         'session' => $item['session'],
                     ]);
