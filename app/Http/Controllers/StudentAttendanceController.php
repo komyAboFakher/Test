@@ -164,7 +164,7 @@ class StudentAttendanceController extends Controller
             //checking the order of the session attendance taking
             $temp = $request->session - 1;
             if ($request->session != 1) {
-                $sessionOrder = CheckInTeacher::where('sessions', $temp)->first();
+                $sessionOrder = CheckInTeacher::where('sessions', $temp)->whereDate('created_at', now()) ->first();
                 if (!$sessionOrder) {
                     return response()->json([
                         'status' => false,
