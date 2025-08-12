@@ -318,8 +318,11 @@ class StudentAttendanceController extends Controller
         try {
             //getting all the classes
             $classes=SchoolClass::all();
+            return response()->json([
+                'meow'=>$classes
+            ])
             foreach($classes as $class){
-                $check=CheckInTeacher::where('class_id',$class->id)->where('sessions',7)->get();
+                $check=CheckInTeacher::where('class_id',$class->id)->where('sessions',7)->first();
                 if(!$check){
                     return response()->json([
                         'status'=>false,
