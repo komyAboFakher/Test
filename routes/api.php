@@ -50,7 +50,7 @@ Route::post('/studentsAttendanceSubmit', [StudentAttendanceController::class, 's
 //2-for supervisor
 Route::post('/checkStudentAbsenceReport', [StudentAttendanceController::class, 'checkStudentAbsenceReport'])->middleware('auth:sanctum', 'supervisor'); //checking attendance report //done w request
 Route::post('/checkStudentWarnings', [StudentAttendanceController::class, 'checkStudentWarnings'])->middleware('auth:sanctum', 'supervisor'); //checking student warnings and how many day they did no attend //done w request
-Route::post('/submitDailyReports', [StudentAttendanceController::class, 'submitDailyReports'])->middleware('auth:sanctum', 'supervisor'); //giving the supervisor the ability to submit all the daily reports //done w request
+Route::post('/submitDailyReports', [StudentAttendanceController::class, 'submitDailyReports']);//->middleware('auth:sanctum', 'supervisor'); //giving the supervisor the ability to submit all the daily reports //done w request
 Route::post('/incrementStudentAbsence', [StudentAttendanceController::class, 'incrementStudentAbsence'])->middleware('auth:sanctum', 'supervisor'); //giving the supervisor the ability to increment student absence num by one //done w request
 Route::post('/decrementStudentAbsence', [StudentAttendanceController::class, 'decrementStudentAbsence'])->middleware('auth:sanctum', 'supervisor'); //giving the supervisor the ability to decrement student absence num by one //done 
 

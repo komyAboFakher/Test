@@ -318,18 +318,14 @@ class StudentAttendanceController extends Controller
         try {
             //getting all the classes
             $classes=SchoolClass::all();
-            return response()->json([
-                'meow'=>$classes
-            ]);
             foreach($classes as $class){
                 $check=CheckInTeacher::where('class_id',$class->id)->where('sessions',7)->first();
                 if(!$check){
                     return response()->json([
                         'status'=>false,
                         'message'=>'the class ' .$class->className. ' doesnt have all the 7 sessions',
-                    ]);
+                    ],422);
                 }
-
             }
             // Get all unprocessed absence records
             $allAbsences = CheckInTeacher::where('checked', false)->get();
