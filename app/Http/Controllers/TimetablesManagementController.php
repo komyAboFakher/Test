@@ -79,6 +79,7 @@ class TimetablesManagementController extends Controller
     //         ], 500);
     //     }
     // }
+    /*
     public function teachersAndTheirSessions(Request $request){
         try{
             //validation
@@ -119,7 +120,96 @@ class TimetablesManagementController extends Controller
                 'message'=>$th->getMessage()
             ],500);
         }
+    }*/
+
+    public function teachersAndTheirSessions(Request $request)
+    {
+        try {
+            // 1. Validate the incoming request to ensure 'className' is present and valid.
+            $validation = Validator::make($request->all(), [
+                'className' => ['required', 'string', 'regex:/^\d{1,2}-[A-Z]$/', 'exists:classes,className']
+            ]);
+
+            if ($validation->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => $validation->errors(),
+                ], 422);
+            }
+
+            // 2. Get the ID for the given className to use in the next query.
+            // This is slightly more efficient than using a subquery.
+            $classId = DB::table('classes')->where('className', $request->className)->value('id');
+
+            // 3. Get all teacher IDs associated with the class from the pivot table.
+            $teachersIds = DB::table('teacher_classes')
+                ->where('class_id', $classId)
+                ->pluck('teacher_id');
+
+            // If no teachers are found for the class, return a successful response with an empty schedule.
+            if ($teachersIds->isEmpty()) {
+                return response()->json([
+                    'status' => true,
+                    'schedules' => []
+                ], 200);
+            }
+
+            // 4. Get the schedule data for the found teachers.
+            //
+            // *** SCHEMA ASSUMPTION ***
+            // This query assumes you have:
+            // - A 'teachers' table with 'id' and 'name' columns.
+            // - A 'subjects' table with 'id' and 'name' columns.
+            // - A 'subject_id' foreign key on the 'teachers' table that links to the 'subjects' table.
+            // If your schema is different (e.g., a pivot table between teachers and subjects),
+            // you will need to adjust the join statements below.
+            $schedulesData = Session::query()
+                ->join('schedule_briefs', 'sessions.schedule_brief_id', '=', 'schedule_briefs.id')
+                ->join('teachers', 'sessions.teacher_id', '=', 'teachers.id')
+                ->join('subjects', 'teachers.subject_id', '=', 'subjects.id') // <-- ADJUST IF NEEDED
+                ->whereIn('sessions.teacher_id', $teachersIds)
+                ->select(
+                    'teachers.name as teacherName',
+                    'subjects.name as subjectName',
+                    'sessions.Session as session',
+                    'schedule_briefs.day as day'
+                )
+                ->get();
+
+            // 5. Group the flat collection by the subject's name.
+            $groupedBySubject = $schedulesData->groupBy('subjectName');
+
+            // 6. Format the grouped data to match the exact output structure you requested.
+            $formattedSchedules = $groupedBySubject->map(function ($sessions) {
+                // For each subject, map its sessions to a cleaner format without the redundant subject name.
+                return $sessions->map(function ($session) {
+                    return [
+                        'teacherName' => $session->teacherName,
+                        'day' => $session->day,
+                        'session' => $session->session,
+                    ];
+                })->values(); // Use ->values() to reset keys and ensure it becomes a JSON array.
+            });
+
+            // 7. Wrap the final object in an array as per your requested format.
+            $finalResponse = [$formattedSchedules];
+
+            // 8. Return the successful response.
+            return response()->json([
+                'status' => true,
+                'schedules' => $finalResponse,
+            ], 200);
+
+        } catch (\Throwable $th) {
+            // 9. Catch any potential exceptions and return a server error response.
+            return response()->json([
+                'status' => false,
+                'message' => $th->getMessage()
+            ], 500);
+        }
     }
+
+
 
     public function deleteWeeklySchecdule(Request $request){
         try{
