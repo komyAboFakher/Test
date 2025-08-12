@@ -154,7 +154,7 @@ class StudentAttendanceController extends Controller
                 ], 404);
             }
             //checking if the session attendance has been already taken for the same teacher
-            $sessionExists = CheckInTeacher::where('sessions', $request->session)->where('teacher_id', $teacher->id)->first();
+            $sessionExists = CheckInTeacher::where('sessions', $request->session)->where('teacher_id', $teacher->id)->whereDate('created_at', now())->first();
             if ($sessionExists) {
                 return response()->json([
                     'status' => false,
@@ -164,11 +164,11 @@ class StudentAttendanceController extends Controller
             //checking the order of the session attendance taking
             $temp = $request->session - 1;
             if ($request->session != 1) {
-                $sessionOrder = CheckInTeacher::where('sessions', $temp)->whereDate('created_at', now()) ->first();
+                $sessionOrder = CheckInTeacher::where('sessions', $temp)->whereDate('created_at', now())->first();
                 if (!$sessionOrder) {
                     return response()->json([
                         'status' => false,
-                        'message' => 'you are not following the order!',
+                        'message' => 'the teaacher that had the session before you did not take the report',
                     ], 409);
                 }
             }
