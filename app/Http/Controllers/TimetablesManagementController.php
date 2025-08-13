@@ -236,6 +236,7 @@ public function teachersAndTheirSessions(Request $request)
                 ],500);
             }
     }
+    
  public function generateWeeklySchedule(Request $request)
     {
         try {
