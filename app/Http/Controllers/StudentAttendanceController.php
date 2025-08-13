@@ -132,7 +132,7 @@ class StudentAttendanceController extends Controller
                 'className' => 'required|regex:/^\d{1,2}-[A-Z]$/',
                 'fullAttendance'=>'required|boolean',
                 'session' =>  'required|integer|min:1|max:7',
-                'students' => 'required|array',
+                'students' => 'sometimes|array',
                 'students.*.studentId' => 'sometimes|integer|exists:students,id'
             ]);
             if ($validateSession->fails()) {
@@ -158,22 +158,8 @@ class StudentAttendanceController extends Controller
 
                 $classId=Student::where('id',$firstStudentId)->value('class_id');
             }else{
-                $classId=SchoolClass::where('className',$request->className)->value('class_id');
+                $classId=SchoolClass::where('className',$request->className)->value('id');
             }
-            //checking if the class has full attendance
-            if($request->fullAttendance == true){
-                CheckInTeacher::firstOrcreate([
-                    'teacher_id'=>$teacher->id,
-                    'class_id'=>$classId,
-                    'sessions'=>$request->session,
-                ]);
-            //returning success message
-                return response()->json([
-                    'status' => true,
-                    'message' => 'check in has been logged successfully for session ' . $request->session . '! and if the is any stupid teacher that does any mistakes i will i will get his mothers id from the system',
-                ], 200);
-            }
-
             //checking if this teacher has the session for this class
             $today=now()->format('l');
             $todaysBrief=ScheduleBrief::where('day',$today)->where('class_id',$classId)->first();
@@ -182,7 +168,7 @@ class StudentAttendanceController extends Controller
                 return response()->json([
                     'status'=>false,
                     'message'=>'you are not allowed to take the report of this session IDIOT!',
-                ],422);
+                ],409);
             }
     
             //checking if the session attendance has been already taken for the same teacher
@@ -191,7 +177,7 @@ class StudentAttendanceController extends Controller
                 return response()->json([
                     'status' => false,
                     'message' => 'attendance has been already made!',
-                ], 422);
+                ], 409);
             }
             //checking the order of the session attendance taking
             $temp = $request->session - 1;
@@ -203,6 +189,23 @@ class StudentAttendanceController extends Controller
                         'message' => 'the teacher that had the session before you did not take the report',
                     ], 409);
                 }
+            }
+            //checking if the class has full attendance
+            if($request->fullAttendance == true){
+                 CheckInTeacher::create([
+                    'teacher_id'      => $teacher->id,
+                    'student_id'      => null, // <-- This is the main fix
+                    'class_id'        => $classId,
+                    'full_attendance' => true,
+                    'date'            => now(),
+                    'checked'         => false, // Full attendance is considered checked
+                    'sessions'        => $request->session,
+                ]);
+            //returning success message
+                return response()->json([
+                    'status' => true,
+                    'message' => 'check in has been logged successfully for session ' . $request->session . '! and if the is any stupid teacher that does any mistakes i will i will get his mothers id from the system',
+                ], 200);
             }
 
             //now we need to track skips
