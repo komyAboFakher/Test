@@ -129,6 +129,7 @@ class StudentAttendanceController extends Controller
         try {
             //validating
             $validateSession = Validator::make($request->all(), [
+                'className' => 'required|regex:/^\d{1,2}-[A-Z]$/',
                 'fullAttendance'=>'required|boolean',
                 'session' =>  'required|integer|min:1|max:7',
                 'students' => 'required|array',
@@ -156,6 +157,8 @@ class StudentAttendanceController extends Controller
                 $firstStudentId=$validatedData['students'][0]['studentId'];
 
                 $classId=Student::where('id',$firstStudentId)->value('class_id');
+            }else{
+                $classId=SchoolClass::where('className',$request->className)->value('class_id');
             }
             //checking if the class has full attendance
             if($request->fullAttendance == true){

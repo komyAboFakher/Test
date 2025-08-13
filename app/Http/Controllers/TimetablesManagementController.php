@@ -437,6 +437,7 @@ class TimetablesManagementController extends Controller
             ], 500);
         }
     }
+    
     public function getClassWeeklySchcedule(Request $request)
     {
         try {
