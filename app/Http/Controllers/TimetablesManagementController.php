@@ -437,6 +437,48 @@ class TimetablesManagementController extends Controller
             ], 500);
         }
     }
+    public function getClassWeeklySchcedule(Request $request)
+    {
+        try {
+            //validation 
+            $validation = Validator::make($request->all(), [
+                'className' => ['required', 'string', 'regex:/^\d{1,2}-[A-Z]$/', 'exists:classes,className']
+            ]);
+            if($validation->fails()){
+                return response()->json([
+                    'status'=>false,
+                    'message'=>$validation->errors(),
+                ],422);
+            }
+            $classId=schoolClass::where('className',$request->className)->value('id');
+            $schedule=Session::query()
+            ->join('schedule_briefs','sessions.schedule_brief_id','=','schedule_briefs.id')
+            ->join('teachers','sessions.teacher_id','=','teachers.id')
+            ->join('users','teachers.user_id','=','users.id')
+            ->join('subjects','sessions.subject_id','=','subjects.id')
+            ->where('sessions.class_id',$classId)
+            ->select(
+                'subjects.subjectName',     // Assumes your column is literally 'subjectName'
+                'users.name as teacher_name', // Get name from users table, call it 'teacher_name'
+                'sessions.cancelled',
+                'sessions.session',
+                'schedule_briefs.day'
+            )
+            ->get()
+            ->all();
+
+            //returning success message
+            return response()->json([
+                'status'=>true,
+                'schedule'=>$schedule,
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status'  => false,
+                'message' => $th->getMessage(),
+            ], 500);
+        }
+    }
 
     public function getStudentWeeklySchedule()
     {
