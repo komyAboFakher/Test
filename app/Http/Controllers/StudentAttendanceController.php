@@ -129,9 +129,10 @@ class StudentAttendanceController extends Controller
         try {
             //validating
             $validateSession = Validator::make($request->all(), [
+                'fullAttendance'=>'required|boolean',
                 'session' =>  'required|integer|min:1|max:7',
                 'students' => 'required|array',
-                'students.*.studentId' => 'required|integer|exists:students,id'
+                'students.*.studentId' => 'sometimes|integer|exists:students,id'
             ]);
             if ($validateSession->fails()) {
                 return response()->json([
@@ -139,13 +140,6 @@ class StudentAttendanceController extends Controller
                     'message' => 'validation error',
                     'errors' => $validateSession->errors(),
                 ], 422);
-            }
-            //first of all we wanna get any student and get their classs name
-            $validatedData=$validateSession->validated();
-            if(!empty($validatedData['students'])){
-                $firstStudentId=$validatedData['students'][0]['studentId'];
-
-                $classId=Student::where('id',$firstStudentId)->value('class_id');
             }
             //getting user id to get teacher id
             $user = Auth::user();
@@ -156,6 +150,27 @@ class StudentAttendanceController extends Controller
                     'message' => 'Teacher not found',
                 ], 404);
             }
+            //first of all we wanna get any student and get their classs name
+            $validatedData=$validateSession->validated();
+            if(!empty($validatedData['students'])){
+                $firstStudentId=$validatedData['students'][0]['studentId'];
+
+                $classId=Student::where('id',$firstStudentId)->value('class_id');
+            }
+            //checking if the class has full attendance
+            if($request->fullAttendance == true){
+                CheckInTeacher::firstOrcreate([
+                    'teacher_id'=>$teacher->id,
+                    'class_id'=>$classId,
+                    'sessions'=>$request->session,
+                ]);
+            //returning success message
+                return response()->json([
+                    'status' => true,
+                    'message' => 'check in has been logged successfully for session ' . $request->session . '! and if the is any stupid teacher that does any mistakes i will i will get his mothers id from the system',
+                ], 200);
+            }
+
             //checking if this teacher has the session for this class
             $today=now()->format('l');
             $todaysBrief=ScheduleBrief::where('day',$today)->where('class_id',$classId)->first();

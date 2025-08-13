@@ -13,6 +13,7 @@ class CheckInTeacher extends Model
         'teacher_id',
         'student_id',
         'class_id',
+        'full_attendance',
         'date',
         'checked',
         'sessions',
