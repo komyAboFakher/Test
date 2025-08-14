@@ -201,7 +201,6 @@ class authController extends Controller
                     'password' => Hash::make($request->password),
                     'role' => 'student',
                 ]);
-<<<<<<< HEAD
                 //creating a row in the student table
                 //getting class id
                 $class = schoolClass::where('className', $request->class)->first();
@@ -240,66 +239,6 @@ class authController extends Controller
                     'job' => $request->parentJob,
                 ]);
             });
-=======
-            }
-
-            $komy = $student->class_id;
-
-
-            // adding the student and increment the current Student number and check the max size of the class
-            if ($komy) {
-
-                $studentClass = schoolClass::findOrFail($komy);
-
-                if ($studentClass->studentsNum == $studentClass->currentStudentNumber) {
-                    return response()->json([
-                        "message" => "the current class has max size of students"
-                    ], 422);
-                }
-
-                if (is_null($studentClass->currentStudentNumber)) {
-                    $studentClass->currentStudentNumber = 1;
-                    $studentClass->save();
-                } 
-                
-                
-                else {
-                    $studentClass->increment('currentStudentNumber');
-                    $studentClass->save();
-                }
-            }
-
-            //creating a new row in absence student table
-            $absence = AbsenceStudent::create([
-                'student_id' => $student->id,
-                'absence_num' => 5,
-                'warning' => 0,
-            ]);
-            //now we wanna create a parent for this student
-            //creating a user for the parent
-            $parentUser = User::create([
-                'name' => $request->parentName,
-                'middleName' => $request->parentMiddleName,
-                'lastName' => $request->parentLastName,
-                'phoneNumber' => $request->parentPhoneNumber,
-                'email' => $request->parentEmail,
-                'role' => 'parent',
-                'password' => Hash::make($request->parentPassword),
-            ]);
-
-            Mail::to($parentUser->email)->send(new \App\Mail\TeacherWelcomeMail($request->parentPassword, $parentUser->email));
-            //creating a row in the parent table
-            $parent = Parents::create([
-                'user_id' => $parentUser->id,
-                'student_id' => $student->id,
-                'name' => $request->parentName,
-                'middle_name' => $request->parentMiddleName,
-                'last_name' => $request->parentLastName,
-                'job' => $request->parentJob,
-            ]);
-
-            DB::commit();
->>>>>>> 80ad35027fffca282281997314805b8442f6dc2c
             //success message
             return response()->json([
                 'status' => true,
@@ -489,10 +428,6 @@ class authController extends Controller
                     'errors' => $validateUser->errors(),
                 ], 404);
             }
-<<<<<<< HEAD
-=======
-
->>>>>>> 80ad35027fffca282281997314805b8442f6dc2c
             //create user
             $user = User::create([
                 'name' => $request->name,
@@ -899,17 +834,8 @@ public function deletePinCode(){
     }
     }
 
-<<<<<<< HEAD
     
     public function createOther(Request $request)
-=======
-    //___________________________________________________________________________-
-    // BY KOMY ABO FAKHER, TO DEAR MAJD 
-
-
-
-    public function createOthers(Request $request)
->>>>>>> 80ad35027fffca282281997314805b8442f6dc2c
     {
         // Step 1: Validate input
         $validateUser = Validator::make($request->all(), [
@@ -998,10 +924,4 @@ public function deletePinCode(){
         }
     }
 
-<<<<<<< HEAD
-=======
-
-
-    // komy abo fakher
->>>>>>> 80ad35027fffca282281997314805b8442f6dc2c
 }
