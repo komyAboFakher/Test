@@ -1011,5 +1011,5 @@ class authController extends Controller
 
 
 
-    // komu
+    // komy abo fakher
 }
