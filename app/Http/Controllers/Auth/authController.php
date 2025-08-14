@@ -219,6 +219,33 @@ class authController extends Controller
                     'photo' => $photoPath,
                 ]);
             }
+
+            $komy = $student->class_id;
+
+
+            // adding the student and increment the current Student number and check the max size of the class
+            if ($komy) {
+
+                $studentClass = schoolClass::findOrFail($komy);
+
+                if ($studentClass->studentsNum == $studentClass->currentStudentNumber) {
+                    return response()->json([
+                        "message" => "the current class has max size of students"
+                    ], 422);
+                }
+
+                if (is_null($studentClass->currentStudentNumber)) {
+                    $studentClass->currentStudentNumber = 1;
+                    $studentClass->save();
+                } 
+                
+                
+                else {
+                    $studentClass->increment('currentStudentNumber');
+                    $studentClass->save();
+                }
+            }
+
             //creating a new row in absence student table
             $absence = AbsenceStudent::create([
                 'student_id' => $student->id,
@@ -480,7 +507,7 @@ class authController extends Controller
                     'errors' => $validateUser->errors(),
                 ], 404);
             }
-            
+
             //create user
             $user = User::create([
                 'name' => $request->name,
@@ -909,7 +936,7 @@ class authController extends Controller
             'password' => 'required|string|min:8',
             'role' => 'required|string|in:other',
             'certification' => 'required|mimes:pdf|max:2048',
-            'photo' => 'mimes:png|max:4096',
+            'photo' => 'required|mimes:png|max:4096',
             'salary' => 'numeric|min:0',
         ]);
 
