@@ -162,7 +162,9 @@ public function teachersAndTheirSessions(Request $request)
                 ->whereIn('sessions.teacher_id', $teachersIds)
                 // Also fixed the select statement to be explicit and use aliases.
                 ->select(
-                    'users.fullName as teacherName',
+                    'users.name as firstName',
+                    'users.middleName as middleName',
+                    'users.lastName as lastName',
                     'subjects.subjectName as subjectName', // Assuming the column is 'name' in your subjects table
                     'sessions.Session as session',
                     'schedule_briefs.day as day',
@@ -177,7 +179,7 @@ public function teachersAndTheirSessions(Request $request)
             $formattedSchedules = $groupedBySubject->map(function ($sessions) {
                 return $sessions->map(function ($session) {
                     return [
-                        'teacherName' => $session->teacherName,
+                        'teacherName' => $session->firstName . ' ' .$session->middleName. ' '.$session->lastName,
                         'day' => $session->day,
                         'className' => $session->className,
                         'session' => $session->session,
