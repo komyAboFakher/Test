@@ -278,6 +278,7 @@ class libraryController extends Controller
                 ->get()
                 ->map(function ($borrow) {
                     return [
+                        'id'=> $borrow->id,
                         'user_id' => $borrow->user_id,
                         'book_id' => $borrow->book_id,
                         'title' => $borrow->library->title,
