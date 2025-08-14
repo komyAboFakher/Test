@@ -6,6 +6,7 @@ use Throwable;
 use Carbon\Carbon;
 use App\Models\Clas;
 use App\Models\User;
+use App\Models\Other;
 use App\Models\Parents;
 use App\Models\Student;
 use App\Models\Teacher;
@@ -26,6 +27,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\PersonalAccessToken;
 use Illuminate\Support\Facades\Validator;
 
@@ -830,5 +832,96 @@ public function deletePinCode(){
             'message'=>$th->getMessage(),
         ]);
     }
-}
+    }
+
+    
+    public function createOther(Request $request)
+    {
+        // Step 1: Validate input
+        $validateUser = Validator::make($request->all(), [
+            'name' => 'required|string|max:255|regex:/^[a-zA-Z]+$/',
+            'middleName' => 'required|string|max:255|regex:/^[a-zA-Z]+$/',
+            'lastName' => 'required|string|max:255|regex:/^[a-zA-Z]+$/',
+            'phoneNumber' => 'required|string|regex:/^\+?[0-9\s\-]{10,15}$/|unique:users,phoneNumber',
+            'email' => [
+                'required',
+                'regex:/^[a-zA-Z0-9._%+-]+@gmail\.com$/i',
+                'unique:users,email',
+            ],
+            'password' => 'required|string|min:8',
+            'role' => 'required|string|in:other',
+            'certification' => 'required|mimes:pdf|max:2048',
+            'photo' => 'required|mimes:png|max:4096',
+            'salary' => 'numeric|min:0',
+        ]);
+
+        if ($validateUser->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Validation error',
+                'errors' => $validateUser->errors(),
+            ], 422);
+        }
+
+        DB::beginTransaction();
+
+        try {
+            // Step 2: Store files
+            $photoPath = $request->hasFile('photo')
+                ? $request->file('photo')->store('photos', 'public')
+                : null;
+
+            $certificationPath = $request->file('certification')->store('certifications', 'public');
+
+            // Step 3: Create user
+            $user = User::create([
+                'name' => $request->name,
+                'middleName' => $request->middleName,
+                'lastName' => $request->lastName,
+                'phoneNumber' => $request->phoneNumber,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'role' => $request->role,
+            ]);
+
+
+            Mail::to($user->email)->send(
+                new \App\Mail\TeacherWelcomeMail($request->password, $user->email)
+            );
+
+            // Step 5: Create role-specific record
+            Other::create([
+                'user_id' => $user->id,
+                'certification' => $certificationPath,
+                'photo' => $photoPath,
+                'salary' => $request->salary,
+            ]);
+
+            DB::commit();
+
+            // Step 6: Return success
+            return response()->json([
+                'status' => true,
+                'message' => 'user created successfully',
+                'photoUrl' => asset('storage/' . $photoPath),
+                'certificationUrl' => asset('storage/' . $certificationPath),
+            ], 200);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+
+
+            if (isset($photoPath)) {
+                Storage::disk('public')->delete($photoPath);
+            }
+            if (isset($certificationPath)) {
+                Storage::disk('public')->delete($certificationPath);
+            }
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Transaction failed: ' . $th->getMessage(),
+            ], 500);
+        }
+    }
+
 }
