@@ -10,9 +10,9 @@ class PermissionRule implements ValidationRule
 
 
     private const VALID_PERMISSIONS = [
-        'Library',
-        'Nurse',
-        'Oversee',
+        'library',
+        'nurse',
+        'oversee',
     ];
     /**
      * Run the validation rule.

@@ -9,4 +9,26 @@ use Illuminate\Routing\Controller as BaseController;
 class Controller extends BaseController
 {
     use AuthorizesRequests, ValidatesRequests;
+
+
+
+
+
+
+
+    /*
+ *      ██╗  ██╗ ██████╗ ███╗   ███╗██╗   ██╗
+ *      ██║ ██╔╝██╔═══██╗████╗ ████║╚██╗ ██╔╝
+ *      █████╔╝ ██║   ██║██╔████╔██║ ╚████╔╝ 
+ *      ██╔═██╗ ██║   ██║██║╚██╔╝██║  ╚██╔╝  
+ *      ██║  ██╗╚██████╔╝██║ ╚═╝ ██║   ██║   
+ *      ╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝   ╚═╝  
+ * 
+ * 
+ *  "THE WHITE RABBIT IS YOUR DESTINY, FOLLOW IT"
+ *        CRAFTED BY KOMY A.FAKHER - ITE 
+ */
+
+
+  
 }

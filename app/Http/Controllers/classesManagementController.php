@@ -531,7 +531,8 @@ class classesManagementController extends Controller
                         'gpa' => $user->student->Gpa,
                         'class_id' => $user->student->class_id ?? '',
                         'class_name' => $user->student->schoolClass->className ?? '',
-                        'absences_number' => $user->student->AbsenceStudent->absence_num ?? ''
+                        'absences_number' => $user->student->AbsenceStudent->absence_num ?? '',
+                        'warnings' => $user->student->AbsenceStudent->warning ?? '',
                     ];
                 });
 

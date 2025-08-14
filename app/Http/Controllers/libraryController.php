@@ -274,25 +274,46 @@ class libraryController extends Controller
     {
         try {
 
-            //$validator = Validator::make($request->all(), [
-            //    'serrial_number' => 'required|string|exists:borrows,serrial_number'
-            //]);
+            $borrows = Borrow::with('library')
+                ->get()
+                ->map(function ($borrow) {
+                    return [
+                        'user_id' => $borrow->user_id,
+                        'book_id' => $borrow->book_id,
+                        'title' => $borrow->library->title,
+                        'author' => $borrow->library->author,
+                        'category' => $borrow->library->category,
+                        'publisher' => $borrow->library->publisher,
+                        'shelf_location' => $borrow->library->shelf_location,
+                        'description' => $borrow->library->description,
+                        'serrial_number' => $borrow->serrial_number,
+                        'borrow_status' => $borrow->borrow_status,
+                        'borrow_date' => $borrow->borrow_date,
+                        'due_date' => $borrow->due_date,
+                        'returned_date' => $borrow->returned_date,
+                        'book_status' => $borrow->book_status,
+                        'notes' => $borrow->notes,
+                        'borrower' => [
 
-            //$borrow = Borrow::where('serrial_number', $request->serrial_number)
-            //    ->where('book_status', ['borrowed'])
-            //    ->firstOrFail();
+                            'full_name' => trim($borrow->user->name . ' ' . $borrow->user->middleName . ' ' . $borrow->user->lastName),
+                            'email' => $borrow->user->email,
+                            'role' => $borrow->user->role,
+                            'class' => $borrow->user->student->SchoolClass->className ?? null
 
-            $borrow = Borrow::all();
+                        ]
+                    ];
+                });
 
-            if (!$borrow) {
+
+            if (!$borrows) {
                 return response()->json([
-                    "message" => "there is no such borrow order !!!"
+                    "message" => "there is no  borrow orders yet !!!"
                 ]);
             }
 
             return response()->json([
                 "status" => true,
-                "message" => $borrow->load('user')
+                "message" => $borrows
             ]);
         } catch (\Throwable $th) {
             return response()->json([

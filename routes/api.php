@@ -31,7 +31,8 @@ Route::post('/login', [authController::class, 'login'])->middleware('EnsureSingl
 Route::post('/createDean', [authController::class, 'createDean']); //done w request
 Route::post('/createUser', [authController::class, 'createUser'])->middleware('auth:sanctum', 'dean'); //done w request
 Route::post('/createTeacher', [authController::class, 'createTeacher'])->middleware('auth:sanctum', 'dean'); //done w request
-Route::post('/createSupervisor', [authController::class, 'createSupervisor']);//->middleware('auth:sanctum', 'dean'); //done w request
+Route::post('/createSupervisor', [authController::class, 'createSupervisor'])->middleware('auth:sanctum', 'dean'); //done w request
+Route::post('/createOther', [authController::class, 'createOther'])->middleware('auth:sanctum', 'dean'); //done w request
 //and modify the create func to intiate student, teacher, parent and supervisor tables
 Route::delete('/logout', [authController::class, 'logout'])->middleware('auth:sanctum'); //done w request
 Route::post('/sendForgetPasswordOtp', [authController::class, 'sendForgetPasswordOtp']); //done w request
@@ -206,7 +207,14 @@ Route::post('/modifyBorrow', [libraryController::class, 'modifyBorrow'])->middle
 // permissions managements
 
 Route::post('assignPermission',[PermissionController::class,'assignPermission'])->middleware(['auth:sanctum','dean']);
-Route::post('unassignPermission',[PermissionController::class,'unassignPermission'])->middleware(['auth:sanctum','dean']);
+// show the whole permissions we have in the system
+Route::get('showPermissions',[PermissionController::class,'showPermissions'])->middleware(['auth:sanctum','dean']);
+// show all the users group by there permissions
+Route::get('showAllUserPermissions',[PermissionController::class,'showAllUserPermissions'])->middleware(['auth:sanctum','dean']);
+// show some user permissions
+Route::get('showUserPermissions',[PermissionController::class,'showUserPermissions'])->middleware(['auth:sanctum','dean']);
+Route::post('updateAssignPermission',[PermissionController::class,'updateAssignPermission'])->middleware(['auth:sanctum','dean']);
+Route::delete('deleteAssignPermission',[PermissionController::class,'deleteAssignPermission'])->middleware(['auth:sanctum','dean']);
 
 // public relations managements
 //Route::post('/publish', [PrController::class, 'publish']);
