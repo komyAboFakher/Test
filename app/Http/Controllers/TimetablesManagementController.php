@@ -606,7 +606,7 @@ public function teachersAndTheirSessions(Request $request)
             ->select(
                 'sessions.session as session',
                 'sessions.cancelled as cancelled',
-                'subjects.subjectName as subjectName',
+                'subjects.subjectName as subject',
                 'schedule_briefs.day as day',
                 'classes.className as className',
             )
