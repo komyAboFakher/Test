@@ -12,6 +12,7 @@ class ExamSchedule extends Model
     protected $fillable=[
         'class_id',
         'schedule_pdf',
+        'type',
     ];
     public function Clas(){
         return $this->belongsTo(SchoolClass::class);

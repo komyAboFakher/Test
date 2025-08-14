@@ -19,6 +19,7 @@ use App\Models\AbsenceStudent;
 use App\Mail\LoginNotification;
 use Illuminate\Validation\Rule;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -154,8 +155,7 @@ class authController extends Controller
                     'middleName' => 'required|string|max:255|regex:/^[a-zA-Z]+$/',
                     'lastName' => 'required|string|max:255|regex:/^[a-zA-Z]+$/',
                     'phoneNumber' => 'required|string|regex:/^\+?[0-9\s\-]{10,15}$/|unique:users,phoneNumber',
-                    'email' => 'required',
-                    'email',
+                    'email' => 'required|email|regex:/^[a-zA-Z0-9._%+-]+@gmail\.com$/i|unique:users,email',
                     'regex:/^[a-zA-Z0-9._%+-]+@gmail\.com$/i',
                     'unique:users,email',
                     'password' => 'required|string|min:8',
@@ -168,8 +168,7 @@ class authController extends Controller
                     'parentMiddleName' => 'required|string|max:255|regex:/^[a-zA-Z]+$/',
                     'parentLastName' => 'required|string|max:255|regex:/^[a-zA-Z]+$/',
                     'parentPhoneNumber' => 'required|string|regex:/^\+?[0-9\s\-]{10,15}$/|unique:users,phoneNumber',
-                    'parentEmail' => 'required',
-                    'email',
+                    'parentEmail' => 'required|email|regex:/^[a-zA-Z0-9._%+-]+@gmail\.com$/i|unique:users,email',
                     'regex:/^[a-zA-Z0-9._%+-]+@gmail\.com$/i',
                     'unique:users,email',
                     'parentPassword' => 'required|string|min:8',
@@ -184,59 +183,60 @@ class authController extends Controller
                     'errors' => $validateUser->errors(),
                 ], 404);
             }
-
+            DB::transaction(function() use($request){
             //intiating photo URL
             $photoPath = $request->file('photo')->store('photos', 'public');
             //intiating certification URL
             $certificationPath = $request->file('previousCertification')->store('certifications', 'public');
             //creating a student
             //create user for student
-            $user = User::create([
-                'name' => $request->name,
-                'middleName' => $request->middleName,
-                'lastName' => $request->lastName,
-                'phoneNumber' => $request->phoneNumber,
-                'email' => $request->email,
-                'password' => Hash::make($request->password),
-                'role' => 'student',
-            ]);
-            //creating a row in the student table
-            //getting class id
-            $class = schoolClass::where('className', $request->class)->first();
-            if ($request->role == 'student') {
-                $student = Student::create([
-                    'user_id' => $user->id,
-                    'class_id' => $class->id,
-                    'schoolGraduatedFrom' => $certificationPath,
-                    'photo' => $photoPath,
+                $user = User::create([
+                    'name' => $request->name,
+                    'middleName' => $request->middleName,
+                    'lastName' => $request->lastName,
+                    'phoneNumber' => $request->phoneNumber,
+                    'email' => $request->email,
+                    'password' => Hash::make($request->password),
+                    'role' => 'student',
                 ]);
-            }
-            //creating a new row in absence student table
-            $absence = AbsenceStudent::create([
-                'student_id' => $student->id,
-                'absence_num' => 5,
-                'warning' => 0,
-            ]);
-            //now we wanna create a parent for this student
-            //creating a user for the parent
-            $parentUser = User::create([
-                'name' => $request->parentName,
-                'middleName' => $request->parentMiddleName,
-                'lastName' => $request->parentLastName,
-                'phoneNumber' => $request->parentPhoneNumber,
-                'email' => $request->parentEmail,
-                'role' => 'parent',
-                'password' => Hash::make($request->parentPassword),
-            ]);
-            //creating a row in the parent table
-            $parent = Parents::create([
-                'user_id' => $parentUser->id,
-                'student_id' => $student->id,
-                'name' => $request->parentName,
-                'middle_name' => $request->parentMiddleName,
-                'last_name' => $request->parentLastName,
-                'job' => $request->parentJob,
-            ]);
+                //creating a row in the student table
+                //getting class id
+                $class = schoolClass::where('className', $request->class)->first();
+                if ($request->role == 'student') {
+                    $student = Student::create([
+                        'user_id' => $user->id,
+                        'class_id' => $class->id,
+                        'schoolGraduatedFrom' => $certificationPath,
+                        'photo' => $photoPath,
+                    ]);
+                }
+                //creating a new row in absence student table
+                $absence = AbsenceStudent::create([
+                    'student_id' => $student->id,
+                    'absence_num' => 5,
+                    'warning' => 0,
+                ]);
+                //now we wanna create a parent for this student
+                //creating a user for the parent
+                $parentUser = User::create([
+                    'name' => $request->parentName,
+                    'middleName' => $request->parentMiddleName,
+                    'lastName' => $request->parentLastName,
+                    'phoneNumber' => $request->parentPhoneNumber,
+                    'email' => $request->parentEmail,
+                    'role' => 'parent',
+                    'password' => Hash::make($request->parentPassword),
+                ]);
+                //creating a row in the parent table
+                $parent = Parents::create([
+                    'user_id' => $parentUser->id,
+                    'student_id' => $student->id,
+                    'name' => $request->parentName,
+                    'middle_name' => $request->parentMiddleName,
+                    'last_name' => $request->parentLastName,
+                    'job' => $request->parentJob,
+                ]);
+            });
             //success message
             return response()->json([
                 'status' => true,
@@ -283,7 +283,7 @@ class authController extends Controller
                     'errors' => $validateUser->errors(),
                 ], 422);
             }
-
+            DB::transaction(function() use($request){
             //intiating photo URL
             $photoPath = $request->file('photo')->store('photos', 'public');
             //intiating certification URL
@@ -309,14 +309,13 @@ class authController extends Controller
                     'salary' => $request->salary,
                 ]);
             }
+            });
 
 
             //success message
             return response()->json([
                 'status' => true,
                 'message' => 'user created successfully',
-                'photoUrl' => asset('storage/' . $photoPath),
-                'certificationUrl' => asset('storage/' . $certificationPath),
             ], 200);
         } catch (\Throwable $th) {
             return response()->json([
@@ -356,7 +355,7 @@ class authController extends Controller
                     'errors' => $validateUser->errors(),
                 ], 422);
             }
-
+            DB::transaction(function() use($request){
             //intiating photo URL
             $photoPath = $request->file('photo')->store('photos', 'public');
             //intiating certification URL
@@ -387,13 +386,11 @@ class authController extends Controller
                     'message' => 'the role you have input is not right!',
                 ]);
             }
-
+            });
             //success message
             return response()->json([
                 'status' => true,
                 'message' => 'user created successfully',
-                'photoUrl' => asset('storage/' . $photoPath),
-                'certificationUrl' => asset('storage/' . $certificationPath),
             ], 200);
         } catch (\Throwable $th) {
             return response()->json([

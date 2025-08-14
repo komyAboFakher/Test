@@ -157,16 +157,16 @@ public function teachersAndTheirSessions(Request $request)
                 ->join('schedule_briefs', 'sessions.schedule_brief_id', '=', 'schedule_briefs.id')
                 ->join('teachers', 'sessions.teacher_id', '=', 'teachers.id')
                 ->join('users', 'teachers.user_id', '=', 'users.id')
-                // *** THE FIX IS HERE ***
-                // The subject is linked directly from the 'sessions' table, not the 'teachers' table.
                 ->join('subjects', 'sessions.subject_id', '=', 'subjects.id')
+                ->join('classes', 'sessions.class_id', '=', 'classes.id')
                 ->whereIn('sessions.teacher_id', $teachersIds)
                 // Also fixed the select statement to be explicit and use aliases.
                 ->select(
                     'users.name as teacherName',
                     'subjects.subjectName as subjectName', // Assuming the column is 'name' in your subjects table
                     'sessions.Session as session',
-                    'schedule_briefs.day as day'
+                    'schedule_briefs.day as day',
+                    'classes.className as className',
                 )
                 ->get();
 
@@ -220,7 +220,7 @@ public function teachersAndTheirSessions(Request $request)
 
             //we wanna check if there is already a schedule for this spesefic class
                 //first of all we wanna get the class id
-                $classId=schoolClass::where('className',$request->className)->first();
+                $classId=schoolClass::where('className',$request->className)->value('id');
                 //now we wanna get their briefs
                 $brief=ScheduleBrief::where('class_id',$classId)->delete();
 
@@ -236,7 +236,7 @@ public function teachersAndTheirSessions(Request $request)
                 ],500);
             }
     }
-    
+
  public function generateWeeklySchedule(Request $request)
     {
         try {
@@ -545,15 +545,25 @@ public function teachersAndTheirSessions(Request $request)
     }
 
 
-    public function getStudentExamSchedule()
+    public function getStudentExamSchedule(Request $request)
     {
         try {
+            //validation
+            $validaiton=Validator::make($request->all(),[
+                'type'=>'required|string|in:final,quiz'
+            ]);
+            if($validaiton->fails()){
+                return response()->json([
+                    'status'=>false,
+                    'message'=>$validaiton->errors(),
+                ],422);
+            }
             //first of all we wanna get the user
             $user = Auth::user();
             //now we wanna get the student
             $student = Student::where('user_id', $user->id)->first();
             //now we wanna get the exams
-            $exams = ExamSchedule::where('class_id', $student->class_id)->get();
+            $exams = ExamSchedule::where('class_id', $student->class_id)->where('type', $request->type)->first();
             //returning data
             return response()->json([
                 'status' => true,
@@ -564,6 +574,51 @@ public function teachersAndTheirSessions(Request $request)
                 'status' => false,
                 'message' => $th->getMessage(),
             ], 500);
+        }
+    }
+
+    public function getTeacherWeeklySchedule(){
+        try{
+            //getting the user
+            $user=Auth::user();
+            $teacher=Teacher::where('user_id',$user->id)->first();
+            if(!$teacher){
+                return response()->json([
+                    'status'=>false,
+                    'message'=>'teacher not found',
+                ],422);
+            }
+            // //now we will get his schedules
+            $schedule=Session::query()
+            ->join('schedule_briefs','schedule_briefs.id','=','sessions.schedule_brief_id')
+            ->join('classes','classes.id','=','sessions.class_id')
+            ->join('subjects','subjects.id','=','sessions.subject_id')
+            ->where('teacher_id',$teacher->id)
+            ->select(
+                'sessions.session as session',
+                'sessions.cancelled as cancelled',
+                'subjects.subjectName as subjectName',
+                'schedule_briefs.day as day',
+                'classes.className as className',
+            )
+            ->get()
+            ->all();
+            if(!$schedule){
+                return response()->json([
+                    'status'=>false,
+                    'message'=>'schedule not found',
+                ],422);
+            }
+            //success message
+            return response()->json([
+                'status'=>true,
+                'schedule'=>$schedule,
+            ]);
+        }catch(\throwable $th){
+            return response()->json([
+                'status'=>false,
+                'message'=>$th->getMessage(),
+            ]);
         }
     }
 }

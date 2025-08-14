@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('class_id')->constrained()->onDelete('cascade');
             $table->string('schedule_pdf');
+            $table->neum('type',['final','quiz']);
             $table->timestamps();
         });
     }
