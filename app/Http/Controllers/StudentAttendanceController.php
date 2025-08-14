@@ -12,9 +12,13 @@ use App\Rules\validateDate;
 use Illuminate\Http\Request;
 use App\Models\AbsenceStudent;
 use App\Models\CheckInTeacher;
+use App\Models\ScheduleBrief;
+use App\Models\Session;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Psy\VersionUpdater\Checker;
 
 class StudentAttendanceController extends Controller
 {
@@ -94,7 +98,7 @@ class StudentAttendanceController extends Controller
             }
 
             // 3. Get all students from that class and eager load their user data
-            $students = Student::with('Users')->where('class_id', $class->id)->get();
+            $students = Student::with('Users')->where('class_id', $class->id)->where('expelled',0)->get();
 
             // 4. Transform the student data into the desired format
             $studentList = $students->map(function ($student) {
@@ -125,9 +129,11 @@ class StudentAttendanceController extends Controller
         try {
             //validating
             $validateSession = Validator::make($request->all(), [
+                'className' => 'required|regex:/^\d{1,2}-[A-Z]$/',
+                'fullAttendance'=>'required|boolean',
                 'session' =>  'required|integer|min:1|max:7',
-                'students' => 'required|array',
-                'students.*.studentId' => 'required|integer|exists:students,id',
+                'students' => 'sometimes|array',
+                'students.*.studentId' => 'sometimes|integer|exists:students,id'
             ]);
             if ($validateSession->fails()) {
                 return response()->json([
@@ -145,8 +151,28 @@ class StudentAttendanceController extends Controller
                     'message' => 'Teacher not found',
                 ], 404);
             }
+            //first of all we wanna get any student and get their classs name
+            $validatedData=$validateSession->validated();
+            if(!empty($validatedData['students'])){
+                $firstStudentId=$validatedData['students'][0]['studentId'];
+
+                $classId=Student::where('id',$firstStudentId)->value('class_id');
+            }else{
+                $classId=SchoolClass::where('className',$request->className)->value('id');
+            }
+            //checking if this teacher has the session for this class
+            $today=now()->format('l');
+            $todaysBrief=ScheduleBrief::where('day',$today)->where('class_id',$classId)->first();
+            $teachersSession=Session::where('schedule_brief_id',$todaysBrief->id)->where('teacher_id',$teacher->id)->where('session',$request->session)->first();
+            if(!$teachersSession){
+                return response()->json([
+                    'status'=>false,
+                    'message'=>'you are not allowed to take the report of this session IDIOT!',
+                ],409);
+            }
+    
             //checking if the session attendance has been already taken for the same teacher
-            $sessionExists = CheckInTeacher::where('sessions', $request->session)->where('teacher_id', $teacher->id)->first();
+            $sessionExists = CheckInTeacher::where('sessions', $request->session)->where('class_id', $classId)->whereDate('created_at', now())->first();
             if ($sessionExists) {
                 return response()->json([
                     'status' => false,
@@ -156,20 +182,45 @@ class StudentAttendanceController extends Controller
             //checking the order of the session attendance taking
             $temp = $request->session - 1;
             if ($request->session != 1) {
-                $sessionOrder = CheckInTeacher::where('sessions', $temp)->first();
+                $sessionOrder = CheckInTeacher::where('sessions', $temp)->where('class_id', $classId)->whereDate('created_at', now())->first();
                 if (!$sessionOrder) {
                     return response()->json([
                         'status' => false,
-                        'message' => 'you are not following the order!',
+                        'message' => 'the teacher that had the session before you did not take the report',
                     ], 409);
                 }
             }
+            //checking if the class has full attendance
+            if($request->fullAttendance == true){
+                 CheckInTeacher::create([
+                    'teacher_id'      => $teacher->id,
+                    'student_id'      => null, // <-- This is the main fix
+                    'class_id'        => $classId,
+                    'full_attendance' => true,
+                    'date'            => now(),
+                    'checked'         => false, // Full attendance is considered checked
+                    'sessions'        => $request->session,
+                ]);
+            //returning success message
+                return response()->json([
+                    'status' => true,
+                    'message' => 'check in has been logged successfully for session ' . $request->session . '! and if the is any stupid teacher that does any mistakes i will i will get his mothers id from the system',
+                ], 200);
+            }
 
+            //now we need to track skips
+            $lastSessionReport = CheckInTeacher::where('sessions', $temp)  
+                ->where('class_id', $classId)
+                ->whereDate('created_at', now()) 
+                ->pluck('student_id'); 
+            //now we wanna check if there is a new absent student in this session
+            
             //loging absence
             foreach ($request->students as $student) {
                 CheckInTeacher::create([
                     'teacher_id' => $teacher->id,
                     'student_id' => $student['studentId'],
+                    'class_id' => $classId,
                     'date' => now(),
                     'checked' => false,
                     'sessions' => $request->session,
@@ -178,7 +229,7 @@ class StudentAttendanceController extends Controller
             //returning success message
             return response()->json([
                 'status' => true,
-                'message' => 'check in has been logged successfully for session ' . $request->session . '!',
+                'message' => 'check in has been logged successfully for session ' . $request->session . '! and if the is any stupid teacher that does any mistakes i will i will get his mothers id from the system',
             ], 200);
         } catch (\Throwable $th) {
             return response()->json([
@@ -189,6 +240,7 @@ class StudentAttendanceController extends Controller
             ], 500);
         }
     }
+
     public function checkStudentAbsenceReport(Request $request)
     {
         try {
@@ -235,7 +287,7 @@ class StudentAttendanceController extends Controller
                         }
                         return [
                             'studentId' => $record->student->id,
-                            'full_name' => $record->student->users->name,
+                            'full_name' => $record->student->users->full_name,
                         ];
                     })->filter()->values(),
                 ];
@@ -285,6 +337,17 @@ class StudentAttendanceController extends Controller
     public function submitDailyReports()
     {
         try {
+            //getting all the classes
+            $classes=SchoolClass::all();
+            foreach($classes as $class){
+                $check=CheckInTeacher::where('class_id',$class->id)->where('sessions',7)->first();
+                if(!$check){
+                    return response()->json([
+                        'status'=>false,
+                        'message'=>'the class ' .$class->className. ' doesnt have all the 7 sessions',
+                    ],422);
+                }
+            }
             // Get all unprocessed absence records
             $allAbsences = CheckInTeacher::where('checked', false)->get();
 
@@ -313,11 +376,11 @@ class StudentAttendanceController extends Controller
                         $absence->save();
                     }
 
-                    // Mark those 7 records as checked
-                    foreach ($records as $rec) {
-                        $rec->checked = true;
-                        $rec->save();
-                    }
+                }
+                // Mark those 7 records as checked
+                foreach ($records as $rec) {
+                    $rec->checked = true;
+                    $rec->save();
                 }
             }
 

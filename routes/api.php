@@ -111,9 +111,10 @@ Route::post('/save-fcm-token', [fcmController::class, 'saveFcmToken']);
 
 
 //timetables management
-route::put('/createWeeklySchedule', [TimetablesManagementController::class, 'createWeeklySchedule'])->middleware('auth:sanctum', 'supervisor'); //done w request
+route::put('/createWeeklySchedule', [TimetablesManagementController::class, 'createWeeklySchedule']);//->middleware('auth:sanctum', 'supervisor'); //done w request
 route::put('/uploadExamSchedule', [TimetablesManagementController::class, 'uploadExamSchedule'])->middleware('auth:sanctum', 'supervisor'); //done
 route::get('/getStudentWeeklySchedule', [TimetablesManagementController::class, 'getStudentWeeklySchedule'])->middleware('auth:sanctum', 'student'); //done w request
+route::post('/getClassWeeklySchcedule', [TimetablesManagementController::class, 'getClassWeeklySchcedule']);//->middleware('auth:sanctum', 'teacher ,'supervisor'); //done w request
 route::post('/teachersAndTheirSessions', [TimetablesManagementController::class, 'teachersAndTheirSessions']);//->middleware('auth:sanctum', 'supervisor'); //
 route::post('/generateWeeklySchedule', [TimetablesManagementController::class, 'generateWeeklySchedule']);//->middleware('auth:sanctum', 'supervisor'); //
 route::post('/deleteWeeklySchecdule', [TimetablesManagementController::class, 'deleteWeeklySchecdule']);//->middleware('auth:sanctum', 'supervisor'); //

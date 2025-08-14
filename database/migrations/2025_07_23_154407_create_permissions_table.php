@@ -19,11 +19,14 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
+        // Temporarily disable foreign key checks
+        Schema::disableForeignKeyConstraints();
+
         Schema::dropIfExists('permissions');
+
+        // Re-enable foreign key checks
+        Schema::enableForeignKeyConstraints();
     }
 };
