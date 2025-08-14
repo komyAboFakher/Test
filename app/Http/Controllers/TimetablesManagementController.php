@@ -433,8 +433,10 @@ public function teachersAndTheirSessions(Request $request)
         try {
             //validation 
             $validation = Validator::make($request->all(), [
-                'classId' => 'required|integer|exists:classes,id',
+                'grade' => 'required|integer|in:1,2,3,4,5,6,7,8,9,10,11,12',
+                'semester'=>'required|in:first,second',
                 'schedule' => 'required|mimes:pdf|max:2048',
+                'type'=>'required|string|in:final,midTerm'
             ]);
             if ($validation->fails()) {
                 return response()->json([
@@ -443,8 +445,10 @@ public function teachersAndTheirSessions(Request $request)
                 ]);
             }
             //creating schedule
-            $schedule = ExamSchedule::create([
-                'class_id' => $request->classId,
+            $schedule = ExamSchedule::firstOrcreate([
+                'grade' => $request->grade,
+                'semester' => $request->semester,
+                'type' => $request->type,
                 'schedule' => $request->schedule,
             ]);
             //retrun success message 
@@ -553,7 +557,7 @@ public function teachersAndTheirSessions(Request $request)
         try {
             //validation
             $validaiton=Validator::make($request->all(),[
-                'type'=>'required|string|in:final,quiz'
+                'type'=>'required|string|in:final,midTerm'
             ]);
             if($validaiton->fails()){
                 return response()->json([
@@ -565,8 +569,10 @@ public function teachersAndTheirSessions(Request $request)
             $user = Auth::user();
             //now we wanna get the student
             $student = Student::where('user_id', $user->id)->first();
+            //getting the semester
+            $academic=Academic::firstOrFail();
             //now we wanna get the exams
-            $exams = ExamSchedule::where('class_id', $student->class_id)->where('type', $request->type)->first();
+            $exams = ExamSchedule::where('class_id', $student->class_id)->where('type', $request->semester)->where('semester', $academic->semester)->first();
             //returning data
             return response()->json([
                 'status' => true,
