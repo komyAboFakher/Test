@@ -920,7 +920,7 @@ class authController extends Controller
 
 
 
-    public function createOther(Request $request)
+    public function createOthers(Request $request)
     {
         // Step 1: Validate input
         $validateUser = Validator::make($request->all(), [
