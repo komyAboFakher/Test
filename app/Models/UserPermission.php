@@ -25,10 +25,10 @@ class UserPermission extends Model
 
     public function User()
     {
-        return $this->belongsToMany(User::class);
+        return $this->belongsTo(User::class);
     }
     public function Permission()
     {
-        return $this->belongsTomany(Permission::class);
+        return $this->belongsTo(Permission::class);
     }
 }

@@ -53,9 +53,9 @@ class User extends Authenticatable
     protected function fullName(): Attribute
     {
         return Attribute::make(
-            get: fn ($value, $attributes) => trim(implode(' ', [
-                $attributes['name'], 
-                $attributes['middleName'], 
+            get: fn($value, $attributes) => trim(implode(' ', [
+                $attributes['name'],
+                $attributes['middleName'],
                 $attributes['lastName']
             ]))
         );
@@ -80,21 +80,28 @@ class User extends Authenticatable
     }
     //_________________________________________________________________________
 
+    public function other()
+    {
+        return $this->hasOne(Other::class);
+    }
+
+    //_________________________________________________________________________
+
     public function application()
     {
         return $this->hasOne(Application::class);
     }
     //_________________________________________________________________________
-    public function permissions()
-    {
-        return $this->belongsToMany(Permission::class, 'user_permissions', 'user_id');
-    }
+    //public function permissions()
+    //{
+    //    return $this->belongsToMany(Permission::class, 'user_permissions', 'user_id');
+    //}
     //_________________________________________________________________________
     public function UserPermission()
     {
 
         return $this->hasMany(UserPermission::class);
-  }
+    }
     //_________________________________________________________________________
     public function Parent()
     {
