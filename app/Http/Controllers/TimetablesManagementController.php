@@ -162,7 +162,7 @@ public function teachersAndTheirSessions(Request $request)
                 ->whereIn('sessions.teacher_id', $teachersIds)
                 // Also fixed the select statement to be explicit and use aliases.
                 ->select(
-                    'users.name as teacherName',
+                    'users.fullName as teacherName',
                     'subjects.subjectName as subjectName', // Assuming the column is 'name' in your subjects table
                     'sessions.Session as session',
                     'schedule_briefs.day as day',
