@@ -491,7 +491,7 @@ class classesManagementController extends Controller
                                     $student->users->lastName),
                                 'email' => $student->users->email,
                                 'phone' => $student->users->phoneNumber,
-                                'photo' => $student->photo,
+                                'photo' =>  asset('storage/' . $student->photo),
                                 'gpa' => $student->Gpa,
                                 'absences number' => $student->AbsenceStudent->absence_num ?? ''
                             ];
@@ -527,7 +527,7 @@ class classesManagementController extends Controller
                         'full_name' => trim(implode(' ', array_filter([$user->name, $user->middleName, $user->lastName]))),
                         'email' => $user->email,
                         'phone' => $user->phoneNumber,
-                        'photo' => $user->student->photo,
+                        'photo' => asset('storage/' . $user->student->photo) ?? null,
                         'gpa' => $user->student->Gpa,
                         'class_id' => $user->student->class_id ?? '',
                         'class_name' => $user->student->schoolClass->className ?? '',
@@ -572,7 +572,7 @@ class classesManagementController extends Controller
                                 'full_name' => trim("{$student->users->name} {$student->users->middleName} {$student->users->lastName}"),
                                 'email' => $student->users->email,
                                 'phone' => $student->users->phoneNumber,
-                                'photo' => $student->photo,
+                                'photo' => asset('storage/' . $student->photo) ?? null,
                                 'gpa' => $student->Gpa,
                                 'class_id' => $student->class_id,
                                 'class_name' => $student->schoolClass->className
@@ -614,8 +614,8 @@ class classesManagementController extends Controller
                         'full_name' => trim($user->name . ' ' . $user->middleName . ' ' . $user->lastName),
                         'email' => $user->email,
                         'phone' => $user->phoneNumber,
-                        'certification' => $user->teacher->certification ?? null,
-                        'photo' => $user->teacher->photo ?? null,
+                        'certification' => asset('storage/' . $user->teacher->certification) ?? null,
+                        'photo' => asset('storage/' . $user->teacher->photo) ?? null,
                         'salary' => $user->teacher->salary ?? null,
                         'subject' => $user->teacher->subject ?? null,
                         'classes' => $user->teacher->schoolClasses->map(function ($schoolClass) {
@@ -663,15 +663,49 @@ class classesManagementController extends Controller
                         'full_name' => trim("{$user->name} {$user->middleName} {$user->lastName}"),
                         'email' => $user->email,
                         'phone' => $user->phoneNumber,
-                        'photo' => $user->supervisor->photo ?? null,
-                        'certification' => $user->supervisor->certification ?? null,
+                        'photo' => asset('storage/' . $user->supervisor->photo) ?? null,
+                        'certification' => asset('storage/' . $user->supervisor->certification)  ?? null,
                         'salary' => $user->supervisor->salary ?? null,
+                    ];
+                });
+
+
+            return response()->json([
+                'status' => true,
+                'data' => $supervisors
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'message' => $th->getMessage()
+            ], 500);
+        }
+    }
+    //________________________________________________________________
+
+    public function getAllOthers()
+    {
+
+        try {
+            $others = User::with(['other'])
+                ->where('role', 'other')
+                ->get()
+                ->map(function ($user) {
+                    return [
+                        'user_id' => $user->id,
+                        'other_id' => $user->other->id,
+                        'full_name' => trim("{$user->name} {$user->middleName} {$user->lastName}"),
+                        'email' => $user->email,
+                        'phone' => $user->phoneNumber,
+                        'photo' => asset('storage/' . $user->other->photo) ?? null,
+                        'certification' => asset('storage/' . $user->other->certification) ?? null,
+                        'salary' => $user->other->salary ?? null,
                     ];
                 });
 
             return response()->json([
                 'status' => true,
-                'data' => $supervisors
+                'data' => $others
             ]);
         } catch (\Throwable $th) {
             return response()->json([
@@ -715,11 +749,12 @@ class classesManagementController extends Controller
                 'class_name' => $student->student->SchoolClass->className ?? null,
                 'email' => $student->email,
                 'phone' => $student->phoneNumber,
-                'photo' => $student->student->photo ?? null,
-                'school_graduated_from' => $student->student->schoolGraduatedFrom ?? null,
+                'photo' => asset('storage/' . $student->student->photo) ?? null,
+                'school_graduated_from' => asset('storage/' . $student->student->schoolGraduatedFrom) ?? null,
                 'gpa' => $student->student->Gpa ?? null,
 
             ];
+
 
             return response()->json([
                 'status' => true,
@@ -771,8 +806,8 @@ class classesManagementController extends Controller
                 'full_name' => trim("{$teacher->name} {$teacher->middleName} {$teacher->lastName}"),
                 'email' => $teacher->email,
                 'phone' => $teacher->phoneNumber,
-                'photo' => $teacher->teacher->photo ?? null,
-                'certification' => $teacher->teacher->certification ?? null,
+                'photo' => asset('storage/' . $teacher->teacher->photo) ?? null,
+                'certification' => asset('storage/' . $teacher->teacher->certification) ?? null,
                 'salary' => $teacher->teacher->salary ?? null,
                 'subject' => $teacher->teacher->subject ?? null,
                 'classes' => $classes->SchoolClasses->pluck('className')->toArray(),
@@ -826,8 +861,8 @@ class classesManagementController extends Controller
                 'full_name' => trim("{$supervisor->name} {$supervisor->middleName} {$supervisor->lastName}"),
                 'email' => $supervisor->email,
                 'phone' => $supervisor->phoneNumber,
-                'photo' => $supervisor->supervisor->photo ?? null,
-                'certification' => $supervisor->supervisor->certification ?? null,
+                'photo' => asset('storage/' . $supervisor->supervisor->photo) ?? null,
+                'certification' => asset('storage/' . $supervisor->supervisor->certification) ?? null,
                 'salary' => $supervisor->supervisor->salary ?? null,
 
 
@@ -845,6 +880,61 @@ class classesManagementController extends Controller
             ], 500);
         }
     }
+    //______________________________________________________________________________________________-
+
+    public function getSpecificOther(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'other_id' => 'required|integer|exists:users,id'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Validation error',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $other = User::with('other')
+                ->where('id', $request->other_id)
+                ->where('role', 'other')
+                ->first();
+
+            if (!$other) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'No supervisor found with this ID or the user is not a supervisor'
+                ], 404);
+            }
+
+            $response = [
+                'supervisor_id' => $other->id,
+                'full_name' => trim("{$other->name} {$other->middleName} {$other->lastName}"),
+                'email' => $other->email,
+                'phone' => $other->phoneNumber,
+                'photo' => asset('storage/' . $other->other->photo) ?? null,
+                'certification' => asset('storage/' . $other->other->certification) ?? null,
+                'salary' => $other->other->salary ?? null,
+
+
+            ];
+
+
+            return response()->json([
+                'status' => true,
+                'message' => 'the other information retrieved successfully',
+                'data' => $response
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'message' => $th->getMessage()
+            ], 500);
+        }
+    }
+
     //________________________________________________________________
     private function calculateAttendanceYears($createdAt): int
     {
@@ -1003,9 +1093,26 @@ class classesManagementController extends Controller
                 ], 403);
             }
 
-            $user = User::find($request->user_id);
-            $user->delete();
+            $komy = $request->user_id;
 
+            $user = User::findOrfail($komy);
+
+            if ($user->role == 'student') {
+
+                $student = Student::where('user_id', $komy)->firstOrfail();
+
+                if ($student->class_id) {
+                    $studentClass = $student->class_id;
+                    $class = schoolClass::findOrFail($studentClass);
+                    $class->decrement('currentStudentNumber');
+                    $class->save();
+                    $user->delete();
+                } else {
+                    $user->delete();
+                }
+            } else {
+                $user->delete();
+            }
 
 
 
@@ -1021,9 +1128,10 @@ class classesManagementController extends Controller
         }
     }
     //_________________________________________________________________
-    
-public function getStudentTeachersAndMates(){
-    try{
+
+    public function getStudentTeachersAndMates()
+    {
+        try {
             // 1. Get the authenticated user.
             $user = Auth::user();
 
@@ -1036,15 +1144,15 @@ public function getStudentTeachersAndMates(){
             // Find all students in the same class, but exclude the current student's ID.
             // We use with('user') to also load the user details (like name, email) for each student.
             $classmates = Student::where('class_id', $classId)
-                                 ->where('id', '!=', $student->id)
-                                 ->with('users') // Assumes a 'user' relationship is defined on the Student model
-                                 ->get();
+                ->where('id', '!=', $student->id)
+                ->with('users') // Assumes a 'user' relationship is defined on the Student model
+                ->get();
 
             // 4. Get the Teachers and their Subjects for the class.
             // We fetch the 'TeacherClass' entries and eager load the related teacher (with their user) and the subject.
             $teacherClassEntries = TeacherClass::where('class_id', $classId)
-                                     ->with(['teachers.user', 'subject'])
-                                     ->get();
+                ->with(['teachers.user', 'subject'])
+                ->get();
 
             // We now transform this collection to create our desired output.
             // We want a list of teachers, with the subject name injected into each teacher object.
@@ -1068,13 +1176,13 @@ public function getStudentTeachersAndMates(){
                 'teachers' => $teachers,
                 'students' => $classmates,
             ]);
-    }catch(\Throwable $th){
-        return response()->json([
-            'status'=>false,
-            'message'=>$th->getMessage(),
-        ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'message' => $th->getMessage(),
+            ]);
+        }
     }
-}
 
 
     public function getTeacherClasses()
@@ -1105,5 +1213,4 @@ public function getStudentTeachersAndMates(){
             ], 404);
         }
     }
-
 }

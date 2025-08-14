@@ -828,12 +828,13 @@ class CommunicationController extends Controller
 
             $alreadyReported = ReportedComment::where([
                 'comment_id' => $commentID->id,
+                'reporter_id' => $currentUser
             ])->exists();
 
             if ($alreadyReported) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'the comment has been reported !!'
+                    'message' => 'you already reported this comment !!'
                 ], 409); // 409 = Conflict
             }
 
@@ -879,20 +880,20 @@ class CommunicationController extends Controller
             $Events = $events->map(function ($event) {
                 return [
                     'id' => $event->id,
-                    'user_id' => $event->user_id,
-                    'full_name' => trim("{$event->user->name} {$event->user->middleName} {$event->user->lastName}"),
-                    'email' => $event->user->email,
-                    'event_name' => $event->event_name,
-                    'post' => $event->post,
-                    'is_published' => $event->is_published,
-                    'created_at' => $event->created_at,
-                    'updated_at' => $event->updated_at,
-                    'media' => $event->media->map(function ($media) {
-                        return [
-                            'id' => $media->id,
-                            'url' => asset(Storage::url($media->photo_path)),
-                        ];
-                    })
+                    //'user_id' => $event->user_id,
+                    //'full_name' => trim("{$event->user->name} {$event->user->middleName} {$event->user->lastName}"),
+                    //'email' => $event->user->email,
+                    //'event_name' => $event->event_name,
+                    //'post' => $event->post,
+                    //'is_published' => $event->is_published,
+                    //'created_at' => $event->created_at,
+                    //'updated_at' => $event->updated_at,
+                    //'media' => $event->media->map(function ($media) {
+                    //    return [
+                    //        'id' => $media->id,
+                    //        'url' => asset(Storage::url($media->photo_path)),
+                    //    ];
+                    //})
                 ];
             });
 
@@ -938,6 +939,20 @@ class CommunicationController extends Controller
         }
     }
     //__________________________________________________________________________________________
+
+    public function showReport($eventID)
+    {
+
+        try {
+
+           // $event = Event:: where('id')
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'message' => $th->getMessage(),
+            ], 500);
+        }
+    }
 
     public function react(Request $request)
     {

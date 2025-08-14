@@ -32,7 +32,7 @@ Route::post('/createDean', [authController::class, 'createDean']); //done w requ
 Route::post('/createUser', [authController::class, 'createUser']);//->middleware('auth:sanctum', 'dean'); //done w request
 Route::post('/createTeacher', [authController::class, 'createTeacher'])->middleware('auth:sanctum', 'dean'); //done w request
 Route::post('/createSupervisor', [authController::class, 'createSupervisor'])->middleware('auth:sanctum', 'dean'); //done w request
-Route::post('/createOther', [authController::class, 'createOther'])->middleware('auth:sanctum', 'dean'); //done w request
+Route::post('/createOther', [authController::class, 'createOthers'])->middleware('auth:sanctum', 'dean'); //done w request
 //and modify the create func to intiate student, teacher, parent and supervisor tables
 Route::delete('/logout', [authController::class, 'logout'])->middleware('auth:sanctum'); //done w request
 Route::post('/sendForgetPasswordOtp', [authController::class, 'sendForgetPasswordOtp']); //done w request
@@ -91,9 +91,11 @@ Route::get('/getPaginateStudents', [classesManagementController::class, 'getPagi
 Route::get('/getAllTeacherStudents', [classesManagementController::class, 'getAllTeacherStudents'])->middleware('auth:sanctum', 'teacher'); //done w request
 Route::get('/getAllTeachers', [classesManagementController::class, 'getAllTeachers'])->middleware('auth:sanctum', 'komy'); // done w request
 Route::get('/getAllSupervisors', [classesManagementController::class, 'getAllSupervisors'])->middleware('auth:sanctum', 'dean'); //done w request
+Route::get('/getAllOthers', [classesManagementController::class, 'getAllOthers'])->middleware('auth:sanctum', 'dean'); //done w request
 Route::post('/getSpecificStudent', [classesManagementController::class, 'getSpecificStudent'])->middleware('auth:sanctum', 'gaith'); //done w request
 Route::post('/getSpecificTeacher', [classesManagementController::class, 'getSpecificTeacher'])->middleware('auth:sanctum', 'komy'); //done w request
 Route::post('/getSpecificSupervisor', [classesManagementController::class, 'getSpecificSupervisor'])->middleware('auth:sanctum', 'dean'); //done w request
+Route::post('/getSpecificOther', [classesManagementController::class, 'getSpecificOther'])->middleware('auth:sanctum', 'dean'); //done w request
 Route::get('/getUserInfo', [classesManagementController::class, 'getUserInfo'])->middleware('auth:sanctum'); //done w request
 Route::post('/getClassTeachers', [classesManagementController::class, 'getClassTeachers'])->middleware('auth:sanctum', 'supervisor'); //done w request
 Route::delete('/deleteUser', [classesManagementController::class, 'deleteUser'])->middleware('auth:sanctum', 'dean'); //done w request
@@ -216,11 +218,6 @@ Route::get('showUserPermissions',[PermissionController::class,'showUserPermissio
 Route::post('updateAssignPermission',[PermissionController::class,'updateAssignPermission'])->middleware(['auth:sanctum','dean']);
 Route::delete('deleteAssignPermission',[PermissionController::class,'deleteAssignPermission'])->middleware(['auth:sanctum','dean']);
 
-// public relations managements
-//Route::post('/publish', [PrController::class, 'publish']);
-//Route::post('/updatePublish', [PrController::class, 'updatePublish']);
-//Route::post('/deletePublish', [PrController::class, 'deletePublish']);
-//Route::post('/showPublish', [PrController::class, 'showPublish']);
 
 
 
