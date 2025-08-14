@@ -924,7 +924,4 @@ public function deletePinCode(){
         }
     }
 
-    public function meow(){
-        
-    }
 }

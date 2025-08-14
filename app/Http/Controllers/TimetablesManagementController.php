@@ -179,6 +179,7 @@ public function teachersAndTheirSessions(Request $request)
                     return [
                         'teacherName' => $session->teacherName,
                         'day' => $session->day,
+                        'className' => $session->className,
                         'session' => $session->session,
                     ];
                 })->values();
