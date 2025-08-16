@@ -369,7 +369,7 @@ public function teachersAndTheirSessions(Request $request)
                 'schedule.*.day' => 'required|string|in:sunday,monday,tuesday,wednesday,thursday',
                 'schedule.*.session' => 'required|numeric|in:1,2,3,4,5,6,7',
                 // Note: The key is 'subjectName' to match the data from your generate function
-                'schedule.*.subjectName' => ['required', 'string', Rule::in($allowedSubjects)],
+                'schedule.*.subject' => ['required', 'string', Rule::in($allowedSubjects)],
             ]);
         if($validation->fails()){
             return response()->json([
