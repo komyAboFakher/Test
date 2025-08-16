@@ -159,7 +159,7 @@ Route::post('/editComment/{commentID}', [CommunicationController::class, 'editCo
 Route::delete('/deleteComment/{commentID}', [CommunicationController::class, 'deleteComment'])->middleware('auth:sanctum'); // done with r
 Route::get('/getEventComments/{eventID}', [CommunicationController::class, 'getEventComments'])->middleware('auth:sanctum'); // done wih r
 Route::post('/reportComment', [CommunicationController::class, 'reportComment'])->middleware('auth:sanctum'); // done wih r
-Route::get('/showReportedComments/{eventID}', [CommunicationController::class, 'showReportedComments'])->middleware('auth:sanctum', 'supervisor'); // done wih r
+Route::get('/showReportedComments', [CommunicationController::class, 'showReportedComments'])->middleware('auth:sanctum', 'supervisor'); // done wih r
 Route::delete('/deleteReportedComments', [CommunicationController::class, 'showReportedComments'])->middleware('auth:sanctum', 'supervisor');
 
 //reactions

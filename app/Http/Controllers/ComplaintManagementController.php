@@ -423,7 +423,7 @@ class ComplaintManagementController extends Controller
             $complaints = Complaint::where('seen_at', null)->get();
             //->groupBy('priority')
             //->map(function ($group) {
-            //    return $group->map(function ($complaint) {
+            //    return $group->ap(function ($coplaint) {
             //
             //        return [
             //            'complaint_id' => $complaint->id,
