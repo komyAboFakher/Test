@@ -452,7 +452,7 @@ public function generateWeeklySchedule(Request $request)
         // --- 2. GENERATION: BUILD THE SCHEDULE IN MEMORY ---
         $newlyGeneratedSchedule = [];
         $weekDays = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday'];
-        $sessionsPerDay = 6;
+        $sessionsPerDay = 7;
         $subjectsToPlace = $classSubjects->shuffle()->all(); // Create the pool of subjects ONCE
 
         foreach ($weekDays as $day) {
