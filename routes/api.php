@@ -77,7 +77,7 @@ Route::get('/showClasses', [classesManagementController::class, 'showClasses'])-
 Route::post('/editClass', [classesManagementController::class, 'editClass'])->middleware('auth:sanctum', 'supervisor'); //done w request
 Route::post('/assignStudentToClass', [classesManagementController::class, 'assignStudentToClass'])->middleware('auth:sanctum', 'supervisor'); //done w request
 Route::delete('/deleteClass', [classesManagementController::class, 'deleteClass'])->middleware('auth:sanctum', 'supervisor'); //done
-Route::post('/assignTeacherToClass', [classesManagementController::class, 'assignTeacherToClass'])->middleware('auth:sanctum', 'supervisor'); //done w request //dont froget to make it assign a specific tracher to three classes in the maximum
+Route::post('/assignTeacherToClass', [classesManagementController::class, 'assignTeacherToClass']);//->middleware('auth:sanctum', 'supervisor'); //done w request //dont froget to make it assign a specific tracher to three classes in the maximum
 Route::delete('/unassignTeacherToClass', [classesManagementController::class, 'unassignTeacherToClass'])->middleware('auth:sanctum', 'supervisor'); //done w request 
 Route::post('/overWriteTeacherToClass', [classesManagementController::class, 'overWriteTeacherToClass'])->middleware('auth:sanctum', 'supervisor'); //done w request
 Route::get('/getStudentTeachersAndMates', [classesManagementController::class,'getStudentTeachersAndMates'])->middleware('auth:sanctum','student');//done

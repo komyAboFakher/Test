@@ -2,11 +2,12 @@
 
 return [
     'allowed' => [
-        'Math',
-        'Physics',
-        'Chemistry',
-        'Biology',
-        'History',
-        'Computer',
+        'math',
+        'physics',
+        'chemistry',
+        'biology',
+        'history',
+        'computer',
+        'english',
     ],
 ];

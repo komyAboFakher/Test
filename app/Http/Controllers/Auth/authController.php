@@ -456,8 +456,7 @@ class authController extends Controller
         try {
             //validation
             $validateUser = Validator::make($request->all(), [
-                'email' => 'required',
-                'email',
+                'email' => ['required', 'email', 'exists:users,email'],
                 'regex:/^[a-zA-Z0-9._%+-]+@gmail\.com$/i',
                 'unique:users,email',
                 'password' => 'required|string|min:8',
