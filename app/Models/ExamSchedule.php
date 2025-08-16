@@ -12,6 +12,8 @@ class ExamSchedule extends Model
     protected $fillable=[
         'class_id',
         'schedule_pdf',
+        'semester',
+        'grade',
         'type',
     ];
     public function Clas(){

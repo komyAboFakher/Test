@@ -340,7 +340,7 @@ class StudentAttendanceController extends Controller
             //getting all the classes
             $classes=SchoolClass::all();
             foreach($classes as $class){
-                $check=CheckInTeacher::where('class_id',$class->id)->where('sessions',7)->first();
+                $check=CheckInTeacher::where('class_id',$class->id)->where('checked',false)->where('sessions',7)->first();
                 if(!$check){
                     return response()->json([
                         'status'=>false,

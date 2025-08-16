@@ -9,6 +9,7 @@ use App\Models\Teacher;
 use App\Models\Academic;
 use App\Models\schoolClass;
 use App\Models\ExamSchedule;
+use App\Models\Pr;
 use App\Models\TeacherClass;
 use Illuminate\Http\Request;
 use App\Models\ScheduleBrief;
@@ -162,7 +163,9 @@ public function teachersAndTheirSessions(Request $request)
                 ->whereIn('sessions.teacher_id', $teachersIds)
                 // Also fixed the select statement to be explicit and use aliases.
                 ->select(
-                    'users.name as teacherName',
+                    'users.name as firstName',
+                    'users.middleName as middleName',
+                    'users.lastName as lastName',
                     'subjects.subjectName as subjectName', // Assuming the column is 'name' in your subjects table
                     'sessions.Session as session',
                     'schedule_briefs.day as day',
@@ -177,8 +180,9 @@ public function teachersAndTheirSessions(Request $request)
             $formattedSchedules = $groupedBySubject->map(function ($sessions) {
                 return $sessions->map(function ($session) {
                     return [
-                        'teacherName' => $session->teacherName,
+                        'teacherName' => $session->firstName . ' ' .$session->middleName. ' '.$session->lastName,
                         'day' => $session->day,
+                        'className' => $session->className,
                         'session' => $session->session,
                     ];
                 })->values();
@@ -237,201 +241,351 @@ public function teachersAndTheirSessions(Request $request)
             }
     }
 
- public function generateWeeklySchedule(Request $request)
+    private function performDeleteSchedule(int $classId)
+    {
+        try{
+            // 1. Find all brief IDs associated with this class
+            $briefIds = ScheduleBrief::where('class_id', $classId)->pluck('id');
+
+            // 2. If briefs exist, delete the sessions and then the briefs
+            if ($briefIds->isNotEmpty()) {
+                // CRITICAL: Delete all sessions linked to those briefs first
+                Session::whereIn('schedule_brief_id', $briefIds)->delete();
+
+                // Finally, delete the briefs themselves
+                ScheduleBrief::whereIn('id', $briefIds)->delete();
+            }
+        }catch(\Throwable $th){
+            return response()->json([
+                'status'=>false,
+                'message'=>$th->getMessage(),
+            ]);
+        }
+    }
+
+ public function createWeeklySchedule(Request $request)
     {
         try {
-            // --- VALIDATION (Assuming 'classes' table) ---
+            // --- YOUR SPECIFIC VALIDATION RULES ---
+            $allowedSubjects = config('subjects.allowed'); // Make sure this config file exists
             $validation = Validator::make($request->all(), [
-                'className' => ['required', 'string', 'regex:/^\d{1,2}-[A-Z]$/', 'exists:classes,className']
+                'classId' => 'required|integer|exists:classes,id',
+                'schedule' => 'required|array',
+                'schedule.*.day' => 'required|string|in:sunday,monday,tuesday,wednesday,thursday',
+                'schedule.*.session' => 'required|numeric|in:1,2,3,4,5,6,7',
+                // Note: The key is 'subjectName' to match the data from your generate function
+                'schedule.*.subject' => ['required', 'string', Rule::in($allowedSubjects)],
             ]);
 
             if ($validation->fails()) {
                 return response()->json(['status' => false, 'message' => 'Validation failed', 'errors' => $validation->errors()], 422);
             }
 
-            // --- PRE-CHECK ---
-            $class = schoolClass::where('className', $request->className)->first();
-
-            // Use dd($class->id); here to see what ID is being found for your className
-            // For example: dd($class->id);
-
-            $scheduleExists = ScheduleBrief::where('class_id', $class->id)->exists();
-
-            if ($scheduleExists) {
-                return response()->json(['status' => false, 'message' => "The class already has a timetable. Please delete it before generating a new one."], 422);
+            // --- PRE-CHECK: Does a schedule already exist? ---
+            if (ScheduleBrief::where('class_id', $request->classId)->exists()) {
+                return response()->json(['status' => false, 'message' => "The class already has a timetable. Please delete it before generating it!"], 422);
             }
 
-            // --- 1. PREPARATION: GATHER DATA (Using snake_case conventions) ---
+            $class = schoolClass::find($request->classId);
+            $grade = explode('-', $class->className)[0];
+            $scheduleItems = $request->schedule;
+            $errors = [];
+            $validatedData = [];
 
-            $classSubjects = DB::table('teacher_classes as tc')
-                ->join('subjects as s', 'tc.subject_id', '=', 's.id')
-                ->join('users as u', 'tc.teacher_id', '=', 'u.id')
-                ->where('tc.class_id', $class->id)
-                ->select(
-                    'tc.teacher_id',
-                    'tc.subject_id',
-                    's.subjectName', // CORRECTED: Assumes column is 'subject_name'
-                    DB::raw("CONCAT(u.name, ' ', u.lastName) as teacher_name") // CORRECTED: Assumes 'first_name', 'last_name'
-                )
-                ->get()
-                ->shuffle();
-
-            if ($classSubjects->isEmpty()) {
-                return response()->json(['status' => false, 'message' => "No subjects or teachers are assigned to this class for the given className."], 422);
-            }
-
-            $teacherIds = $classSubjects->pluck('teacher_id')->unique();
-
-            // Build a fast "Conflict Map"
-            $existingSchedules = Session::query()
-                ->join('schedule_briefs as sb', 'sessions.schedule_brief_id', '=', 'sb.id') // CORRECTED: Join key is 'brief_id'
-                ->whereIn('sessions.teacher_id', $teacherIds)
-                ->select('sessions.teacher_id', 'sessions.session', 'sb.day')
-                ->get();
-
-            $conflictMap = [];
-            foreach ($existingSchedules as $schedule) {
-                // Ensure array keys are consistent
-                $conflictMap[strtolower($schedule->day)][$schedule->session] = $schedule->teacher_id;
-            }
-
-            // --- 2. GENERATION: BUILD THE SCHEDULE IN MEMORY ---
-
-            $newlyGeneratedSchedule = [];
-            $weekDays = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday']; // Use lowercase to match conflict map keys
-            $sessionsPerDay = 7;
-            $subjectsToPlace = $classSubjects->all();
-
-            foreach ($weekDays as $day) {
-                $dailySessions = [];
-                for ($sessionNum = 1; $sessionNum <= $sessionsPerDay; $sessionNum++) {
-                    $assignedSlot = null;
-                    foreach ($subjectsToPlace as $key => $subject) {
-                        $isTeacherBusy = isset($conflictMap[$day][$sessionNum]) && $conflictMap[$day][$sessionNum] == $subject->teacher_id;
-
-                        if (!$isTeacherBusy) {
-                            $assignedSlot = ['session' => $sessionNum, 'day' => $day, 'class_id' => $class->id] + (array)$subject;
-                            unset($subjectsToPlace[$key]);
-                            break;
-                        }
-                    }
-
-                    if (is_null($assignedSlot)) {
-                        $assignedSlot = ['session' => $sessionNum, 'day' => $day, 'class_id' => $class->id, 'teacher_id' => null, 'subject_name' => 'Free Period', 'teacher_name' => null];
-                    }
-                    $dailySessions[] = $assignedSlot;
+            // --- PHASE 1: PRE-VALIDATION LOOP ---
+            // Check all data before starting the database transaction.
+            foreach ($scheduleItems as $index => $item) {
+                if ($item['subject'] === 'Free Period') {
+                    $validatedData[] = $item + ['teacher_id' => null, 'subject_id' => null];
+                    continue;
                 }
-                $newlyGeneratedSchedule[] = ['day' => $day, 'sessions' => $dailySessions];
+
+                $subject = Subject::where('grade', $grade)->where('subjectName', $item['subject'])->first();
+                if (!$subject) {
+                    $errors[] = "Subject '{$item['subject']}' not found for grade {$grade} (at session {$item['session']} on {$item['day']}).";
+                    continue;
+                }
+
+                $teacherId = TeacherClass::where('class_id', $request->classId)->where('subject_id', $subject->id)->value('teacher_id');
+
+                if (!$teacherId) {
+                    $errors[] = "No teacher is assigned to subject '{$item['subject']}' for this class.";
+                }
+                
+                $validatedData[] = $item + ['teacher_id' => $teacherId, 'subject_id' => $subject->id];
             }
 
-            // --- 3. RESPONSE ---
-            return response()->json(['status' => true, 'message' => 'Schedule generated successfully.', 'schedule_data' => $newlyGeneratedSchedule], 200);
+            if (!empty($errors)) {
+                return response()->json(['status' => false, 'message' => 'Invalid schedule data provided.', 'errors' => array_unique($errors)], 422);
+            }
 
-        } catch (\Throwable $th) {
-            return response()->json(['status' => false, 'message' => $th->getMessage()], 500);
-        }
-    }
+            // --- PHASE 2: CREATION PHASE ---
+            // If we reach this point, all data is valid. Now we can safely create records.
+            DB::transaction(function () use ($request, $validatedData) {
+                $academics = Academic::firstOrFail();
+                $briefsCache = [];
 
-    public function createWeeklySchedule(Request $request)
-    {
-        $allowedSubjects = config('subjects.allowed');
-        //validation
-        $validation = Validator::make($request->all(), [
-            'classId' => 'required|integer|exists:classes,id',
-            // 'semester' => 'required|string|in:first,second',
-            // 'year' => 'required|string|regex:/^\d{4}\/\d{4}$/',
-            'schedule' => 'required|array',
-            'schedule.*.day' => 'required|string|in:sunday,monday,tuesday,wednesday,thursday',
-            'schedule.*.session' => 'required|numeric|in:1,2,3,4,5,6,7',
-            'schedule.*.subject' => ['required', 'string', Rule::in($allowedSubjects)],
-        ]);
-        if($validation->fails()){
-            return response()->json([
-                'status'=>false,
-                'message'=>$validation->errors(),
-            ],422);
-        }
-        //now we wanna get their briefs
-        $existingbrief=ScheduleBrief::where('class_id',$request->classId)->first();
-        //now there is the check
-        if($existingbrief){
-            return response()->json([
-                'status'=>false,
-                'message'=>"the class already has a timetable delete it before genrating it!",
-            ],422);
-        }
-        try{
-            DB::transaction(function() use($request){
-                $academics=Academic::firstOrFail();
-                $class=schoolClass::find($request->classId);
-                $classParts=explode('-',$class->className);
-                $grade=$classParts[0];
-                //use chache to avoid reading the same brief or subject repeadetly
-                $briefsCache=[];
-                $subjectsCache=[];
+                foreach ($validatedData as $item) {
+                    if (is_null($item['subject_id'])) {
+                        continue;
+                    }
 
-                foreach($request->schedule as $item){
-                    $day=$item['day'];
+                    $day = $item['day'];
 
-                    //create orfind the schedule brief effeciently
-                    if(!isset($briefsCache[$day])){
-                        $briefsCache[$day] = ScheduleBrief::firstOrCreate([
-                        'class_id' => $request->classId,
-                        'day' => $day,
-                        'semester' => $academics->academic_semester,
-                        'year' => $academics->academic_year,
+                    if (!isset($briefsCache[$day])) {
+                        $briefsCache[$day] = ScheduleBrief::create([
+                            'class_id' => $request->classId,
+                            'day' => $day,
+                            'semester' => $academics->academic_semester,
+                            'year' => $academics->academic_year,
                         ]);
                     }
+                    $brief = $briefsCache[$day];
 
-                    $brief=$briefsCache[$day];
-
-                    //find the subject id effeciently
-                    $subjectName=$item['subject'];
-                    if(!isset($subjectsCache[$subjectName])){
-                        $subject = Subject::where('grade', $grade)->where('subjectName', $subjectName)->firstOrFail();
-                        $subjectsCache[$subjectName] = $subject->id;
-                    }
-                    $subjectId=$subjectsCache[$subjectName];
-                    //we need to get the teacher id
-                    $teacherId=TeacherClass::where('class_id',$request->classId)->where('subject_id',$subjectId)->value('teacher_id');
-                    if(!$teacherId){
-                        return response()->json([
-                            'status'=>false,
-                            'message'=>'the class doesnt have any assigned teacher to the subject '.$subjectName.'!',
-                        ],422);
-                    }
-                    // 5. Create the session
                     Session::create([
                         'class_id' => $request->classId,
                         'schedule_brief_id' => $brief->id,
-                        'subject_id' => $subjectId,
-                        'teacher_id' => $teacherId,
+                        'subject_id' => $item['subject_id'],
+                        'teacher_id' => $item['teacher_id'],
                         'cancelled' => false,
                         'session' => $item['session'],
                     ]);
                 }
             });
 
-            return response()->json([
-                'status' => true,
-                'message' => 'Schedule has been created successfully!',
-            ], 200);
+            return response()->json(['status' => true, 'message' => 'Schedule has been created successfully!'], 200);
 
-        }catch(\Throwable $th){
-            return response()->json([
-                'status'=>false,
-                'message'=>$th->getMessage(),
-            ],500);
+        } catch (\Throwable $th) {
+            return response()->json(['status' => false, 'message' => $th->getMessage()], 500);
         }
     }
+
+    private function performCreateSchedule(int $classId, array $scheduleItems): void
+{
+    $class = schoolClass::find($classId);
+    $grade = explode('-', $class->className)[0];
+    $errors = [];
+    $validatedData = [];
+
+    // --- PHASE 1: PRE-VALIDATION LOOP ---
+    // Check all data before starting the database transaction.
+    foreach ($scheduleItems as $index => $item) {
+        // The frontend should send the subject's name, not its ID
+        $subjectName = $item['subject']; 
+        
+        if ($subjectName === 'Free Period') {
+            $validatedData[] = $item + ['teacher_id' => null, 'subject_id' => null];
+            continue;
+        }
+
+        $subject = Subject::where('grade', $grade)->where('subjectName', $subjectName)->first();
+        if (!$subject) {
+            $errors[] = "Subject '{$subjectName}' not found for grade {$grade}.";
+            continue; // Continue checking other items
+        }
+
+        $teacherId = TeacherClass::where('class_id', $classId)->where('subject_id', $subject->id)->value('teacher_id');
+        if (!$teacherId) {
+            $errors[] = "No teacher is assigned to subject '{$subjectName}' for this class.";
+        }
+        
+        $validatedData[] = $item + ['teacher_id' => $teacherId, 'subject_id' => $subject->id];
+    }
+
+    // If any errors were found, throw an exception with all the details.
+    if (!empty($errors)) {
+        // Consolidate unique errors into a single string
+        $errorString = implode(' | ', array_unique($errors));
+        throw new \Exception($errorString);
+    }
+
+    // --- PHASE 2: CREATION PHASE ---
+    // If we reach here, all data is valid.
+    DB::transaction(function () use ($classId, $validatedData) {
+        $academics = Academic::firstOrFail();
+        $briefsCache = [];
+
+        foreach ($validatedData as $item) {
+            if (is_null($item['subject_id'])) {
+                continue;
+            }
+
+            $day = $item['day'];
+            if (!isset($briefsCache[$day])) {
+                $briefsCache[$day] = ScheduleBrief::create([
+                    'class_id' => $classId,
+                    'day' => $day,
+                    'semester' => $academics->academic_semester,
+                    'year' => $academics->academic_year,
+                ]);
+            }
+            $brief = $briefsCache[$day];
+
+            Session::create([
+                'class_id' => $classId,
+                'schedule_brief_id' => $brief->id,
+                'subject_id' => $item['subject_id'],
+                'teacher_id' => $item['teacher_id'],
+                'cancelled' => false,
+                'session' => $item['session'],
+            ]);
+        }
+    });
+}
+public function updateWeeklySchedule(Request $request)
+{
+    // First, validate the incoming data for the NEW schedule
+    $validation = Validator::make($request->all(), [
+        'classId' => 'required|integer|exists:classes,id',
+        'schedule' => 'required|array',
+        'schedule.*.day' => 'required|string|in:sunday,monday,tuesday,wednesday,thursday',
+        'schedule.*.session' => 'required|numeric|between:1,7',
+        'schedule.*.subject' => 'required|string', 
+    ]);
+
+    if ($validation->fails()) {
+        return response()->json(['status' => false, 'message' => $validation->errors()], 422);
+    }
+
+    try {
+        // Use a single transaction to ensure the update is atomic
+        DB::transaction(function () use ($request) {
+            
+            // Step 1: Delete the old schedule using the private helper
+            $this->performDeleteSchedule($request->classId);
+            
+            // Step 2: Create the new schedule using the private helper
+            // As you correctly said, we pass the classId and schedule array.
+            $this->performCreateSchedule($request->classId, $request->schedule);
+
+        });
+
+        // If the transaction completes without errors, the update was successful
+        return response()->json([
+            'status' => true,
+            'message' => 'The schedule has been updated successfully!',
+        ], 200);
+
+    } catch (\Throwable $th) {
+        // If anything fails in the transaction, it's rolled back and we catch the error
+        return response()->json([
+            'status' => false,
+            'message' => $th->getMessage(),
+        ], 500);
+    }
+}
+public function generateWeeklySchedule(Request $request)
+{
+    try {
+        // --- VALIDATION & PRE-CHECKS ---
+        $validation = Validator::make($request->all(), [
+            'className' => ['required', 'string', 'regex:/^\d{1,2}-[A-Z]$/', 'exists:classes,className']
+        ]);
+
+        if ($validation->fails()) {
+            return response()->json(['status' => false, 'message' => 'Validation failed', 'errors' => $validation->errors()], 422);
+        }
+
+        $class = schoolClass::where('className', $request->className)->first();
+        if (ScheduleBrief::where('class_id', $class->id)->exists()) {
+            return response()->json(['status' => false, 'message' => "The class already has a timetable. Please delete it before generating a new one."], 422);
+        }
+
+        // --- 1. PREPARATION: GATHER DATA ---
+        $classSubjects = DB::table('teacher_classes as tc')
+            ->join('subjects as s', 'tc.subject_id', '=', 's.id')
+            ->join('users as u', 'tc.teacher_id', '=', 'u.id')
+            ->where('tc.class_id', $class->id)
+            ->select('tc.teacher_id', 'tc.subject_id', 's.subjectName as subject', DB::raw("CONCAT(u.name, ' ', u.lastName) as teacher_name"))
+            ->get();
+
+        if ($classSubjects->isEmpty()) {
+            return response()->json(['status' => false, 'message' => "No subjects or teachers are assigned to this class for the given className."], 422);
+        }
+
+        // Fetch ALL existing schedules to build a complete conflict map
+        $allExistingSchedules = Session::query()
+            ->join('schedule_briefs as sb', 'sessions.schedule_brief_id', '=', 'sb.id')
+            ->select('sessions.teacher_id', 'sessions.class_id', 'sessions.session', 'sb.day')
+            ->get();
+
+        // **CORRECTION 1: Build a more detailed conflict map**
+        $conflictMap = [];
+        foreach ($allExistingSchedules as $schedule) {
+            $day = strtolower($schedule->day);
+            $session = $schedule->session;
+
+            // Initialize the slot if it's the first time we see it
+            if (!isset($conflictMap[$day][$session])) {
+                $conflictMap[$day][$session] = [
+                    'teachers' => [],
+                    'classes' => [],
+                ];
+            }
+            // Add the busy teacher and class to the lists for that slot
+            $conflictMap[$day][$session]['teachers'][] = $schedule->teacher_id;
+            $conflictMap[$day][$session]['classes'][] = $schedule->class_id;
+        }
+
+        // return response()->json([
+        //     'meow'=>$conflictMap
+        // ]);
+        // --- 2. GENERATION: BUILD THE SCHEDULE IN MEMORY ---
+        $newlyGeneratedSchedule = [];
+        $weekDays = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday'];
+        $sessionsPerDay = 7;
+        $subjectsToPlace = $classSubjects->shuffle()->all(); // Create the pool of subjects ONCE
+
+        foreach ($weekDays as $day) {
+            for ($sessionNum = 1; $sessionNum <= $sessionsPerDay; $sessionNum++) {
+                $assignedSlot = null;
+                $subjectsToPlace = $classSubjects->shuffle()->all();
+                foreach ($subjectsToPlace as $key => $subject) {
+                    
+                    // **CORRECTION 2: The new, more accurate conflict check**
+                    $isTeacherBusy = isset($conflictMap[$day][$sessionNum]) && in_array($subject->teacher_id, $conflictMap[$day][$sessionNum]['teachers']);
+                    
+                    // A class cannot have two lessons at the same time. Let's check if this class is already busy.
+                    $isClassBusy = isset($conflictMap[$day][$sessionNum]) && in_array($class->id, $conflictMap[$day][$sessionNum]['classes']);
+
+                    if (!$isTeacherBusy && !$isClassBusy) {
+                        $assignedSlot = ['session' => $sessionNum, 'day' => $day, 'class_id' => $class->id] + (array)$subject;
+                        
+                        // Immediately update the conflict map with our new assignment for this run
+                        $conflictMap[$day][$sessionNum]['teachers'][] = $subject->teacher_id;
+                        $conflictMap[$day][$sessionNum]['classes'][] = $class->id;
+                        
+                        unset($subjectsToPlace[$key]); // Remove subject from the pool
+                        break;
+                    }
+                }
+
+                if (is_null($assignedSlot)) {
+                    $assignedSlot = ['session' => $sessionNum, 'day' => $day, 'class_id' => $class->id, 'teacher_id' => null, 'subject_id' => null, 'subject' => 'Free Period', 'teacher_name' => null];
+                }
+                
+                $newlyGeneratedSchedule[] = $assignedSlot;
+            }
+        }
+
+        // --- 3. RESPONSE ---
+        return response()->json(['status' => true, 'message' => 'Schedule generated successfully.', 'schedule_data' => $newlyGeneratedSchedule], 200);
+
+    } catch (\Throwable $th) {
+        return response()->json(['status' => false, 'message' => $th->getMessage()], 500);
+    }
+}
+
 
     public function uploadExamSchedule(Request $request)
     {
         try {
             //validation 
             $validation = Validator::make($request->all(), [
-                'classId' => 'required|integer|exists:classes,id',
+                'grade' => 'required|integer|in:1,2,3,4,5,6,7,8,9,10,11,12',
+                'semester'=>'required|in:first,second',
                 'schedule' => 'required|mimes:pdf|max:2048',
+                'type'=>'required|string|in:final,midTerm'
             ]);
             if ($validation->fails()) {
                 return response()->json([
@@ -440,8 +594,10 @@ public function teachersAndTheirSessions(Request $request)
                 ]);
             }
             //creating schedule
-            $schedule = ExamSchedule::create([
-                'class_id' => $request->classId,
+            $schedule = ExamSchedule::firstOrcreate([
+                'grade' => $request->grade,
+                'semester' => $request->semester,
+                'type' => $request->type,
                 'schedule' => $request->schedule,
             ]);
             //retrun success message 
@@ -544,13 +700,34 @@ public function teachersAndTheirSessions(Request $request)
         }
     }
 
-
+    public function getExamSchedule(Request $request){
+        try{
+            //validation
+            $validation=Validator::make($request->all(),[
+                'className' => ['required', 'string', 'regex:/^\d{1,2}-[A-Z]$/', 'exists:classes,className'],
+                'type'=>'required|string|in:final,midTerm',
+                'semester'=>'required|string|in:first,second',
+            ]);
+            if($validation ->fails()){
+                return response()->json([
+                    'status'=>false,
+                    'message'=>$validation->errors(),
+                ]);
+            }
+            ////////////////////////////////////////////////////NOT DONE////////////////////////////////////////////////////////////
+        }catch(\Throwable $th){
+            return response()->json([
+                'status'=>false,
+                'message'=>$th->getMessage(),
+            ]);
+        }
+    }
     public function getStudentExamSchedule(Request $request)
     {
         try {
             //validation
             $validaiton=Validator::make($request->all(),[
-                'type'=>'required|string|in:final,quiz'
+                'type'=>'required|string|in:final,midTerm'
             ]);
             if($validaiton->fails()){
                 return response()->json([
@@ -562,8 +739,10 @@ public function teachersAndTheirSessions(Request $request)
             $user = Auth::user();
             //now we wanna get the student
             $student = Student::where('user_id', $user->id)->first();
+            //getting the semester
+            $academic=Academic::firstOrFail();
             //now we wanna get the exams
-            $exams = ExamSchedule::where('class_id', $student->class_id)->where('type', $request->type)->first();
+            $exams = ExamSchedule::where('class_id', $student->class_id)->where('type', $request->semester)->where('semester', $academic->semester)->first();
             //returning data
             return response()->json([
                 'status' => true,
@@ -597,7 +776,7 @@ public function teachersAndTheirSessions(Request $request)
             ->select(
                 'sessions.session as session',
                 'sessions.cancelled as cancelled',
-                'subjects.subjectName as subjectName',
+                'subjects.subjectName as subject',
                 'schedule_briefs.day as day',
                 'classes.className as className',
             )
