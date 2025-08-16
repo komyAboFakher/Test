@@ -360,39 +360,120 @@ public function teachersAndTheirSessions(Request $request)
         }
     }
 
-    public function updateWeeklySchedule(Request $request){
-        try{
-            $allowedSubjects = config('subjects.allowed'); // Make sure this config file exists
-            $validation = Validator::make($request->all(), [
-                'classId' => 'required|integer|exists:classes,id',
-                'schedule' => 'required|array',
-                'schedule.*.day' => 'required|string|in:sunday,monday,tuesday,wednesday,thursday',
-                'schedule.*.session' => 'required|numeric|in:1,2,3,4,5,6,7',
-                // Note: The key is 'subjectName' to match the data from your generate function
-                'schedule.*.subject' => ['required', 'string', Rule::in($allowedSubjects)],
-            ]);
-        if($validation->fails()){
-            return response()->json([
-                'status'=>false,
-                'message'=>$validation->errors(),
-            ],422);
+    private function performCreateSchedule(int $classId, array $scheduleItems): void
+{
+    $class = schoolClass::find($classId);
+    $grade = explode('-', $class->className)[0];
+    $errors = [];
+    $validatedData = [];
+
+    // --- PHASE 1: PRE-VALIDATION LOOP ---
+    // Check all data before starting the database transaction.
+    foreach ($scheduleItems as $index => $item) {
+        // The frontend should send the subject's name, not its ID
+        $subjectName = $item['subject']; 
+        
+        if ($subjectName === 'Free Period') {
+            $validatedData[] = $item + ['teacher_id' => null, 'subject_id' => null];
+            continue;
         }
-        DB::transaction(function() use($request){
-            $this->performDeleteSchedule($request->classId);        
-            $this->createWeeklySchedule($request);
-        });
-        //success message
-        return response()->json([
-            'status'=>false,
-            'message'=>'the schedule has been updated successfuly!',
-        ]);
-        }catch(\Throwable $th){
-            return response()->json([
-                'status'=>false,
-                'message'=>$th->getMessage(),
-            ]);
+
+        $subject = Subject::where('grade', $grade)->where('subjectName', $subjectName)->first();
+        if (!$subject) {
+            $errors[] = "Subject '{$subjectName}' not found for grade {$grade}.";
+            continue; // Continue checking other items
         }
+
+        $teacherId = TeacherClass::where('class_id', $classId)->where('subject_id', $subject->id)->value('teacher_id');
+        if (!$teacherId) {
+            $errors[] = "No teacher is assigned to subject '{$subjectName}' for this class.";
+        }
+        
+        $validatedData[] = $item + ['teacher_id' => $teacherId, 'subject_id' => $subject->id];
     }
+
+    // If any errors were found, throw an exception with all the details.
+    if (!empty($errors)) {
+        // Consolidate unique errors into a single string
+        $errorString = implode(' | ', array_unique($errors));
+        throw new \Exception($errorString);
+    }
+
+    // --- PHASE 2: CREATION PHASE ---
+    // If we reach here, all data is valid.
+    DB::transaction(function () use ($classId, $validatedData) {
+        $academics = Academic::firstOrFail();
+        $briefsCache = [];
+
+        foreach ($validatedData as $item) {
+            if (is_null($item['subject_id'])) {
+                continue;
+            }
+
+            $day = $item['day'];
+            if (!isset($briefsCache[$day])) {
+                $briefsCache[$day] = ScheduleBrief::create([
+                    'class_id' => $classId,
+                    'day' => $day,
+                    'semester' => $academics->academic_semester,
+                    'year' => $academics->academic_year,
+                ]);
+            }
+            $brief = $briefsCache[$day];
+
+            Session::create([
+                'class_id' => $classId,
+                'schedule_brief_id' => $brief->id,
+                'subject_id' => $item['subject_id'],
+                'teacher_id' => $item['teacher_id'],
+                'cancelled' => false,
+                'session' => $item['session'],
+            ]);
+        }
+    });
+}
+public function updateWeeklySchedule(Request $request)
+{
+    // First, validate the incoming data for the NEW schedule
+    $validation = Validator::make($request->all(), [
+        'classId' => 'required|integer|exists:classes,id',
+        'schedule' => 'required|array',
+        'schedule.*.day' => 'required|string|in:sunday,monday,tuesday,wednesday,thursday',
+        'schedule.*.session' => 'required|numeric|between:1,7',
+        'schedule.*.subject' => 'required|string', 
+    ]);
+
+    if ($validation->fails()) {
+        return response()->json(['status' => false, 'message' => $validation->errors()], 422);
+    }
+
+    try {
+        // Use a single transaction to ensure the update is atomic
+        DB::transaction(function () use ($request) {
+            
+            // Step 1: Delete the old schedule using the private helper
+            $this->performDeleteSchedule($request->classId);
+            
+            // Step 2: Create the new schedule using the private helper
+            // As you correctly said, we pass the classId and schedule array.
+            $this->performCreateSchedule($request->classId, $request->schedule);
+
+        });
+
+        // If the transaction completes without errors, the update was successful
+        return response()->json([
+            'status' => true,
+            'message' => 'The schedule has been updated successfully!',
+        ], 200);
+
+    } catch (\Throwable $th) {
+        // If anything fails in the transaction, it's rolled back and we catch the error
+        return response()->json([
+            'status' => false,
+            'message' => $th->getMessage(),
+        ], 500);
+    }
+}
 public function generateWeeklySchedule(Request $request)
 {
     try {
