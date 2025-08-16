@@ -151,7 +151,9 @@ class authController extends Controller
     {
         try {
             //validation
-            $validateUser = Validator::make($request->all(),[
+            $validateUser = Validator::make(
+                $request->all(),
+                [
                     //student validation
                     'name' => 'required|string|max:255|regex:/^[a-zA-Z]+$/',
                     'middleName' => 'required|string|max:255|regex:/^[a-zA-Z]+$/',
@@ -185,13 +187,13 @@ class authController extends Controller
                     'errors' => $validateUser->errors(),
                 ], 404);
             }
-            DB::transaction(function() use($request){
-            //intiating photo URL
-            $photoPath = $request->file('photo')->store('photos', 'public');
-            //intiating certification URL
-            $certificationPath = $request->file('previousCertification')->store('certifications', 'public');
-            //creating a student
-            //create user for student
+            DB::transaction(function () use ($request) {
+                //intiating photo URL
+                $photoPath = $request->file('photo')->store('photos', 'public');
+                //intiating certification URL
+                $certificationPath = $request->file('previousCertification')->store('certifications', 'public');
+                //creating a student
+                //create user for student
                 $user = User::create([
                     'name' => $request->name,
                     'middleName' => $request->middleName,
@@ -201,6 +203,10 @@ class authController extends Controller
                     'password' => Hash::make($request->password),
                     'role' => 'student',
                 ]);
+
+                Mail::to($user->email)->send(
+                    new \App\Mail\TeacherWelcomeMail($request->password, $user->email)
+                );
                 //creating a row in the student table
                 //getting class id
                 $class = schoolClass::where('className', $request->class)->first();
@@ -229,6 +235,11 @@ class authController extends Controller
                     'role' => 'parent',
                     'password' => Hash::make($request->parentPassword),
                 ]);
+
+                Mail::to($parentUser->email)->send(
+                    new \App\Mail\TeacherWelcomeMail($request->password, $parentUser->email)
+                );
+
                 //creating a row in the parent table
                 $parent = Parents::create([
                     'user_id' => $parentUser->id,
@@ -260,7 +271,9 @@ class authController extends Controller
         try {
             $allowedSubjects = config('subjects.allowed');
             //validation
-            $validateUser = Validator::make($request->all(),[
+            $validateUser = Validator::make(
+                $request->all(),
+                [
                     'name' => 'required|string|max:255|regex:/^[a-zA-Z]+$/',
                     'middleName' => 'required|string|max:255|regex:/^[a-zA-Z]+$/',
                     'lastName' => 'required|string|max:255|regex:/^[a-zA-Z]+$/',
@@ -285,32 +298,36 @@ class authController extends Controller
                     'errors' => $validateUser->errors(),
                 ], 422);
             }
-            DB::transaction(function() use($request){
-            //intiating photo URL
-            $photoPath = $request->file('photo')->store('photos', 'public');
-            //intiating certification URL
-            $certificationPath = $request->file('certification')->store('certifications', 'public');
+            DB::transaction(function () use ($request) {
+                //intiating photo URL
+                $photoPath = $request->file('photo')->store('photos', 'public');
+                //intiating certification URL
+                $certificationPath = $request->file('certification')->store('certifications', 'public');
 
-            //create user
-            $user = User::create([
-                'name' => $request->name,
-                'middleName' => $request->middleName,
-                'lastName' => $request->lastName,
-                'phoneNumber' => $request->phoneNumber,
-                'email' => $request->email,
-                'password' => Hash::make($request->password),
-                'role' => $request->role,
-            ]);
-            //creating a row in the role table
-            if ($request->role == 'teacher') {
-                Teacher::create([
-                    'user_id' => $user->id,
-                    'certification' => $certificationPath,
-                    'photo' => $photoPath,
-                    'subject' => $request->subject,
-                    'salary' => $request->salary,
+                //create user
+                $user = User::create([
+                    'name' => $request->name,
+                    'middleName' => $request->middleName,
+                    'lastName' => $request->lastName,
+                    'phoneNumber' => $request->phoneNumber,
+                    'email' => $request->email,
+                    'password' => Hash::make($request->password),
+                    'role' => $request->role,
                 ]);
-            }
+
+                Mail::to($user->email)->send(
+                    new \App\Mail\TeacherWelcomeMail($request->password, $user->email)
+                );
+                //creating a row in the role table
+                if ($request->role == 'teacher') {
+                    Teacher::create([
+                        'user_id' => $user->id,
+                        'certification' => $certificationPath,
+                        'photo' => $photoPath,
+                        'subject' => $request->subject,
+                        'salary' => $request->salary,
+                    ]);
+                }
             });
 
 
@@ -357,37 +374,40 @@ class authController extends Controller
                     'errors' => $validateUser->errors(),
                 ], 422);
             }
-            DB::transaction(function() use($request){
-            //intiating photo URL
-            $photoPath = $request->file('photo')->store('photos', 'public');
-            //intiating certification URL
-            $certificationPath = $request->file('certification')->store('certifications', 'public');
+            DB::transaction(function () use ($request) {
+                //intiating photo URL
+                $photoPath = $request->file('photo')->store('photos', 'public');
+                //intiating certification URL
+                $certificationPath = $request->file('certification')->store('certifications', 'public');
 
-            //create user
-            $user = User::create([
-                'name' => $request->name,
-                'middleName' => $request->middleName,
-                'lastName' => $request->lastName,
-                'phoneNumber' => $request->phoneNumber,
-                'email' => $request->email,
-                'password' => Hash::make($request->password),
-                'role' => $request->role,
-            ]);
+                //create user
+                $user = User::create([
+                    'name' => $request->name,
+                    'middleName' => $request->middleName,
+                    'lastName' => $request->lastName,
+                    'phoneNumber' => $request->phoneNumber,
+                    'email' => $request->email,
+                    'password' => Hash::make($request->password),
+                    'role' => $request->role,
+                ]);
 
-            //creating a row in the role table
-            if ($request->role == 'supervisor') {
-                Supervisor::create([
-                    'user_id' => $user->id,
-                    'certification' => $certificationPath,
-                    'photo' => $photoPath,
-                    'salary' => $request->salary,
-                ]);
-            } else {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'the role you have input is not right!',
-                ]);
-            }
+                Mail::to($user->email)->send(
+                    new \App\Mail\TeacherWelcomeMail($request->password, $user->email)
+                );
+                //creating a row in the role table
+                if ($request->role == 'supervisor') {
+                    Supervisor::create([
+                        'user_id' => $user->id,
+                        'certification' => $certificationPath,
+                        'photo' => $photoPath,
+                        'salary' => $request->salary,
+                    ]);
+                } else {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'the role you have input is not right!',
+                    ]);
+                }
             });
             //success message
             return response()->json([
@@ -719,121 +739,122 @@ class authController extends Controller
         }
     }
 
-    
-public function createOrUpdatePinCode(Request $request){
-    try{
-        //validation
-        $validation=Validator::make($request->all(),[
-            'pinCode'=>'required|string|digits:4|same:confirmedPinCode',
-            'confirmedPinCode'=>'required|string'
-        ]);
 
-        if($validation->fails()){
-            return response()->json([
-                'status'=>false,
-                'message'=>$validation->errors(),
-            ],422);
-        }
-        //getting the user id
-        $authUser=Auth::user();
-        $user=User::where('id',$authUser->id)->first();
-        $user->pinCode=Hash::make($request->pinCode);
-        $user->save();
-        //returning success message
-        return response()->json([
-            'status'=>true,
-            'message'=>'PIN Code created successfully!',
-        ]);
-
-    }catch(\Throwable $th){
-        return response()->json([
-            'status'=>false,
-            'message'=>$th->getMessage(),
-        ],500);
-    }
-}
-
-public function checkPinCode(Request $request){
-    try{
-        //validation
-        $validation=Validator::make($request->all(),[
-            'pinCode'=>'required|string|digits:4'
-        ]);
-
-        if($validation->fails()){
-            return response()->json([
-                'status'=>false,
-                'message'=>$validation->errors(),
-            ],422);
-        }
-        //getting the user id
-        $user=Auth::user();
-
-        if(!$user){
-            return response()->json([
-                'status'=>false,
-                'message'=>'unauthenticated',
-            ],401);
-        }        
-
-        if(Hash::check($request->pinCode , $user->pinCode)){
-            return response()->json([
-                'status'=>true,
-                'message'=>'the PIN CODE is verfied successfully!'
-            ],200);
-        }else{
-            return response()->json([
-                'status'=>false,
-                'message'=>'the PIN CODE you have provided doesnt match our record!' ,
-            ],401);
-        }
-        }catch(\Throwable $th){
-        return response()->json([
-            'status'=>false,
-            'message'=>$th->getMessage(),
-        ],500);
-    }
-}
-
-public function deletePinCode(){
-    try{
-        //getting the suer
-        $authUser=Auth::user();
-
-        if(!$authUser){
-            return response()->json([
-                'status'=>false,
-                'message'=>'unauthenticated',
+    public function createOrUpdatePinCode(Request $request)
+    {
+        try {
+            //validation
+            $validation = Validator::make($request->all(), [
+                'pinCode' => 'required|string|digits:4|same:confirmedPinCode',
+                'confirmedPinCode' => 'required|string'
             ]);
-        }
-        $user=User::where('id',$authUser->id)->first();
-        
-        //deleting the pin code
-        if($user->pinCode != null){
-            $user->pinCode=null;
+
+            if ($validation->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => $validation->errors(),
+                ], 422);
+            }
+            //getting the user id
+            $authUser = Auth::user();
+            $user = User::where('id', $authUser->id)->first();
+            $user->pinCode = Hash::make($request->pinCode);
             $user->save();
-                    
-            //returnin success message
+            //returning success message
             return response()->json([
-                'status'=>true,
-                'message'=>'your pin code has been deleted successfully!',
+                'status' => true,
+                'message' => 'PIN Code created successfully!',
             ]);
-        }else{
+        } catch (\Throwable $th) {
             return response()->json([
-                'status'=>true,
-                'message'=>'you already doesnt have a pin code',
+                'status' => false,
+                'message' => $th->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function checkPinCode(Request $request)
+    {
+        try {
+            //validation
+            $validation = Validator::make($request->all(), [
+                'pinCode' => 'required|string|digits:4'
+            ]);
+
+            if ($validation->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => $validation->errors(),
+                ], 422);
+            }
+            //getting the user id
+            $user = Auth::user();
+
+            if (!$user) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'unauthenticated',
+                ], 401);
+            }
+
+            if (Hash::check($request->pinCode, $user->pinCode)) {
+                return response()->json([
+                    'status' => true,
+                    'message' => 'the PIN CODE is verfied successfully!'
+                ], 200);
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'the PIN CODE you have provided doesnt match our record!',
+                ], 401);
+            }
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'message' => $th->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function deletePinCode()
+    {
+        try {
+            //getting the suer
+            $authUser = Auth::user();
+
+            if (!$authUser) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'unauthenticated',
+                ]);
+            }
+            $user = User::where('id', $authUser->id)->first();
+
+            //deleting the pin code
+            if ($user->pinCode != null) {
+                $user->pinCode = null;
+                $user->save();
+
+                //returnin success message
+                return response()->json([
+                    'status' => true,
+                    'message' => 'your pin code has been deleted successfully!',
+                ]);
+            } else {
+                return response()->json([
+                    'status' => true,
+                    'message' => 'you already doesnt have a pin code',
+                ]);
+            }
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'message' => $th->getMessage(),
             ]);
         }
-
-    }catch(\Throwable $th){
-        return response()->json([
-            'status'=>false,
-            'message'=>$th->getMessage(),
-        ]);
-    }
     }
 
-    
+
     public function createOther(Request $request)
     {
         // Step 1: Validate input
@@ -922,5 +943,4 @@ public function deletePinCode(){
             ], 500);
         }
     }
-
 }
