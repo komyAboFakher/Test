@@ -32,7 +32,7 @@ Route::post('/createDean', [authController::class, 'createDean']); //done w requ
 Route::post('/createUser', [authController::class, 'createUser']);//->middleware('auth:sanctum', 'dean'); //done w request
 Route::post('/createTeacher', [authController::class, 'createTeacher'])->middleware('auth:sanctum', 'dean'); //done w request
 Route::post('/createSupervisor', [authController::class, 'createSupervisor'])->middleware('auth:sanctum', 'dean'); //done w request
-Route::post('/createOther', [authController::class, 'createOthers'])->middleware('auth:sanctum', 'dean'); //done w request
+Route::post('/createOther', [authController::class, 'createOther'])->middleware('auth:sanctum', 'dean'); //done w request
 //and modify the create func to intiate student, teacher, parent and supervisor tables
 Route::delete('/logout', [authController::class, 'logout'])->middleware('auth:sanctum'); //done w request
 Route::post('/sendForgetPasswordOtp', [authController::class, 'sendForgetPasswordOtp']); //done w request
