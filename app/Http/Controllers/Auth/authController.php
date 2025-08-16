@@ -218,6 +218,29 @@ class authController extends Controller
                         'photo' => $photoPath,
                     ]);
                 }
+
+                $komy = $student->class_id;
+
+                // adding the student and increment the current Student number and check the max size of the class
+                if ($komy) {
+
+                    $studentClass = schoolClass::findOrFail($komy);
+
+                    if ($studentClass->studentsNum == $studentClass->currentStudentNumber) {
+                        return response()->json([
+                            "message" => "the current class has max size of students"
+                        ], 422);
+                    }
+
+                    if (is_null($studentClass->currentStudentNumber)) {
+                        $studentClass->currentStudentNumber = 1;
+                        $studentClass->save();
+                    } else {
+                        $studentClass->increment('currentStudentNumber');
+                        $studentClass->save();
+                    }
+                }
+
                 //creating a new row in absence student table
                 $absence = AbsenceStudent::create([
                     'student_id' => $student->id,
