@@ -109,7 +109,7 @@ Route::put('/updateSubject', [SubjectsManagementController::class, 'updateSubjec
 Route::delete('/deleteSubject', [SubjectsManagementController::class, 'deleteSubject'])->middleware('auth:sanctum', 'supervisor'); //done
 
 // the fcm
-Route::post('/save-fcm-token', [fcmController::class, 'saveFcmToken']);
+Route::post('/save-fcm-token', [fcmController::class, 'saveFcmoken']);
 
 
 //timetables management

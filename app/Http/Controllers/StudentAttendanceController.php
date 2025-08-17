@@ -163,6 +163,12 @@ class StudentAttendanceController extends Controller
             //checking if this teacher has the session for this class
             $today=now()->format('l');
             $todaysBrief=ScheduleBrief::where('day',$today)->where('class_id',$classId)->first();
+            if(!$todaysBrief){
+                return response()->json([
+                    'status'=>false,
+                    'message'=>'There is no schedules for today',
+                ],422);
+            }
             $teachersSession=Session::where('schedule_brief_id',$todaysBrief->id)->where('teacher_id',$teacher->id)->where('session',$request->session)->first();
             if(!$teachersSession){
                 return response()->json([
@@ -229,7 +235,7 @@ class StudentAttendanceController extends Controller
             //returning success message
             return response()->json([
                 'status' => true,
-                'message' => 'check in has been logged successfully for session ' . $request->session . '! and if the is any stupid teacher that does any mistakes i will i will get his mothers id from the system',
+                'message' => 'check in has been logged successfully for session ' . $request->session . '! and if the is any stupid teacher that does any mistakes i will get his mothers id from the system',
             ], 200);
         } catch (\Throwable $th) {
             return response()->json([

@@ -30,6 +30,8 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\PersonalAccessToken;
 use Illuminate\Support\Facades\Validator;
+use App\Jobs\SendLoginNotification;
+
 
 
 
@@ -454,64 +456,54 @@ class authController extends Controller
     public function login(Request $request)
     {
         try {
-            //validation
+            // --- BONUS: Corrected Validation ---
             $validateUser = Validator::make($request->all(), [
-                'email' => ['required', 'email', 'exists:users,email'],
-                'regex:/^[a-zA-Z0-9._%+-]+@gmail\.com$/i',
-                'unique:users,email',
+                'email' => [
+                    'required',
+                    'email',
+                    'exists:users,email', // Correct for login: user must exist
+                    // 'regex:/^[a-zA-Z0-9._%+-]+@gmail\.com$/i' // Optional: if you only allow gmail
+                ],
                 'password' => 'required|string|min:8',
                 'deviceType' => 'required|string|in:web,mobile',
             ]);
+
             if ($validateUser->fails()) {
                 return response()->json([
                     'status' => false,
                     'message' => 'validation error',
                     'errors' => $validateUser->errors(),
-                ], 404);
+                ], 400); // 400 is more appropriate for validation errors
             }
-            //authentication attempt
+
             if (!Auth::attempt($request->only(['email', 'password']))) {
                 return response()->json([
                     'status' => false,
-                    'error' => 'invalid Credentials',
-                    'message' => 'email or password is incorrect !! '
+                    'message' => 'Email & Password does not match with our record.',
                 ], 401);
             }
-            //putting data in avariable
+
             $user = User::with('UserPermission')->where('email', $request->email)->first();
-            //sending login email
-            $loginTime = now()->format('Y-m-d H:i:s');
 
+            // --- Dispatch the Job for Background Processing ---
             $agent = new Agent();
-            $platform = $agent->platform();
-            $browser = $agent->browser();
-            $device = $agent->device();
+            $deviceDetails = "{$agent->platform()} - {$agent->browser()}";
+            $loginTime = now()->format('Y-m-d H:i:s');
+            $ip = $request->ip();
 
-            $deviceDetails = "{$platform} - {$browser} - {$device}";
+            // Dispatch the job to the queue
+            SendLoginNotification::dispatch($user, $deviceDetails, $loginTime, $ip);
 
-            $ip = $request->header('X-Forwarded-For', $request->ip());
-            $response = Http::get("https://ipinfo.io/{$ip}/json");
-            $location = 'Unknown';
-            if ($response->successful()) {
-                $data = $response->json();
-                $city = $data['city'] ?? null;
-                $region = $data['region'] ?? null;
-                $country = $data['country'] ?? null;
-
-                if ($city && $region && $country) {
-                    $location = "$city, $region, $country";
-                }
-            }
-            Mail::to($request->email)->send(new LoginNotification($request->email, $deviceDetails, $loginTime, $ip, $location));
-            //retturning data to front end
+            // --- Return Response Immediately ---
             return response()->json([
                 'status' => true,
-                'message' => 'user logged in successfully',
+                'message' => 'User Logged In Successfully',
                 'token' => $user->createToken($request->deviceType)->plainTextToken,
                 'data' => [
                     'user' => $user,
                 ],
             ], 200);
+
         } catch (\Throwable $th) {
             return response()->json([
                 'status' => false,
@@ -519,7 +511,6 @@ class authController extends Controller
             ], 500);
         }
     }
-
 
     public function logout(Request $request)
     {
