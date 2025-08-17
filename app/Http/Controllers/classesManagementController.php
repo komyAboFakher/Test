@@ -700,6 +700,9 @@ class classesManagementController extends Controller
                         'photo' => asset('storage/' . $user->other->photo) ?? null,
                         'certification' => asset('storage/' . $user->other->certification) ?? null,
                         'salary' => $user->other->salary ?? null,
+                        'permission' => $user->userPermission->pluck('Permission.permission'),  
+
+
                     ];
                 });
 

@@ -861,75 +861,53 @@ class CommunicationController extends Controller
         }
     }
     //_____________________________________________________________________________________________
-    // version 1 'in used'
-    public function showReportedComments($eventID)
+
+    public function showReportedComments()
     {
+
         try {
 
-            $reportedComments = ReportedComment::with([
+            $rep = ReportedComment::with([
                 'reporter',
                 'Comment.user',
-                'Comment.parent.user',
-            ])->whereHas('comment', function ($q) use ($eventID) {
-                $q->where('event_id', $eventID);
-            })->get();
+                'Comment.event',
+            ])->get()->groupBy(function ($k) {
+                $eventID = $k->comment->event->id;
+                return " event_id: {$eventID} ";
+            })
+                ->map(function ($group) {
+                    return $group->groupBy(function ($r) {
+                        $commentId = $r->comment->id;
+                        return " comment_id: {$commentId} ";
+                    })->map(function ($group) {
+                        return $group->map(function ($r) {
+                            return [
+                                'report_id' => $r->id,
+                                'reporter' => trim("{$r->reporter->name} {$r->reporter->middleName} {$r->reporter->lastName}"),
+                                'reporter role' => $r->reporter->role,
+                                'reporter email' => $r->reporter->email,
+                                'reporter phone' => $r->reporter->phoneNumber,
+                                'reason' => $r->reason,
+                                'reported_at' => $r->created_at,
+                                'comment_content' => $r->Comment->content,
+                                'author' => trim("{$r->Comment->user->name} {$r->Comment->user->middleName} {$r->Comment->user->lastName}"),
+                                'author role' => $r->Comment->user->role,
+                                'author email' => $r->Comment->user->email,
+                            ];
+                        });
+                    });
+                });
 
-            //$event_name= Event::select('event_name')->where('id', $eventID)->get();
-            $events = Event::where('id', $eventID)->get();
-
-            $Events = $events->map(function ($event) {
-                return [
-                    'id' => $event->id,
-                    //'user_id' => $event->user_id,
-                    //'full_name' => trim("{$event->user->name} {$event->user->middleName} {$event->user->lastName}"),
-                    //'email' => $event->user->email,
-                    //'event_name' => $event->event_name,
-                    //'post' => $event->post,
-                    //'is_published' => $event->is_published,
-                    //'created_at' => $event->created_at,
-                    //'updated_at' => $event->updated_at,
-                    //'media' => $event->media->map(function ($media) {
-                    //    return [
-                    //        'id' => $media->id,
-                    //        'url' => asset(Storage::url($media->photo_path)),
-                    //    ];
-                    //})
-                ];
-            });
-
-            $cleanResponse = $reportedComments->map(function ($report) {
-                return [
-                    'report_id' => $report->id,
-                    'reporter' => trim("{$report->reporter->name} {$report->reporter->middleName} {$report->reporter->lastName}"),
-                    'reporter role' => $report->reporter->role,
-                    'reporter email' => $report->reporter->email,
-                    'reporter phone' => $report->reporter->phoneNumber,
-                    'reason' => $report->reason,
-                    'reported_at' => $report->created_at,
-                    'reported comment' => [
-                        'id' => $report->Comment->id,
-                        'parent_id' => $report->Comment->parent_id,
-                        'content' => $report->Comment->content,
-                        'author' => trim("{$report->Comment->user->name} {$report->Comment->user->middleName} {$report->Comment->user->lastName}"),
-                        'author role' => $report->Comment->user->role,
-                        'author email' => $report->Comment->user->email,
-                        'author phone' => $report->Comment->user->phoneNumber,
-                        'parent_comment' => $report->Comment->parent ? [
-                            'id' => $report->Comment->parent->id,
-                            'content' => $report->Comment->parent->content,
-                            'author' => trim("{$report->Comment->parent->user->name} {$report->Comment->parent->user->middleName} {$report->Comment->parent->user->lastName}"),
-                            'author role' => $report->Comment->parent->user->role,
-                            'author email' => $report->Comment->parent->user->email,
-                            'author phone' => $report->Comment->parent->user->phoneNumber,
-                        ] : null,
-                    ],
-                ];
-            });
-
+            if (!$rep) {
+                return response()->json([
+                    "status" => true,
+                    "message" => "no reported comments yet !!"
+                ]);
+            }
 
             return response()->json([
-                'event' => $Events,
-                'data' => $cleanResponse
+                "status" => true,
+                "message" => $rep
             ]);
         } catch (\Throwable $th) {
             return response()->json([
@@ -938,21 +916,7 @@ class CommunicationController extends Controller
             ], 500);
         }
     }
-    //__________________________________________________________________________________________
-
-    public function showReport($eventID)
-    {
-
-        try {
-
-           // $event = Event:: where('id')
-        } catch (\Throwable $th) {
-            return response()->json([
-                'status' => false,
-                'message' => $th->getMessage(),
-            ], 500);
-        }
-    }
+    //_____________________________________________________________________________________
 
     public function react(Request $request)
     {
@@ -1311,3 +1275,81 @@ class CommunicationController extends Controller
     //        ], 500);
     //    }
     //}
+    // version 1 'not used'
+    //public function showReportedComments($eventID)
+    //{
+    //    try {
+    //
+    //        $reportedComments = ReportedComment::with([
+    //            'reporter',
+    //            'Comment.user',
+    //            'Comment.parent.user',
+    //        ])->whereHas('comment', function ($q) use ($eventID) {
+    //            $q->where('event_id', $eventID);
+    //        })->get();
+    //
+    //        //$event_name= Event::select('event_name')->where('id', $eventID)->get();
+    //        $events = Event::where('id', $eventID)->get();
+    //
+    //        $Events = $events->map(function ($event) {
+    //            return [
+    //                'id' => $event->id,
+    //                'user_id' => $event->user_id,
+    //                'full_name' => trim("{$event->user->name} {$event->user->middleName} {$event->user->lastName}"),
+    //                'email' => $event->user->email,
+    //                'event_name' => $event->event_name,
+    //                'post' => $event->post,
+    //                'is_published' => $event->is_published,
+    //                'created_at' => $event->created_at,
+    //                'updated_at' => $event->updated_at,
+    //                'media' => $event->media->map(function ($media) {
+    //                    return [
+    //                        'id' => $media->id,
+    //                        'url' => asset(Storage::url($media->photo_path)),
+    //                    ];
+    //                })
+    //            ];
+    //        });
+    //
+    //        $cleanResponse = $reportedComments->map(function ($report) {
+    //            return [
+    //                'report_id' => $report->id,
+    //                'reporter' => trim("{$report->reporter->name} {$report->reporter->middleName} {$report->reporter->lastName}"),
+    //                'reporter role' => $report->reporter->role,
+    //                'reporter email' => $report->reporter->email,
+    //                'reporter phone' => $report->reporter->phoneNumber,
+    //                'reason' => $report->reason,
+    //                'reported_at' => $report->created_at,
+    //                'reported comment' => [
+    //                    'id' => $report->Comment->id,
+    //                    'parent_id' => $report->Comment->parent_id,
+    //                    'content' => $report->Comment->content,
+    //                    'author' => trim("{$report->Comment->user->name} {$report->Comment->user->middleName} {$report->Comment->user->lastName}"),
+    //                    'author role' => $report->Comment->user->role,
+    //                    'author email' => $report->Comment->user->email,
+    //                    'author phone' => $report->Comment->user->phoneNumber,
+    //                    'parent_comment' => $report->Comment->parent ? [
+    //                        'id' => $report->Comment->parent->id,
+    //                        'content' => $report->Comment->parent->content,
+    //                        'author' => trim("{$report->Comment->parent->user->name} {$report->Comment->parent->user->middleName} {$report->Comment->parent->user->lastName}"),
+    //                        'author role' => $report->Comment->parent->user->role,
+    //                        'author email' => $report->Comment->parent->user->email,
+    //                        'author phone' => $report->Comment->parent->user->phoneNumber,
+    //                    ] : null,
+    //                ],
+    //            ];
+    //        });
+    //
+    //
+    //        return response()->json([
+    //            'event' => $Events,
+    //            'data' => $cleanResponse
+    //        ]);
+    //    } catch (\Throwable $th) {
+    //        return response()->json([
+    //            'status' => false,
+    //            'message' => $th->getMessage(),
+    //        ], 500);
+    //    }
+    //}
+    //__________________________________________________________________________________________

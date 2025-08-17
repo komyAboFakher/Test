@@ -25,6 +25,6 @@ class ReportedComment extends Model
 
     public function Comment()
     {
-        return $this->belongsTo(Comment::class, 'comment_id')->with('user','parent','replies');
+        return $this->belongsTo(Comment::class, 'comment_id');//->with('user','parent','replies');
     }
 }
