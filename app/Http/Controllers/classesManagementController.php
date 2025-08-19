@@ -1157,13 +1157,16 @@ class classesManagementController extends Controller
                 ->with(['teachers.user', 'subject'])
                 ->get();
 
+            // return response()->json([
+            //     'meow'=>$teacherClassEntries
+            // ]);
             // We now transform this collection to create our desired output.
             // We want a list of teachers, with the subject name injected into each teacher object.
             $teachers = $teacherClassEntries->map(function ($entry) {
                 // Check if the relationships loaded correctly to prevent errors
-                if ($entry->teacher && $entry->subject) {
+                if ($entry->teachers && $entry->subject) {
                     // Get the teacher model instance
-                    $teacherData = $entry->teacher;
+                    $teacherData = $entry->teachers;
                     // Add the subject name to the teacher object. 'Subject' is the column name from your ERD.
                     $teacherData->subject_name = $entry->subject->Subject;
                     return $teacherData;

@@ -20,7 +20,9 @@ use App\Models\AbsenceStudent;
 use App\Mail\LoginNotification;
 use Illuminate\Validation\Rule;
 use Illuminate\Http\JsonResponse;
+use App\Jobs\sendUserNotification;
 use Illuminate\Support\Facades\DB;
+use App\Jobs\SendLoginNotification;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -30,7 +32,6 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\PersonalAccessToken;
 use Illuminate\Support\Facades\Validator;
-use App\Jobs\SendLoginNotification;
 
 
 
@@ -261,9 +262,9 @@ class authController extends Controller
                     'password' => Hash::make($request->parentPassword),
                 ]);
 
-                Mail::to($parentUser->email)->send(
-                    new \App\Mail\TeacherWelcomeMail($request->password, $parentUser->email)
-                );
+                // Mail::to($parentUser->email)->send(new \App\Mail\TeacherWelcomeMail($request->password, $parentUser->email));
+
+                sendUserNotification::dispatch($user, $parentUser->email, $request->password);
 
                 //creating a row in the parent table
                 $parent = Parents::create([
