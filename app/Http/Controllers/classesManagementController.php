@@ -1137,7 +1137,12 @@ class classesManagementController extends Controller
         try {
             // 1. Get the authenticated user.
             $user = Auth::user();
-
+            if(!$user){
+                return response()->json([
+                    'status'=>false,
+                    'message'=>'user not found!',
+                ],422);
+            }
             // 2. Find the student record associated with the user.
             // A middleware should already confirm the user is a student.
             $student = Student::where('user_id', $user->id)->first();
@@ -1150,32 +1155,30 @@ class classesManagementController extends Controller
                 ->where('id', '!=', $student->id)
                 ->with('users') // Assumes a 'user' relationship is defined on the Student model
                 ->get();
+            if(!$classmates){
+                return response()->json([
+                    'status'=>false,
+                    'message'=>'this student doesnt have any classMates !'
+                ],422);
+            }
 
-            // 4. Get the Teachers and their Subjects for the class.
-            // We fetch the 'TeacherClass' entries and eager load the related teacher (with their user) and the subject.
-            $teacherClassEntries = TeacherClass::where('class_id', $classId)
-                ->with(['teachers.user', 'subject'])
-                ->get();
+            //getting the teachers
+            $teachers=TeacherClass::query()
+            ->join('teachers','teachers.id','=','teacher_Classes.teacher_id')
+            ->join('users','users.id','=','teachers.user_id')
+            ->join('subjects','subjects.id','=','teacher_Classes.subject_id')
+            ->where('class_id',$classId)
+            ->select('name','subjectName')
+            ->get();
 
-            // return response()->json([
-            //     'meow'=>$teacherClassEntries
-            // ]);
-            // We now transform this collection to create our desired output.
-            // We want a list of teachers, with the subject name injected into each teacher object.
-            $teachers = $teacherClassEntries->map(function ($entry) {
-                // Check if the relationships loaded correctly to prevent errors
-                if ($entry->teachers && $entry->subject) {
-                    // Get the teacher model instance
-                    $teacherData = $entry->teachers;
-                    // Add the subject name to the teacher object. 'Subject' is the column name from your ERD.
-                    $teacherData->subject_name = $entry->subject->Subject;
-                    return $teacherData;
-                }
-                return null;
-            })->filter()->values(); // ->filter() removes any nulls, ->values() re-indexes the array.
+            if(!$teachers){
+                return response()->json([
+                    'status'=>false,
+                    'message'=>'this class doesnt have any teachers!',
+                ],422);
+            }
 
-
-            // 5. Return a successful response with the requested structure.
+            //Return a successful response with the requested structure.
             return response()->json([
                 'status' => true,
                 'message' => 'Data retrieved successfully!',
