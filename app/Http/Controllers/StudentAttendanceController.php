@@ -18,6 +18,7 @@ use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use PhpParser\Node\Stmt\Catch_;
 use Psy\VersionUpdater\Checker;
 
 class StudentAttendanceController extends Controller
@@ -619,5 +620,17 @@ class StudentAttendanceController extends Controller
             ]);
         }
     
+    }
+
+    public function getStudentAbsenceDates(){
+        try{
+            
+        }catch(\Throwable $th){
+            return response()->json([
+                'status'=>false,
+                'message'=>$th->getMessage(),
+                'line'=>$th->getLine(),
+            ],500);
+        }
     }
 }
