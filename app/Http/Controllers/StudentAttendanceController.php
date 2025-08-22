@@ -162,24 +162,24 @@ class StudentAttendanceController extends Controller
                 $classId=SchoolClass::where('className',$request->className)->value('id');
             }
             //checking if this teacher has the session for this class
-            $today=now()->format('l');
-            $todaysBrief=ScheduleBrief::where('day',$today)->where('class_id',$classId)->first();
-            if(!$todaysBrief){
-                return response()->json([
-                    'status'=>false,
-                    'message'=>'There is no schedules for today',
-                ],422);
-            }
-            $teachersSession=Session::where('schedule_brief_id',$todaysBrief->id)->where('teacher_id',$teacher->id)->where('session',$request->session)->first();
-            if(!$teachersSession){
-                return response()->json([
-                    'status'=>false,
-                    'message'=>'you are not allowed to take the report of this session IDIOT!',
-                ],409);
-            }
+            // $today=now()->format('l');
+            // $todaysBrief=ScheduleBrief::where('day',$today)->where('class_id',$classId)->first();
+            // if(!$todaysBrief){
+            //     return response()->json([
+            //         'status'=>false,
+            //         'message'=>'There are no schedules for today',
+            //     ],422);
+            // }
+            // $teachersSession=Session::where('schedule_brief_id',$todaysBrief->id)->where('teacher_id',$teacher->id)->where('session',$request->session)->first();
+            // if(!$teachersSession){
+            //     return response()->json([
+            //         'status'=>false,
+            //         'message'=>'you are not allowed to take the report of this session IDIOT!',
+            //     ],409);
+            // }
     
             //checking if the session attendance has been already taken for the same teacher
-            $sessionExists = CheckInTeacher::where('sessions', $request->session)->where('class_id', $classId)->whereDate('created_at', now())->first();
+            $sessionExists = CheckInTeacher::where('sessions', $request->session)->where('class_id', $classId)->whereDate('date', now())->first();
             if ($sessionExists) {
                 return response()->json([
                     'status' => false,
@@ -189,7 +189,7 @@ class StudentAttendanceController extends Controller
             //checking the order of the session attendance taking
             $temp = $request->session - 1;
             if ($request->session != 1) {
-                $sessionOrder = CheckInTeacher::where('sessions', $temp)->where('class_id', $classId)->whereDate('created_at', now())->first();
+                $sessionOrder = CheckInTeacher::where('sessions', $temp)->where('class_id', $classId)->wheredate('date', now())->first();
                 if (!$sessionOrder) {
                     return response()->json([
                         'status' => false,
@@ -624,7 +624,25 @@ class StudentAttendanceController extends Controller
 
     public function getStudentAbsenceDates(){
         try{
-            
+            //getting the user
+            $user=Auth::user();
+            //getting the student
+            $student=Student::where('user_id',$user->id)->first();
+            //getting all the reports from the check_in_teachres table
+            $reports=CheckInTeacher::where('student_id',$student->id)->select('student_id','date','sessions')->get()->groupBy('date');
+            //we need a array to collect the number of the sessions that this student was absent in (if its 7 then this student was absent in this day)
+            $absentDates=[];
+            foreach($reports as $date => $dayReport){
+                $dayCount=count($dayReport);
+                if($dayCount == 7){
+                    $absentDates[]=$date;
+                }
+            }
+            //returning success message
+            return response()->json([
+                'status'=>true,
+                'absentDates'=>$absentDates,
+            ]);
         }catch(\Throwable $th){
             return response()->json([
                 'status'=>false,

@@ -54,6 +54,7 @@ Route::post('/checkStudentWarnings', [StudentAttendanceController::class, 'check
 Route::post('/submitDailyReports', [StudentAttendanceController::class, 'submitDailyReports'])->middleware('auth:sanctum', 'supervisor'); //giving the supervisor the ability to submit all the daily reports //done w request
 Route::post('/incrementStudentAbsence', [StudentAttendanceController::class, 'incrementStudentAbsence'])->middleware('auth:sanctum', 'supervisor'); //giving the supervisor the ability to increment student absence num by one //done w request
 Route::post('/decrementStudentAbsence', [StudentAttendanceController::class, 'decrementStudentAbsence'])->middleware('auth:sanctum', 'supervisor'); //giving the supervisor the ability to decrement student absence num by one //done 
+Route::get('/getStudentAbsenceDates', [StudentAttendanceController::class, 'getStudentAbsenceDates'])->middleware('auth:sanctum', 'student'); //giving the supervisor the ability to decrement student absence num by one //done 
 
 
 Route::get('/searchStudentById', [StudentAttendanceController::class, 'searchStudentById'])->middleware('auth:sanctum', 'supervisor'); //giving the supervisor the ability to see all student based on the name and class name //done w request
@@ -110,7 +111,6 @@ Route::delete('/deleteSubject', [SubjectsManagementController::class, 'deleteSub
 
 // the fcm
 Route::post('/save-fcm-token', [fcmController::class, 'saveFcmoken']);
-
 
 //timetables management
 route::put('/createWeeklySchedule', [TimetablesManagementController::class, 'createWeeklySchedule']);//->middleware('auth:sanctum', 'supervisor'); //done w request

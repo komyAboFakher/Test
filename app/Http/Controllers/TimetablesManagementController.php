@@ -474,6 +474,7 @@ public function updateWeeklySchedule(Request $request)
         ], 500);
     }
 }
+
 public function generateWeeklySchedule(Request $request)
 {
     try {
