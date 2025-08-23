@@ -8,6 +8,7 @@ use App\Http\Controllers\marksController;
 use App\Http\Controllers\NurseController;
 use App\Http\Controllers\libraryController;
 use App\Http\Controllers\Auth\authController;
+use App\Http\Controllers\AverageController;
 use App\Http\Controllers\communicationController;
 use App\Http\Controllers\classesManagementController;
 use App\Http\Controllers\StudentAttendanceController;
@@ -15,6 +16,7 @@ use App\Http\Controllers\SubjectsManagementController;
 use App\Http\Controllers\ComplaintManagementController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\TimetablesManagementController;
+use App\Models\Average;
 
 /*
 |--------------------------------------------------------------------------
@@ -29,7 +31,7 @@ use App\Http\Controllers\TimetablesManagementController;
 //authentication routes:authController
 Route::post('/login', [authController::class, 'login'])->middleware('EnsureSingleLogin'); //done w request
 Route::post('/createDean', [authController::class, 'createDean']); //done w request
-Route::post('/createUser', [authController::class, 'createUser']);//->middleware('auth:sanctum', 'dean'); //done w request
+Route::post('/createUser', [authController::class, 'createUser']); //->middleware('auth:sanctum', 'dean'); //done w request
 Route::post('/createTeacher', [authController::class, 'createTeacher'])->middleware('auth:sanctum', 'dean'); //done w request
 Route::post('/createSupervisor', [authController::class, 'createSupervisor'])->middleware('auth:sanctum', 'dean'); //done w request
 Route::post('/createOther', [authController::class, 'createOther'])->middleware('auth:sanctum', 'dean'); //done w request
@@ -40,9 +42,9 @@ Route::post('/confirmForgetPasswordOtp', [authController::class, 'confirmForgetP
 Route::post('/resetPassword', [authController::class, 'resetPassword']); //done w request
 
 //pin code for users
-Route::post('/createOrUpdatePinCode',[authController::class,'createOrUpdatePinCode'])->middleware('auth:sanctum');
-Route::post('/checkPinCode',[authController::class,'checkPinCode'])->middleware('auth:sanctum');
-Route::delete('/deletePinCode',[authController::class,'deletePinCode'])->middleware('auth:sanctum');
+Route::post('/createOrUpdatePinCode', [authController::class, 'createOrUpdatePinCode'])->middleware('auth:sanctum');
+Route::post('/checkPinCode', [authController::class, 'checkPinCode'])->middleware('auth:sanctum');
+Route::delete('/deletePinCode', [authController::class, 'deletePinCode'])->middleware('auth:sanctum');
 
 //student attendance management
 //1-
@@ -77,10 +79,10 @@ Route::get('/showClasses', [classesManagementController::class, 'showClasses'])-
 Route::post('/editClass', [classesManagementController::class, 'editClass'])->middleware('auth:sanctum', 'supervisor'); //done w request
 Route::post('/assignStudentToClass', [classesManagementController::class, 'assignStudentToClass'])->middleware('auth:sanctum', 'supervisor'); //done w request
 Route::delete('/deleteClass', [classesManagementController::class, 'deleteClass'])->middleware('auth:sanctum', 'supervisor'); //done
-Route::post('/assignTeacherToClass', [classesManagementController::class, 'assignTeacherToClass']);//->middleware('auth:sanctum', 'supervisor'); //done w request //dont froget to make it assign a specific tracher to three classes in the maximum
+Route::post('/assignTeacherToClass', [classesManagementController::class, 'assignTeacherToClass']); //->middleware('auth:sanctum', 'supervisor'); //done w request //dont froget to make it assign a specific tracher to three classes in the maximum
 Route::delete('/unassignTeacherToClass', [classesManagementController::class, 'unassignTeacherToClass'])->middleware('auth:sanctum', 'supervisor'); //done w request 
 Route::post('/overWriteTeacherToClass', [classesManagementController::class, 'overWriteTeacherToClass'])->middleware('auth:sanctum', 'supervisor'); //done w request
-Route::get('/getStudentTeachersAndMates', [classesManagementController::class,'getStudentTeachersAndMates'])->middleware('auth:sanctum','student');//done
+Route::get('/getStudentTeachersAndMates', [classesManagementController::class, 'getStudentTeachersAndMates'])->middleware('auth:sanctum', 'student'); //done
 Route::get('/getTeacherClasses', [classesManagementController::class, 'getTeacherClasses'])->middleware('auth:sanctum', 'teacher'); //done
 
 // for gaith, by KOMY 
@@ -113,14 +115,14 @@ Route::post('/save-fcm-token', [fcmController::class, 'saveFcmToken']);
 
 
 //timetables management
-route::put('/createWeeklySchedule', [TimetablesManagementController::class, 'createWeeklySchedule']);//->middleware('auth:sanctum', 'supervisor'); //done w request
-route::post('/updateWeeklySchedule', [TimetablesManagementController::class, 'updateWeeklySchedule']);//->middleware('auth:sanctum', 'supervisor'); //done w request
+route::put('/createWeeklySchedule', [TimetablesManagementController::class, 'createWeeklySchedule']); //->middleware('auth:sanctum', 'supervisor'); //done w request
+route::post('/updateWeeklySchedule', [TimetablesManagementController::class, 'updateWeeklySchedule']); //->middleware('auth:sanctum', 'supervisor'); //done w request
 route::put('/uploadExamSchedule', [TimetablesManagementController::class, 'uploadExamSchedule'])->middleware('auth:sanctum', 'supervisor'); //done
 route::get('/getStudentWeeklySchedule', [TimetablesManagementController::class, 'getStudentWeeklySchedule'])->middleware('auth:sanctum', 'student'); //done w request
-route::post('/getClassWeeklySchcedule', [TimetablesManagementController::class, 'getClassWeeklySchcedule']);//->middleware('auth:sanctum', 'teacher ,'supervisor'); //done w request
-route::post('/teachersAndTheirSessions', [TimetablesManagementController::class, 'teachersAndTheirSessions']);//->middleware('auth:sanctum', 'supervisor'); //
-route::post('/generateWeeklySchedule', [TimetablesManagementController::class, 'generateWeeklySchedule']);//->middleware('auth:sanctum', 'supervisor'); //
-route::delete('/deleteWeeklySchecdule', [TimetablesManagementController::class, 'deleteWeeklySchecdule']);//->middleware('auth:sanctum', 'supervisor'); //
+route::post('/getClassWeeklySchcedule', [TimetablesManagementController::class, 'getClassWeeklySchcedule']); //->middleware('auth:sanctum', 'teacher ,'supervisor'); //done w request
+route::post('/teachersAndTheirSessions', [TimetablesManagementController::class, 'teachersAndTheirSessions']); //->middleware('auth:sanctum', 'supervisor'); //
+route::post('/generateWeeklySchedule', [TimetablesManagementController::class, 'generateWeeklySchedule']); //->middleware('auth:sanctum', 'supervisor'); //
+route::delete('/deleteWeeklySchecdule', [TimetablesManagementController::class, 'deleteWeeklySchecdule']); //->middleware('auth:sanctum', 'supervisor'); //
 route::get('/getStudentExamSchedule', [TimetablesManagementController::class, 'getStudentExamSchedule'])->middleware('auth:sanctum', 'student'); //
 route::get('/getTeacherWeeklySchedule', [TimetablesManagementController::class, 'getTeacherWeeklySchedule'])->middleware('auth:sanctum', 'teacher'); //pdf ?= true => to give the ability to download the schedule as pdf and if it false i will only return the data
 //needs to be done
@@ -128,12 +130,12 @@ route::get('/getTeacherWeeklySchedule', [TimetablesManagementController::class, 
 
 //////////////////////////////////////////////////////////KOMAY STUFF/////////////////////////////////////////////////////
 //marks management
-Route::post('/getEmptyExcelCheatForMarks', [marksController::class, 'getEmptyExcelCheatForMarks'])->middleware('auth:sanctum', 'teacher');// done
+Route::post('/getEmptyExcelCheatForMarks', [marksController::class, 'getEmptyExcelCheatForMarks'])->middleware('auth:sanctum', 'teacher'); // done
 Route::post('/uploadMarkExcelCheat', [marksController::class, 'upload'])->middleware('auth:sanctum', 'teacher'); // done
 Route::post('/browseOldExcelFiles', [marksController::class, 'index'])->middleware('auth:sanctum', 'teacher'); // done
 Route::get('/getTeacherClasses', [marksController::class, 'getTeacherClasses'])->middleware('auth:sanctum', 'teacher'); //done
 Route::post('/getMarksProfile', [marksController::class, 'getMarksProfile'])->middleware('auth:sanctum'); // done
-Route::post('/getClassMarks', [marksController::class, 'getClassMarks'])->middleware('auth:sanctum','teacher');
+Route::post('/getClassMarks', [marksController::class, 'getClassMarks'])->middleware('auth:sanctum', 'teacher');
 Route::post('/studentGetResult', [marksController::class, 'studentGetResult'])->middleware('auth:sanctum');
 
 
@@ -176,12 +178,12 @@ Route::delete('/deleteComplaint/{complaintID}', [ComplaintManagementController::
 // for the guy who made complaints
 Route::get('/getMyComplaints', [ComplaintManagementController::class, 'getMyComplaints'])->middleware(['auth:sanctum']);
 // for the complaints reviewer
-Route::post('/getAllComplaints', [ComplaintManagementController::class, 'getAllComplaints'])->middleware(['auth:sanctum','dean']);
-Route::get('/getUnSeenComplaints', [ComplaintManagementController::class, 'getUnSeenComplaints'])->middleware(['auth:sanctum','dean']);
-Route::post('/modifyComplaint', [ComplaintManagementController::class, 'modifyComplaint'])->middleware(['auth:sanctum','dean']);
-Route::post('/seenAt', [ComplaintManagementController::class, 'seenAt'])->middleware(['auth:sanctum','dean']);
-Route::delete('/softDeleteComplaint', [ComplaintManagementController::class, 'softDeleteComplaint'])->middleware(['auth:sanctum','dean']);
-Route::post('/restore', [ComplaintManagementController::class, 'restore'])->middleware(['auth:sanctum','dean']);
+Route::post('/getAllComplaints', [ComplaintManagementController::class, 'getAllComplaints'])->middleware(['auth:sanctum', 'dean']);
+Route::get('/getUnSeenComplaints', [ComplaintManagementController::class, 'getUnSeenComplaints'])->middleware(['auth:sanctum', 'dean']);
+Route::post('/modifyComplaint', [ComplaintManagementController::class, 'modifyComplaint'])->middleware(['auth:sanctum', 'dean']);
+Route::post('/seenAt', [ComplaintManagementController::class, 'seenAt'])->middleware(['auth:sanctum', 'dean']);
+Route::delete('/softDeleteComplaint', [ComplaintManagementController::class, 'softDeleteComplaint'])->middleware(['auth:sanctum', 'dean']);
+Route::post('/restore', [ComplaintManagementController::class, 'restore'])->middleware(['auth:sanctum', 'dean']);
 
 //nursing
 
@@ -201,23 +203,28 @@ Route::delete('/deleteBook/{bookID}', [libraryController::class, 'deleteBook'])-
 Route::get('/getBorrowOrder', [libraryController::class, 'getBorrowOrder'])->middleware(['auth:sanctum', 'library']);
 Route::get('/showBooks', [libraryController::class, 'showBooks'])->middleware(['auth:sanctum']);
 Route::post('/showBookBySerrialNumber', [libraryController::class, 'showBookBySerrialNumber'])->middleware(['auth:sanctum']);
-Route::post('/showBookBorrowers', [libraryController::class, 'showBookBorrowers'])->middleware(['auth:sanctum','library']);
+Route::post('/showBookBorrowers', [libraryController::class, 'showBookBorrowers'])->middleware(['auth:sanctum', 'library']);
 //borrow management
 Route::post('/borrow', [libraryController::class, 'borrow'])->middleware(['auth:sanctum']);
-Route::post('/modifyBorrow', [libraryController::class, 'modifyBorrow'])->middleware(['auth:sanctum','library']);
+Route::post('/modifyBorrow', [libraryController::class, 'modifyBorrow'])->middleware(['auth:sanctum', 'library']);
 // books 
 
 // permissions managements
 
-Route::post('assignPermission',[PermissionController::class,'assignPermission'])->middleware(['auth:sanctum','dean']);
+Route::post('assignPermission', [PermissionController::class, 'assignPermission'])->middleware(['auth:sanctum', 'dean']);
 // show the whole permissions we have in the system
-Route::get('showPermissions',[PermissionController::class,'showPermissions'])->middleware(['auth:sanctum','dean']);
+Route::get('showPermissions', [PermissionController::class, 'showPermissions'])->middleware(['auth:sanctum', 'dean']);
 // show all the users group by there permissions
-Route::get('showAllUserPermissions',[PermissionController::class,'showAllUserPermissions'])->middleware(['auth:sanctum','dean']);
+Route::get('showAllUserPermissions', [PermissionController::class, 'showAllUserPermissions'])->middleware(['auth:sanctum', 'dean']);
 // show some user permissions
-Route::get('showUserPermissions',[PermissionController::class,'showUserPermissions'])->middleware(['auth:sanctum','dean']);
-Route::post('updateAssignPermission',[PermissionController::class,'updateAssignPermission'])->middleware(['auth:sanctum','dean']);
-Route::delete('deleteAssignPermission',[PermissionController::class,'deleteAssignPermission'])->middleware(['auth:sanctum','dean']);
+Route::get('showUserPermissions', [PermissionController::class, 'showUserPermissions'])->middleware(['auth:sanctum', 'dean']);
+Route::post('updateAssignPermission', [PermissionController::class, 'updateAssignPermission'])->middleware(['auth:sanctum', 'dean']);
+Route::delete('deleteAssignPermission', [PermissionController::class, 'deleteAssignPermission'])->middleware(['auth:sanctum', 'dean']);
+
+
+// calculate the averages
+
+Route::post('AVG', [AverageController::class, 'Average'])->middleware('auth:sanctum', 'dean');
 
 
 

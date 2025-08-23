@@ -17,7 +17,7 @@ class MarkFactory extends Factory
     public function definition(): array
     {
         return [
-            'Mark'    => $this->faker->numberBetween(40, 100),
+            'mark'    => $this->faker->numberBetween(40, 100),
             'success' => 1, 
             'semester' => $this->faker->randomElement(['First', 'Second']),
             'type'    => $this->faker->randomElement(['final', 'mid-term', 'quizz']),
