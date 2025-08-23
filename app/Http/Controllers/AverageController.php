@@ -57,6 +57,17 @@ class AverageController extends Controller
             $academicYear = $this->currentAcademicYear();
             //$semester = $request->semester;
 
+
+
+
+
+
+
+    
+
+
+
+
             foreach ($grades as $grade) {
                 $subjectIds = Subject::where('grade', $grade)->pluck('id')->toArray();
                 $classes = SchoolClass::where('className', 'LIKE', "{$grade}-%")->get();
