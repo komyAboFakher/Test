@@ -30,6 +30,8 @@ use App\Http\Controllers\TimetablesManagementController;
 Route::post('/login', [authController::class, 'login'])->middleware('EnsureSingleLogin'); //done w request
 Route::post('/createDean', [authController::class, 'createDean']); //done w request
 Route::post('/createUser', [authController::class, 'createUser']);//->middleware('auth:sanctum', 'dean'); //done w request
+Route::post('/setUsers2FA', [authController::class, 'setUsers2FA'])->middleware('auth:sanctum'); //done w request
+Route::post('/unSetUsers2FA', [authController::class, 'unSetUsers2FA'])->middleware('auth:sanctum'); //done w request
 Route::post('/createTeacher', [authController::class, 'createTeacher'])->middleware('auth:sanctum', 'dean'); //done w request
 Route::post('/createSupervisor', [authController::class, 'createSupervisor'])->middleware('auth:sanctum', 'dean'); //done w request
 Route::post('/createOther', [authController::class, 'createOther'])->middleware('auth:sanctum', 'dean'); //done w request
