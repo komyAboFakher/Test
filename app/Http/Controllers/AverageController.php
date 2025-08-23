@@ -2,14 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Average;
 use App\Models\Mark;
-use App\Models\SchoolClass;
+use App\Models\Average;
 use App\Models\Student;
 use App\Models\Subject;
+use App\Models\Academic;
+use App\Models\SchoolClass;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Validator;
 
 class AverageController extends Controller
 {
@@ -36,7 +37,7 @@ class AverageController extends Controller
     }
 
     //_________________________________________________________________________________
-    public function Average(string $semester)
+    public static function Average(string $semester)
     {
         // $validator = Validator::make(
         //     $request->all(),
@@ -54,19 +55,8 @@ class AverageController extends Controller
         try {
             $grades = range(1, 12);
             $missingSubjectsNames = [];
-            $academicYear = $this->currentAcademicYear();
+            $academicYear = Academic::where('currentAcademic',true)->first();
             //$semester = $request->semester;
-
-
-
-
-
-
-
-    
-
-
-
 
             foreach ($grades as $grade) {
                 $subjectIds = Subject::where('grade', $grade)->pluck('id')->toArray();
@@ -109,7 +99,7 @@ class AverageController extends Controller
                             ->where('semester', $semester)
                             ->get();
 
-                        $semesterAverage = $this->calculateSemesterAverage($marks);
+                        $semesterAverage = AverageController::calculateSemesterAverage($marks);
 
                         $averageRecord = Average::updateOrCreate(
                             [
@@ -124,7 +114,7 @@ class AverageController extends Controller
                         //$averageRecord->refresh();
 
                         if ($semester === 'Second') {
-                            $finalGPA = $this->calculateFinalGPA($averageRecord->average_1, $averageRecord->average_2);
+                            $finalGPA = AverageController::calculateFinalGPA($averageRecord->average_1, $averageRecord->average_2);
                             if (!is_null($finalGPA)) {
                                 $averageRecord->update(['average_final' => $finalGPA]);
                             }
