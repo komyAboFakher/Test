@@ -53,6 +53,12 @@ class Student extends Model
 
     public function SchoolClass()
     {
-        return $this->belongsTo(SchoolClass::class,'class_id');
+        return $this->belongsTo(SchoolClass::class, 'class_id');
+    }
+    //______________________________________________________________________
+
+    public function averages()
+    {
+        return $this->hasMany(Average::class, 'student_id');
     }
 }
