@@ -12,5 +12,10 @@ class Academic extends Model
     protected $fillable=[
         'academic_semester',
         'academic_year',
+        'startOfTheFirstSemester',
+        'startOfTheSecondSemester',
+        'endOfTheFirstSemester',
+        'endOfTheSecondSemester',
+        'currentAcademic',
     ];
 }

@@ -569,11 +569,11 @@ class StudentAttendanceController extends Controller
             //now we wanna get the parent
             $parent = Parents::where('user_id', $user->id)->first();
             //now we wanna get the student informations based on his id in $parent
-            $student = Student::where('id', $parent->student_id)->first();
+            $student = Student::where('parent_id', $parent->id)->get();
             //now we wanna get absence days
-            $absences = CheckInTeacher::where('student_id', $parent->student_id)->get();
+            $absences = CheckInTeacher::where('student_id', $student->id)->get();
             //now we wanaa get warnings
-            $warnings = AbsenceStudent::where('student_id', $parent->student_id)->first();
+            $warnings = AbsenceStudent::where('student_id', $student->id)->first();
 
             //returning data
             return response()->json([

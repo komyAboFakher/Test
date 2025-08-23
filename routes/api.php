@@ -7,13 +7,14 @@ use App\Http\Controllers\fcmController;
 use App\Http\Controllers\marksController;
 use App\Http\Controllers\NurseController;
 use App\Http\Controllers\libraryController;
+use App\Http\Controllers\academicController;
 use App\Http\Controllers\Auth\authController;
+use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\communicationController;
 use App\Http\Controllers\classesManagementController;
 use App\Http\Controllers\StudentAttendanceController;
 use App\Http\Controllers\SubjectsManagementController;
 use App\Http\Controllers\ComplaintManagementController;
-use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\TimetablesManagementController;
 
 /*
@@ -125,8 +126,9 @@ route::post('/generateWeeklySchedule', [TimetablesManagementController::class, '
 route::delete('/deleteWeeklySchecdule', [TimetablesManagementController::class, 'deleteWeeklySchecdule']);//->middleware('auth:sanctum', 'supervisor'); //
 route::get('/getStudentExamSchedule', [TimetablesManagementController::class, 'getStudentExamSchedule'])->middleware('auth:sanctum', 'student'); //
 route::get('/getTeacherWeeklySchedule', [TimetablesManagementController::class, 'getTeacherWeeklySchedule'])->middleware('auth:sanctum', 'teacher'); //pdf ?= true => to give the ability to download the schedule as pdf and if it false i will only return the data
-route::get('/getExamSchedule', [TimetablesManagementController::class, 'getExamSchedule'])->middleware('auth:sanctum', 'teacher', 'dean', 'supervisor'); //pdf ?= true => to give the ability to download the schedule as pdf and if it false i will only return the data
+route::get('/getExamSchedule', [TimetablesManagementController::class, 'getExamSchedule'])->middleware('auth:sanctum','ghaith'); //pdf ?= true => to give the ability to download the schedule as pdf and if it false i will only return the data
 //needs to be done
+route::get('/endOfTheSemester', [academicController::class, 'endOfTheSemester']);//->middleware('auth:sanctum', 'teacher', 'dean', 'supervisor'); //pdf ?= true => to give the ability to download the schedule as pdf and if it false i will only return the data
 
 
 //////////////////////////////////////////////////////////KOMAY STUFF/////////////////////////////////////////////////////
