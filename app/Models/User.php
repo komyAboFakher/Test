@@ -20,12 +20,16 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
-        'middleName',
-        'lastName',
-        'phoneNumber',
+        'middleName',   
+        'lastName',     
+        'phoneNumber',  
         'email',
         'password',
-        'role',
+        'TFA',
+        'pinCode',      
+        'role',      
+        'verification_token',
+        'verification_token_expires_at',   
     ];
 
     /**
@@ -43,9 +47,14 @@ class User extends Authenticatable
      *
      * @var array<string, string>
      */
-    protected $casts = [
-        'email_verified_at' => 'datetime',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+            'TFA' => 'boolean', // <-- It's also good practice to cast it!
+        ];
+    }
 
     ///////////////////////////////////////////////////the realations///////////////////////////////////////////
 

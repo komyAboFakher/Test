@@ -20,7 +20,9 @@ use App\Models\AbsenceStudent;
 use App\Mail\LoginNotification;
 use Illuminate\Validation\Rule;
 use Illuminate\Http\JsonResponse;
+use App\Jobs\sendUserNotification;
 use Illuminate\Support\Facades\DB;
+use App\Jobs\SendLoginNotification;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -33,120 +35,66 @@ use Illuminate\Support\Facades\Validator;
 
 
 
+
 class authController extends Controller
 {
-    //public function createUser(Request $request)
-    //{
-    //    try {
-    //        //validation
-    //        $validateUser = Validator::make(
-    //            $request->all(),
-    //            [
-    //                //student validation
-    //                'name' => 'required|string|max:255|regex:/^[a-zA-Z]+$/',
-    //                'middleName' => 'required|string|max:255|regex:/^[a-zA-Z]+$/',
-    //                'lastName' => 'required|string|max:255|regex:/^[a-zA-Z]+$/',
-    //                'phoneNumber' => 'required|string|regex:/^\+?[0-9\s\-]{10,15}$/|unique:users,phoneNumber',
-    //                'email' => 'required',
-    //                'email',
-    //                'regex:/^[a-zA-Z0-9._%+-]+@gmail\.com$/i',
-    //                'unique:users,email',
-    //                'password' => 'required|string|min:8',
-    //                'role' => 'required|string|in:parent,student,teacher,supervisor,dean',
-    //                'previousCertification' => 'required|mimes:pdf|max:2048',
-    //                'photo' => 'mimes:png|max:2048',
-    //                'class' =>  'regex:/^\d{1,2}-[A-Z]$/',
-    //                //parent validation
-    //                'parentName' => 'required|string|max:255|regex:/^[a-zA-Z]+$/',
-    //                'parentMiddleName' => 'required|string|max:255|regex:/^[a-zA-Z]+$/',
-    //                'parentLastName' => 'required|string|max:255|regex:/^[a-zA-Z]+$/',
-    //                'parentPhoneNumber' => 'required|string|regex:/^\+?[0-9\s\-]{10,15}$/|unique:users,phoneNumber',
-    //                'parentEmail' => 'required',
-    //                'email',
-    //                'regex:/^[a-zA-Z0-9._%+-]+@gmail\.com$/i',
-    //                'unique:users,email',
-    //                'parentPassword' => 'required|string|min:8',
-    //                'parentJob' => 'required|string|max:30',
-    //            ]
-    //        );
-    //
-    //        if ($validateUser->fails()) {
-    //            return response()->json([
-    //                'status' => false,
-    //                'message' => 'validation error',
-    //                'errors' => $validateUser->errors(),
-    //            ], 404);
-    //        }
-    //
-    //        //intiating photo URL
-    //        $photoPath = $request->file('photo')->store('photos', 'public');
-    //        //intiating certification URL
-    //        $certificationPath = $request->file('certification')->store('certifications', 'public');
-    //
-    //        //creating a student
-    //        //create user for student
-    //        $user = User::create([
-    //            'name' => $request->name,
-    //            'middleName' => $request->middleName,
-    //            'lastName' => $request->lastName,
-    //            'phoneNumber' => $request->phoneNumber,
-    //            'email' => $request->email,
-    //            'password' => Hash::make($request->password),
-    //            'role' => $request->role,
-    //        ]);
-    //        //creating a row in the student table
-    //        //getting class id
-    //        $class = schoolClass::where('className', $request->class)->first();
-    //        if ($request->role == 'student') {
-    //            $student = Student::create([
-    //                'user_id' => $user->id,
-    //                'class_id' => $class->id,
-    //                'schoolGraduatedFrom' => $certificationPath,
-    //                'photo' => $photoPath,
-    //            ]);
-    //        }
-    //        //creating a new row in absence student table
-    //        $absence = AbsenceStudent::create([
-    //            'student_id' => $student->id,
-    //            'absence_num' => 5,
-    //            'warning' => 0,
-    //        ]);
-    //        //now we wanna create a parent for this student
-    //        //creating a user for the parent
-    //        $parentUser = User::create([
-    //            'name' => $request->parentName,
-    //            'middleName' => $request->parentMiddleName,
-    //            'lastName' => $request->parentLastName,
-    //            'phoneNumber' => $request->parentPhoneNumber,
-    //            'email' => $request->parentEmail,
-    //            'role' => 'parent',
-    //            'password' => Hash::make($request->parentPassword),
-    //        ]);
-    //        //creating a row in the parent table
-    //        $parent = Parents::create([
-    //            'user_id' => $parentUser->id,
-    //            'student_id' => $student->id,
-    //            'name' => $request->parentName,
-    //            'middle_name' => $request->parentMiddleName,
-    //            'last_name' => $request->parentLastName,
-    //            'job' => $request->parentJob,
-    //        ]);
-    //        //success message
-    //        return response()->json([
-    //            'status' => true,
-    //            'message' => 'user created successfully',
-    //            'photoUrl' => asset('storage/' . $photoPath),
-    //            'certificationUrl' => asset('storage/' . $certificationPath),
-    //        ], 200);
-    //    } catch (\Throwable $th) {
-    //        return response()->json([
-    //            'status' => false,
-    //            'message' => $th->getMessage()
-    //        ], 500);
-    //    }
-    //}
+    public function setUsers2FA(){
+        try{
+            //getting the user
+            $authUser=Auth::user();
+            $user=User::where('id',$authUser->id)->first();
+            if(!$user){
+                return response()->json([
+                    'status' => false,
+                    'message' => 'User not authenticated.',
+            ], 401);
+            }
+            //setting the 2FA
+            $user->TFA=true;
+            //saving the suer
+            $user->save();
+            //returning success message
+            return response()->json([
+                'status'=>true,
+                'message'=>'the 2FA has been set successfully!',
+            ]);
+        }catch(\Throwable $th){
+            return response()->json([
+                'status'=>false,
+                'message'=>$th->getMessage(),
+            ],500);
+        }
+    }
 
-
+    
+    public function unSetUsers2FA(){
+        try{
+            //getting the user
+            $authUser=Auth::user();
+            $user=User::where('id',$authUser->id)->first();
+            if(!$user){
+                return response()->json([
+                    'status' => false,
+                    'message' => 'User not authenticated.',
+            ], 401);
+            }
+            //setting the 2FA
+            $user->TFA=false;
+            //saving the suer
+            $user->save();
+            //returning success message
+            return response()->json([
+                'status'=>true,
+                'message'=>'the 2FA has been unset successfully!',
+            ]);
+        }catch(\Throwable $th){
+            return response()->json([
+                'status'=>false,
+                'message'=>$th->getMessage(),
+            ],500);
+        }
+    }
+ 
     public function createUser(Request $request)
     {
         try {
@@ -259,9 +207,9 @@ class authController extends Controller
                     'password' => Hash::make($request->parentPassword),
                 ]);
 
-                Mail::to($parentUser->email)->send(
-                    new \App\Mail\TeacherWelcomeMail($request->password, $parentUser->email)
-                );
+                // Mail::to($parentUser->email)->send(new \App\Mail\TeacherWelcomeMail($request->password, $parentUser->email));
+
+                sendUserNotification::dispatch($user, $parentUser->email, $request->password);
 
                 //creating a row in the parent table
                 $parent = Parents::create([
@@ -497,64 +445,58 @@ class authController extends Controller
     public function login(Request $request)
     {
         try {
-            //validation
+            // --- BONUS: Corrected Validation ---
             $validateUser = Validator::make($request->all(), [
-                'email' => ['required', 'email', 'exists:users,email'],
-                'regex:/^[a-zA-Z0-9._%+-]+@gmail\.com$/i',
-                'unique:users,email',
+                'email' => [
+                    'required',
+                    'email',
+                    'exists:users,email', // Correct for login: user must exist
+                    // 'regex:/^[a-zA-Z0-9._%+-]+@gmail\.com$/i' // Optional: if you only allow gmail
+                ],
                 'password' => 'required|string|min:8',
                 'deviceType' => 'required|string|in:web,mobile',
             ]);
+
             if ($validateUser->fails()) {
                 return response()->json([
                     'status' => false,
                     'message' => 'validation error',
                     'errors' => $validateUser->errors(),
-                ], 404);
+                ], 400); // 400 is more appropriate for validation errors
             }
-            //authentication attempt
+
             if (!Auth::attempt($request->only(['email', 'password']))) {
                 return response()->json([
                     'status' => false,
-                    'error' => 'invalid Credentials',
-                    'message' => 'email or password is incorrect !! '
+                    'message' => 'Email & Password does not match with our record.',
                 ], 401);
             }
-            //putting data in avariable
+
             $user = User::with('UserPermission')->where('email', $request->email)->first();
-            //sending login email
-            $loginTime = now()->format('Y-m-d H:i:s');
 
-            $agent = new Agent();
-            $platform = $agent->platform();
-            $browser = $agent->browser();
-            $device = $agent->device();
-
-            $deviceDetails = "{$platform} - {$browser} - {$device}";
-
-            $ip = $request->header('X-Forwarded-For', $request->ip());
-            $response = Http::get("https://ipinfo.io/{$ip}/json");
-            $location = 'Unknown';
-            if ($response->successful()) {
-                $data = $response->json();
-                $city = $data['city'] ?? null;
-                $region = $data['region'] ?? null;
-                $country = $data['country'] ?? null;
-
-                if ($city && $region && $country) {
-                    $location = "$city, $region, $country";
-                }
+            if($user->TFA == true){
+                $verificationCode=rand(10000,99999);
+                
             }
-            Mail::to($request->email)->send(new LoginNotification($request->email, $deviceDetails, $loginTime, $ip, $location));
-            //retturning data to front end
+            // --- Dispatch the Job for Background Processing ---
+            $agent = new Agent();
+            $deviceDetails = "{$agent->platform()} - {$agent->browser()}";
+            $loginTime = now()->format('Y-m-d H:i:s');
+            $ip = $request->ip();
+
+            // Dispatch the job to the queue
+            SendLoginNotification::dispatch($user, $deviceDetails, $loginTime, $ip);
+
+            // --- Return Response Immediately ---
             return response()->json([
                 'status' => true,
-                'message' => 'user logged in successfully',
+                'message' => 'User Logged In Successfully',
                 'token' => $user->createToken($request->deviceType)->plainTextToken,
                 'data' => [
                     'user' => $user,
                 ],
             ], 200);
+
         } catch (\Throwable $th) {
             return response()->json([
                 'status' => false,
@@ -562,7 +504,6 @@ class authController extends Controller
             ], 500);
         }
     }
-
 
     public function logout(Request $request)
     {

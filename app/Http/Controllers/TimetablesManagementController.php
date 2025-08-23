@@ -474,6 +474,7 @@ public function updateWeeklySchedule(Request $request)
         ], 500);
     }
 }
+
 public function generateWeeklySchedule(Request $request)
 {
     try {
@@ -593,12 +594,14 @@ public function generateWeeklySchedule(Request $request)
                     'message' => $validation->errors(),
                 ]);
             }
+            //intiating pdfs url 
+            $pdfUrl=$request->file('schedule')->store('exam_schedule','public');
             //creating schedule
             $schedule = ExamSchedule::firstOrcreate([
                 'grade' => $request->grade,
                 'semester' => $request->semester,
                 'type' => $request->type,
-                'schedule' => $request->schedule,
+                'schedule' => $pdfUrl,
             ]);
             //retrun success message 
             return response()->json([
@@ -705,7 +708,7 @@ public function generateWeeklySchedule(Request $request)
             //validation
             $validation=Validator::make($request->all(),[
                 'className' => ['required', 'string', 'regex:/^\d{1,2}-[A-Z]$/', 'exists:classes,className'],
-                'type'=>'required|string|in:final,midTerm',
+                'type'=>'required|string|in:final,mid_term',
                 'semester'=>'required|string|in:first,second',
             ]);
             if($validation ->fails()){
@@ -714,7 +717,10 @@ public function generateWeeklySchedule(Request $request)
                     'message'=>$validation->errors(),
                 ]);
             }
-            ////////////////////////////////////////////////////NOT DONE////////////////////////////////////////////////////////////
+            //getting the class id
+            $classId=schoolClass::where('className',$request->className)->value('id');
+            //now getting the schedule
+            $schedule=ExamSchedule::where('class_id',$classId)->where('type',$request->type)->where('semester',$request->semester)->first();
         }catch(\Throwable $th){
             return response()->json([
                 'status'=>false,
@@ -727,7 +733,7 @@ public function generateWeeklySchedule(Request $request)
         try {
             //validation
             $validaiton=Validator::make($request->all(),[
-                'type'=>'required|string|in:final,midTerm'
+                'type'=>'required|string|in:final,mid_term'
             ]);
             if($validaiton->fails()){
                 return response()->json([
