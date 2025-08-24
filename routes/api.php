@@ -114,6 +114,7 @@ Route::delete('/deleteSubject', [SubjectsManagementController::class, 'deleteSub
 
 // the fcm
 Route::post('/save-fcm-token', [fcmController::class, 'saveFcmoken']);
+Route::post('/test-fcm-token', [fcmController::class, 'testFcmoken']);
 
 //timetables management
 route::put('/createWeeklySchedule', [TimetablesManagementController::class, 'createWeeklySchedule']); //->middleware('auth:sanctum', 'supervisor'); //done w request

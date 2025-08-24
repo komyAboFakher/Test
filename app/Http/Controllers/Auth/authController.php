@@ -491,7 +491,7 @@ class authController extends Controller
 
             //saving the fcm token
             if($request->fcmToken != null){
-                $fcmSave=fcmController::saveFcmToken($request->fcmToken);
+                $fcmSave=fcmController::saveFcmToken($request->fcmToken,$user->id);
                 if(!$fcmSave){
                     return response()->json([
                         'status'=>false,
