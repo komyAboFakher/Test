@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('class_id')->constrained()->onDelete('cascade');
             $table->string('schedule_pdf');
-            $table->enum('type',['final','mid_term']);
+            $table->enum('type',['final','mid-term']);
             $table->enum('semester',['first','second']);
             $table->enum('grade',['1','2','3','4','5','6','7','8','9','10','11','12']);
             $table->timestamps();

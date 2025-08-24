@@ -707,8 +707,9 @@ public function generateWeeklySchedule(Request $request)
         try{
             //validation
             $validation=Validator::make($request->all(),[
-                'className' => ['required', 'string', 'regex:/^\d{1,2}-[A-Z]$/', 'exists:classes,className'],
-                'type'=>'required|string|in:final,mid_term',
+                //'className' => ['required', 'string', 'regex:/^\d{1,2}-[A-Z]$/', 'exists:classes,className'],
+                'grade' => ['required', 'string' , 'in:1,2,3,4,5,6,7,8,9,10,11,12'],
+                'type'=>'required|string|in:final,mid-term',
                 'semester'=>'required|string|in:first,second',
             ]);
             if($validation ->fails()){
@@ -733,7 +734,7 @@ public function generateWeeklySchedule(Request $request)
         try {
             //validation
             $validaiton=Validator::make($request->all(),[
-                'type'=>'required|string|in:final,mid_term'
+                'type'=>'required|string|in:final,mid-term'
             ]);
             if($validaiton->fails()){
                 return response()->json([
