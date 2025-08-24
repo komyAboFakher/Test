@@ -7,18 +7,18 @@ use Illuminate\Http\Request;
 
 class fcmController extends Controller
 {
-        public function saveFcmToken(Request $request)
+        public static function saveFcmToken(string $token)
         {
-            $request->validate([
-                'token' => 'required|string',
-            ]);
+            // $request->validate([
+            //     'token' => 'required|string',
+            // ]);
 
             $user = auth()->user(); // if using Sanctum or Passport
 
             // Save or update token
             FcmToken::updateOrCreate(
                 ['user_id' => $user->id],
-                ['token' => $request->token]
+                ['token' => $token]
             );
 
             return response()->json([

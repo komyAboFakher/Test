@@ -8,9 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 class ExamSchedule extends Model
 {
     use HasFactory;
-
+    Protected $table="exam_schedule";
     protected $fillable=[
-        'class_id',
         'schedule_pdf',
         'semester',
         'grade',

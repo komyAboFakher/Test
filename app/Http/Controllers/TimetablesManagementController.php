@@ -592,7 +592,7 @@ public function generateWeeklySchedule(Request $request)
                 return response()->json([
                     'status' => false,
                     'message' => $validation->errors(),
-                ]);
+                ],422);
             }
             //intiating pdfs url 
             $pdfUrl=$request->file('schedule')->store('exam_schedule','public');
@@ -601,12 +601,14 @@ public function generateWeeklySchedule(Request $request)
                 'grade' => $request->grade,
                 'semester' => $request->semester,
                 'type' => $request->type,
-                'schedule' => $pdfUrl,
+                'schedule_pdf' => $pdfUrl,
             ]);
             //retrun success message 
             return response()->json([
                 'status' => true,
                 'message' => 'schedule has been created successfully!',
+                'URL' => asset('storage/' . $pdfUrl),
+                //'certificationUrl' => asset('storage/' . $certificationPath),
             ]);
         } catch (\throwable $th) {
             return response()->json([

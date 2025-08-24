@@ -25,6 +25,7 @@ use Illuminate\Support\Facades\DB;
 use App\Jobs\SendLoginNotification;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\fcmController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
@@ -455,6 +456,7 @@ class authController extends Controller
                 ],
                 'password' => 'required|string|min:8',
                 'deviceType' => 'required|string|in:web,mobile',
+                'fcmToken' => 'sometimes|string'
             ]);
 
             if ($validateUser->fails()) {
@@ -487,6 +489,16 @@ class authController extends Controller
             // Dispatch the job to the queue
             SendLoginNotification::dispatch($user, $deviceDetails, $loginTime, $ip);
 
+            //saving the fcm token
+            if($request->fcmToken != null){
+                $fcmSave=fcmController::saveFcmToken($request->fcmToken);
+                if(!$fcmSave){
+                    return response()->json([
+                        'status'=>false,
+                        'message'=>'fcm is not saved!'
+                    ],422);
+                }
+            }
             // --- Return Response Immediately ---
             return response()->json([
                 'status' => true,
