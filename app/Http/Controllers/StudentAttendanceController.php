@@ -162,21 +162,21 @@ class StudentAttendanceController extends Controller
                 $classId=SchoolClass::where('className',$request->className)->value('id');
             }
             //checking if this teacher has the session for this class
-            // $today=now()->format('l');
-            // $todaysBrief=ScheduleBrief::where('day',$today)->where('class_id',$classId)->first();
-            // if(!$todaysBrief){
-            //     return response()->json([
-            //         'status'=>false,
-            //         'message'=>'There are no schedules for today',
-            //     ],422);
-            // }
-            // $teachersSession=Session::where('schedule_brief_id',$todaysBrief->id)->where('teacher_id',$teacher->id)->where('session',$request->session)->first();
-            // if(!$teachersSession){
-            //     return response()->json([
-            //         'status'=>false,
-            //         'message'=>'you are not allowed to take the report of this session IDIOT!',
-            //     ],409);
-            // }
+            $today=now()->format('l');
+            $todaysBrief=ScheduleBrief::where('day',$today)->where('class_id',$classId)->first();
+            if(!$todaysBrief){
+                return response()->json([
+                    'status'=>false,
+                    'message'=>'There are no schedules for today',
+                ],422);
+            }
+            $teachersSession=Session::where('schedule_brief_id',$todaysBrief->id)->where('teacher_id',$teacher->id)->where('session',$request->session)->first();
+            if(!$teachersSession){
+                return response()->json([
+                    'status'=>false,
+                    'message'=>'you are not allowed to take the report of this session IDIOT!',
+                ],409);
+            }
     
             //checking if the session attendance has been already taken for the same teacher
             $sessionExists = CheckInTeacher::where('sessions', $request->session)->where('class_id', $classId)->whereDate('date', now())->first();
