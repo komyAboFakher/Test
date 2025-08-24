@@ -10,10 +10,6 @@ class Parents extends Model
     use HasFactory;
     Protected $fillable=[
         'user_id',
-        'student_id',
-        'name',
-        'middle_name',
-        'last_name',
         'job',
     ];
     
