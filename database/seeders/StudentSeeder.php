@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Parents;
 use App\Models\User;
 use App\Models\Student;
 use App\Models\SchoolClass;
@@ -17,9 +18,10 @@ class StudentSeeder extends Seeder
     {
         // Get all student users
         $studentUsers = User::where('role', 'student')->get();
+        $parents = Parents::all();
 
-        
-        $availableStudents = $studentUsers ;
+
+        $availableStudents = $studentUsers;
 
         // Get all classes with student limits
         $classes = SchoolClass::all();
@@ -36,9 +38,12 @@ class StudentSeeder extends Seeder
             $assigned = $availableStudents->splice(0, $slots);
 
             foreach ($assigned as $user) {
+                $randomParent = $parents->random();
+
                 Student::factory()->create([
                     'user_id' => $user->id,
                     'class_id' => $class->id,
+                    'parent_id' => $randomParent->id,
                 ]);
             }
 

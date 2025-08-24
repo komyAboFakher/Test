@@ -528,11 +528,17 @@ class classesManagementController extends Controller
                         'email' => $user->email,
                         'phone' => $user->phoneNumber,
                         'photo' => asset('storage/' . $user->student->photo) ?? null,
-                        'gpa' => $user->student->Gpa,
                         'class_id' => $user->student->class_id ?? '',
                         'class_name' => $user->student->schoolClass->className ?? '',
                         'absences_number' => $user->student->AbsenceStudent->absence_num ?? '',
                         'warnings' => $user->student->AbsenceStudent->warning ?? '',
+                        'GPA' => $user->student->averages->map( function ($average){
+                            return  [
+                                'GPA_1'=> $average->average_1 ?? null,
+                                'GPA_2'=> $average->average_2 ?? null,
+                                'GPA_final'=> $average->average_final ?? null,
+                            ];
+                        })
                     ];
                 });
 
@@ -981,10 +987,16 @@ class classesManagementController extends Controller
                     $response['profile_data'] = [
                         'photo' => $user->student->photo ?? '',
                         'shool-graduated-from' => $user->student->schoolGraduatedFrom ?? '',
-                        'gpa' => $user->student->Gpa ?? '',
                         'class_id' => $user->student->class_id ?? ' ',
                         'class_name' => $user->student->schoolClass->className ?? ' ',
                         'number of attendance years' => $attendanceYears ?? ' ',
+                        'GPA' => $user->student->averages->map( function ($average){
+                            return  [
+                                'GPA_1'=> $average->average_1 ?? null,
+                                'GPA_2'=> $average->average_2 ?? null,
+                                'GPA_final'=> $average->average_final ?? null,
+                            ];
+                        })
                     ];
                     break;
 

@@ -16,6 +16,7 @@ class Student extends Model
         'schoolGraduatedFrom',
         'photo',
         'Gpa',
+        'parent_id',
         'expelled',
         'justification',
     ];

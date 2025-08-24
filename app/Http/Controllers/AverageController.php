@@ -53,9 +53,11 @@ class AverageController extends Controller
         // }
 
         try {
+
+
             $grades = range(1, 12);
             $missingSubjectsNames = [];
-            $academicYear = Academic::where('currentAcademic',true)->first();
+            $academicYear = Academic::where('currentAcademic', true)->first();
             //$semester = $request->semester;
 
             foreach ($grades as $grade) {
@@ -70,12 +72,25 @@ class AverageController extends Controller
                         ->toArray();
                     $missingSubjectIds = array_diff($subjectIds, $existingSubjectIds);
 
-                    foreach ($missingSubjectIds as $missingId) {
-                        $subjectName = Subject::find($missingId)?->subjectName;
-                        if ($subjectName) {
-                            $missingSubjectsNames[$class->className][] = "{$subjectName} ({$missingId})";
+                    if ($missingSubjectIds) {
+
+                        foreach ($missingSubjectIds as $missingId) {
+                            $subjectName = Subject::find($missingId)?->subjectName;
+                            if ($subjectName) {
+                                $missingSubjectsNames[$class->className][] = "{$subjectName} ({$missingId})";
+                            }
                         }
+
+                        return response()->json([
+                            "status" => false,
+                            "message" => "there has been missing subjects, you can't calculate the GPA's",
+                            'missing_subjects' => $missingSubjectsNames,
+                        ], 422);
                     }
+
+
+
+
                     $students = Student::where('class_id', $class->id)->get();
 
                     foreach ($students as $student) {
@@ -89,8 +104,8 @@ class AverageController extends Controller
 
                             if (is_null($existingAverage?->average_1)) {
                                 return response()->json([
-                                    "message"=>"the first semester averages not calculated yet !!!"
-                                ],422);
+                                    "message" => "the first semester averages not calculated yet, you can't calculate the second semester !!!"
+                                ], 422);
                             }
                         }
 
@@ -125,7 +140,7 @@ class AverageController extends Controller
             return response()->json([
                 'status' => true,
                 'message' => "Averages calculated for all grades in semester {$semester}.",
-                'missing_subjects' => $missingSubjectsNames,
+                //'missing_subjects' => $missingSubjectsNames,
             ]);
         } catch (\Throwable $th) {
             return response()->json([

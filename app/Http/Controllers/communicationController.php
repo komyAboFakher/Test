@@ -871,18 +871,25 @@ class CommunicationController extends Controller
                 'reporter',
                 'Comment.user',
                 'Comment.event',
-            ])->get()->groupBy(function ($k) {
-                $eventID = $k->comment->event->id;
-                return " event_id: {$eventID} ";
-            })
-                ->map(function ($group) {
-                    return $group->groupBy(function ($r) {
+            ])->get()->
+            
+            //->groupBy(function ($k) {
+            //    $eventID = $k->comment->event->id;
+            //    return " event_id: {$eventID} ";
+            //})
+            //    ->map(function ($group) {
+            //        return $group->
+                    
+                    
+                    
+                    groupBy(function ($r) {
                         $commentId = $r->comment->id;
                         return " comment_id: {$commentId} ";
                     })->map(function ($group) {
                         return $group->map(function ($r) {
                             return [
                                 'report_id' => $r->id,
+                                'event_id' => $r->comment->event_id,
                                 'reporter' => trim("{$r->reporter->name} {$r->reporter->middleName} {$r->reporter->lastName}"),
                                 'reporter role' => $r->reporter->role,
                                 'reporter email' => $r->reporter->email,
@@ -896,7 +903,7 @@ class CommunicationController extends Controller
                             ];
                         });
                     });
-                });
+                //});
 
             if (!$rep) {
                 return response()->json([
