@@ -127,7 +127,7 @@ route::post('/generateWeeklySchedule', [TimetablesManagementController::class, '
 route::delete('/deleteWeeklySchecdule', [TimetablesManagementController::class, 'deleteWeeklySchecdule']); //->middleware('auth:sanctum', 'supervisor'); //
 route::get('/getStudentExamSchedule', [TimetablesManagementController::class, 'getStudentExamSchedule'])->middleware('auth:sanctum', 'student'); //
 route::get('/getTeacherWeeklySchedule', [TimetablesManagementController::class, 'getTeacherWeeklySchedule'])->middleware('auth:sanctum', 'teacher'); //pdf ?= true => to give the ability to download the schedule as pdf and if it false i will only return the data
-route::get('/getExamSchedule', [TimetablesManagementController::class, 'getExamSchedule'])->middleware('auth:sanctum','ghaith'); //pdf ?= true => to give the ability to download the schedule as pdf and if it false i will only return the data
+route::post('/getExamSchedule', [TimetablesManagementController::class, 'getExamSchedule'])->middleware('auth:sanctum','gaith'); //pdf ?= true => to give the ability to download the schedule as pdf and if it false i will only return the data
 //needs to be done
 route::get('/endOfTheFirstSemester', [academicController::class, 'endOfTheFirstSemester']);//->middleware('auth:sanctum', 'teacher', 'dean', 'supervisor'); //pdf ?= true => to give the ability to download the schedule as pdf and if it false i will only return the data
 

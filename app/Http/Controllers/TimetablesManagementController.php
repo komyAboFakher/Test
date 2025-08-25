@@ -586,7 +586,7 @@ public function generateWeeklySchedule(Request $request)
                 'grade' => 'required|integer|in:1,2,3,4,5,6,7,8,9,10,11,12',
                 'semester'=>'required|in:first,second',
                 'schedule' => 'required|mimes:pdf|max:2048',
-                'type'=>'required|string|in:final,mid-Term'
+                'type'=>'required|string|in:final,mid-term'
             ]);
             if ($validation->fails()) {
                 return response()->json([

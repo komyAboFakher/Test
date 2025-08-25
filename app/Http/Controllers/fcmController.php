@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\FcmToken;
+use App\Services\FCMService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class fcmController extends Controller
 {
@@ -29,6 +31,10 @@ class fcmController extends Controller
 
         public function testFcmoken(){
             try{
+                $product='zag';
+                $fcmService=new FCMService;
+                $user = Auth::user();
+                $fcmService->notifyUsers("Product has been Added", (string)"the Admin " . $user->first_name . " has added " . $product);
 
             }catch(\throwable $th){
                 return response()->json([
