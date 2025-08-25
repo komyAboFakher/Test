@@ -724,6 +724,11 @@ public function generateWeeklySchedule(Request $request)
             $classId=schoolClass::where('className',$request->className)->value('id');
             //now getting the schedule
             $schedule=ExamSchedule::where('class_id',$classId)->where('type',$request->type)->where('semester',$request->semester)->first();
+            //success message
+            return response()->json([
+                'status'=>true,
+                'schedule'=>asset('storage/' . $schedule),
+            ]);
         }catch(\Throwable $th){
             return response()->json([
                 'status'=>false,

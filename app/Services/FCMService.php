@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\FcmToken;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Kreait\Firebase\Factory;
@@ -41,7 +42,7 @@ class FCMService
 
     public function notifyUsers($title,$body){
 
-        $usersFcmTokens = User::whereNotNull("fcm_token")->pluck("fcm_token")->toArray();
+        $usersFcmTokens = FcmToken::whereNotNull("fcm_token")->pluck("fcm_token")->toArray();
         $this->sendNotification($usersFcmTokens, $title, $body, []);
     }
 

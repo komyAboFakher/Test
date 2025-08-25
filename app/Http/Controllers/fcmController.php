@@ -34,7 +34,7 @@ class fcmController extends Controller
                 $product='zag';
                 $fcmService=new FCMService;
                 $user = Auth::user();
-                $fcmService->notifyUsers("Product has been Added", (string)"the Admin " . $user->first_name . " has added " . $product);
+                $fcmService->notifyUsers("Product has been Added", "the Admin " . $user->name . " has added " . $product);
 
             }catch(\throwable $th){
                 return response()->json([
