@@ -723,11 +723,26 @@ public function generateWeeklySchedule(Request $request)
             //getting the class id
             $classId=schoolClass::where('className',$request->className)->value('id');
             //now getting the schedule
-            $schedule=ExamSchedule::where('class_id',$classId)->where('type',$request->type)->where('semester',$request->semester)->value('schedule_pdf');
+            $schedule=ExamSchedule::where('grade',$request->grade)->where('type',$request->type)->where('semester',$request->semester)->value('schedule_pdf');
+
+            if(!$schedule){
+                return response()->json([
+                    'status'=>false,
+                    'message'=>'couldnt find schedule',
+                ],404);
+            }
+            //getting the full path
+            $fullPath=storage_path('app/public/'.$schedule);
+
+            if (!file_exists($fullPath)) {
+                return response()->json([
+                    'status'  => false,
+                    'message' => 'The schedule file is missing from the server.',
+                ], 404);
+            }
             //success message
-            return response()->json([
-                'status'=>true,
-                'schedule'=>asset('storage/' . $schedule),
+            return response()->file($fullPath,[
+                'content-type'=>'application/pdf'
             ]);
         }catch(\Throwable $th){
             return response()->json([
@@ -736,6 +751,7 @@ public function generateWeeklySchedule(Request $request)
             ]);
         }
     }
+
     public function getStudentExamSchedule(Request $request)
     {
         try {

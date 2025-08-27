@@ -36,6 +36,10 @@ class fcmController extends Controller
                 $user = Auth::user();
                 $fcmService->notifyUsers("Product has been Added", "the Admin " . $user->name . " has added " . $product);
 
+                return response()->json([
+                    'status'=>true,
+                    'message'=>'notification has been sent successfully!',
+                ]);
             }catch(\throwable $th){
                 return response()->json([
                     'status'=>false,

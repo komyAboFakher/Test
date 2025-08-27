@@ -16,7 +16,7 @@ class FCMService
 
     public function __construct()
     {
-        $firebase = (new Factory)->withServiceAccount(base_path(env("FIREBASE_CREDENTIALS")));
+        $firebase = (new Factory)->withServiceAccount(storage_path(env("FIREBASE_CREDENTIALS")));
         $this->messaging = $firebase->createMessaging();
     }
 
@@ -42,7 +42,7 @@ class FCMService
 
     public function notifyUsers($title,$body){
 
-        $usersFcmTokens = FcmToken::whereNotNull("fcm_token")->pluck("fcm_token")->toArray();
+        $usersFcmTokens = FcmToken::whereNotNull("token")->pluck("token")->toArray();
         $this->sendNotification($usersFcmTokens, $title, $body, []);
     }
 
