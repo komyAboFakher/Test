@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('class_id')->constrained()->onDelete('cascade');
             $table->enum('day',['sunday','monday','tuesday','wednesday','thursday','friday','saturday',]);
             $table->enum('semester',['first','second']);
+            $table->boolean('current')->default(true);
             $table->string('year');//e.g. 2024/2025
             $table->timestamps();
         });

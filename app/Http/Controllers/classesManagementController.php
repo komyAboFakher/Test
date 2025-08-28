@@ -1291,6 +1291,9 @@ class classesManagementController extends Controller
                 $classCount=Student::where('class_id',$classId)->count();
                 $teacherStudentCount+=$classCount;
             }
+            //getting the created at
+            $user=Auth::user();
+            $userCreatedAT=User::where('id',$user->id)->value('created_at');
 
             //returning success message
             return response()->json([
@@ -1298,12 +1301,43 @@ class classesManagementController extends Controller
                 'sessionCount'=>$sessionCount,
                 'teacherClassesCount'=>$teacherClassesCount,
                 'teacherStudentCount'=>$teacherStudentCount,
+                'userCreatedAT'=>$userCreatedAT,
             ]);
         }catch(\Throwable $th){
             return response()->json([
                 'status'=>false,
                 'message'=>$th->getMessage(),
             ],500);
+        }
+    }
+
+    public function checkStatsForSupervisor(){
+        try{
+            //number of student
+            $students=Student::all();
+            $studentsNumber=count($students);
+            //number of teachers
+            $teachers=teacher::all();
+            $teachersNumber=count($teachers);
+            //number of classes
+            $classes=schoolClass::all();
+            $classesNumber=count($classes);
+            //getting the created at
+            $user=Auth::user();
+            $userCreatedAT=User::where('id',$user->id)->value('created_at');
+
+            return response()->json([
+                'status'=>True,
+                'studentsNumber'=>$studentsNumber,
+                'teachersNumber'=>$teachersNumber,
+                'classesNumber'=>$classesNumber,
+                'userCreatedAT'=>$userCreatedAT,
+            ]);
+        }catch(\Throwable $th){
+            return response()->json([
+                'status'=>false,
+                'message'=>$th->getMessage(),
+            ]);
         }
     }
 }

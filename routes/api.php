@@ -33,7 +33,7 @@ use App\Models\Average;
 Route::post('/login', [authController::class, 'login'])->middleware('EnsureSingleLogin'); //done w request
 Route::post('/createDean', [authController::class, 'createDean']); //done w request
 Route::post('/createUser', [authController::class, 'createUser']); //->middleware('auth:sanctum', 'dean'); //done w request
-Route::post('/createTeacher', [authController::class, 'createTeacher'])->middleware('auth:sanctum', 'dean'); //done w request
+Route::post('/createTeacher', [authController::class, 'createTeacher']);//->middleware('auth:sanctum', 'dean'); //done w request
 Route::post('/createSupervisor', [authController::class, 'createSupervisor'])->middleware('auth:sanctum', 'dean'); //done w request
 Route::post('/createOther', [authController::class, 'createOther'])->middleware('auth:sanctum', 'dean'); //done w request
 //and modify the create func to intiate student, teacher, parent and supervisor tables
@@ -83,12 +83,12 @@ Route::post('/assignStudentToClass', [classesManagementController::class, 'assig
 Route::delete('/deleteClass', [classesManagementController::class, 'deleteClass'])->middleware('auth:sanctum', 'supervisor'); //done
 Route::post('/assignTeacherToClass', [classesManagementController::class, 'assignTeacherToClass']); //->middleware('auth:sanctum', 'supervisor'); //done w request //dont froget to make it assign a specific tracher to three classes in the maximum
 Route::delete('/unassignTeacherToClass', [classesManagementController::class, 'unassignTeacherToClass'])->middleware('auth:sanctum', 'supervisor'); //done w request 
-Route::post('/overWriteTeacherToClass', [classesManagementController::class, 'overWriteTeacherToClass'])->middleware('auth:sanctum', 'supervisor'); //done w request
+//Route::post('/overWriteTeacherToClass', [classesManagementController::class, 'overWriteTeacherToClass'])->middleware('auth:sanctum', 'supervisor'); //done w request
 Route::get('/getStudentTeachersAndMates', [classesManagementController::class, 'getStudentTeachersAndMates'])->middleware('auth:sanctum', 'student'); //done
 Route::get('/getTeacherClasses', [classesManagementController::class, 'getTeacherClasses'])->middleware('auth:sanctum', 'teacher'); //done
-Route::get('/getStudentExamSchedule', [classesManagementController::class, 'getStudentExamSchedule'])->middleware('auth:sanctum', 'student'); //done
 Route::get('/getSpecifiedUserNums', [classesManagementController::class, 'getSpecifiedUserNums'])->middleware('auth:sanctum', 'dean'); //done
 Route::get('/getTeacherWorkData', [classesManagementController::class, 'getTeacherWorkData'])->middleware('auth:sanctum', 'teacher'); //done
+Route::get('/checkStatsForSupervisor', [classesManagementController::class, 'checkStatsForSupervisor'])->middleware('auth:sanctum', 'teacher'); //done
 
 // for gaith, by KOMY 
 
@@ -124,7 +124,7 @@ route::put('/createWeeklySchedule', [TimetablesManagementController::class, 'cre
 route::post('/updateWeeklySchedule', [TimetablesManagementController::class, 'updateWeeklySchedule']); //->middleware('auth:sanctum', 'supervisor'); //done w request
 route::post('/uploadExamSchedule', [TimetablesManagementController::class, 'uploadExamSchedule']);//->middleware('auth:sanctum', 'supervisor'); //done
 route::get('/getStudentWeeklySchedule', [TimetablesManagementController::class, 'getStudentWeeklySchedule'])->middleware('auth:sanctum', 'student'); //done w request
-route::post('/getClassWeeklySchcedule', [TimetablesManagementController::class, 'getClassWeeklySchcedule']); //->middleware('auth:sanctum', 'teacher ,'supervisor'); //done w request
+route::post('/getClassWeeklySchcedule', [TimetablesManagementController::class, 'getClassWeeklySchcedule']); //->middleware('auth:sanctum', 'teacher' ,'supervisor'); //done w request
 route::post('/teachersAndTheirSessions', [TimetablesManagementController::class, 'teachersAndTheirSessions']); //->middleware('auth:sanctum', 'supervisor'); //
 route::post('/generateWeeklySchedule', [TimetablesManagementController::class, 'generateWeeklySchedule']); //->middleware('auth:sanctum', 'supervisor'); //
 route::delete('/deleteWeeklySchecdule', [TimetablesManagementController::class, 'deleteWeeklySchecdule']); //->middleware('auth:sanctum', 'supervisor'); //
@@ -133,6 +133,9 @@ route::get('/getTeacherWeeklySchedule', [TimetablesManagementController::class, 
 route::post('/getExamSchedule', [TimetablesManagementController::class, 'getExamSchedule'])->middleware('auth:sanctum','gaith'); //pdf ?= true => to give the ability to download the schedule as pdf and if it false i will only return the data
 //needs to be done
 route::get('/endOfTheFirstSemester', [academicController::class, 'endOfTheFirstSemester']);//->middleware('auth:sanctum', 'teacher', 'dean', 'supervisor'); //pdf ?= true => to give the ability to download the schedule as pdf and if it false i will only return the data
+route::get('/startOfTheSecondSemester', [academicController::class, 'startOfTheSecondSemester']);//->middleware('auth:sanctum', 'teacher', 'dean', 'supervisor'); //pdf ?= true => to give the ability to download the schedule as pdf and if it false i will only return the data
+route::get('/endOfTheYear', [academicController::class, 'endOfTheYear']);//->middleware('auth:sanctum', 'teacher', 'dean', 'supervisor'); //pdf ?= true => to give the ability to download the schedule as pdf and if it false i will only return the data
+route::get('/startOfTheYear', [academicController::class, 'startOfTheYear']);//->middleware('auth:sanctum', 'teacher', 'dean', 'supervisor'); //pdf ?= true => to give the ability to download the schedule as pdf and if it false i will only return the data
 
 
 //////////////////////////////////////////////////////////KOMAY STUFF/////////////////////////////////////////////////////
