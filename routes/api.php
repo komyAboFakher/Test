@@ -86,6 +86,9 @@ Route::delete('/unassignTeacherToClass', [classesManagementController::class, 'u
 Route::post('/overWriteTeacherToClass', [classesManagementController::class, 'overWriteTeacherToClass'])->middleware('auth:sanctum', 'supervisor'); //done w request
 Route::get('/getStudentTeachersAndMates', [classesManagementController::class, 'getStudentTeachersAndMates'])->middleware('auth:sanctum', 'student'); //done
 Route::get('/getTeacherClasses', [classesManagementController::class, 'getTeacherClasses'])->middleware('auth:sanctum', 'teacher'); //done
+Route::get('/getStudentExamSchedule', [classesManagementController::class, 'getStudentExamSchedule'])->middleware('auth:sanctum', 'student'); //done
+Route::get('/getSpecifiedUserNums', [classesManagementController::class, 'getSpecifiedUserNums'])->middleware('auth:sanctum', 'dean'); //done
+Route::get('/getTeacherWorkData', [classesManagementController::class, 'getTeacherWorkData'])->middleware('auth:sanctum', 'teacher'); //done
 
 // for gaith, by KOMY 
 
@@ -106,7 +109,7 @@ Route::delete('/deleteUser', [classesManagementController::class, 'deleteUser'])
 
 // subjects management
 
-Route::Post('/createSubject', [SubjectsManagementController::class, 'createSubject'])->middleware('auth:sanctum', 'supervisor'); //done
+Route::Post('/createSubject', [SubjectsManagementController::class, 'createSubject']);//->middleware('auth:sanctum', 'supervisor'); //done
 Route::get('/getAllSubjects', [SubjectsManagementController::class, 'getAllSubjects'])->middleware('auth:sanctum', 'supervisor'); //done
 Route::get('/getSubjectById', [SubjectsManagementController::class, 'getSubjectById'])->middleware('auth:sanctum', 'supervisor'); //done
 Route::put('/updateSubject', [SubjectsManagementController::class, 'updateSubject'])->middleware('auth:sanctum', 'supervisor'); //done
@@ -114,7 +117,7 @@ Route::delete('/deleteSubject', [SubjectsManagementController::class, 'deleteSub
 
 // the fcm
 Route::post('/save-fcm-token', [fcmController::class, 'saveFcmoken']);
-Route::post('/test-fcm-token', [fcmController::class, 'testFcmoken'])->middleware('auth:sanctum');
+Route::post('/test-fcm-token', [fcmController::class, 'testFcmoken']);//->middleware('auth:sanctum');
 
 //timetables management
 route::put('/createWeeklySchedule', [TimetablesManagementController::class, 'createWeeklySchedule']); //->middleware('auth:sanctum', 'supervisor'); //done w request

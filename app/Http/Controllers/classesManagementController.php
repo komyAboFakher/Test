@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use App\Models\SchoolClass as ModelsSchoolClass;
+use App\Models\Session;
+use App\Models\Supervisor;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
@@ -1232,6 +1234,76 @@ class classesManagementController extends Controller
                 'status' => false,
                 'message' => $th->getMessage(),
             ], 404);
+        }
+    }
+
+    public function getSpecifiedUserNums(){
+        try{
+            //number of student
+            $students=Student::all();
+            $studentsNumber=count($students);
+            //number of teachers
+            $teachers=teacher::all();
+            $teachersNumber=count($teachers);
+            //number of supervisors
+            $supervisors=Supervisor::all();
+            $supervisorsNumber=count($supervisors);
+            //number of others
+            $others=User::where('role','other')->get();
+            $othersNumber=count($others);
+
+            //returning succes message
+            return response()->json([
+                'status'=>true,
+                'students'=>$studentsNumber,
+                'teachers'=>$teachersNumber,
+                'supervisors'=>$supervisorsNumber,
+                'others'=>$othersNumber,
+            ]);
+        }catch(\Throwable $th){
+            return response()->json([
+                'status'=>false,
+                'message'=>$th->getMessage(),
+            ],500);
+        }
+    }
+
+    public function getTeacherWorkData(){
+        try{
+            $user=Auth::user();
+            $teacher=Teacher::where('user_id',$user->id)->first();
+
+            if(!$teacher){
+                return response()->json([
+                    'status'=>false,
+                    'message'=>'the teacher was nout found',
+                ],404);
+            }
+            //getting the number of sessions 
+            $sessions=Session::where('teacher_id',$teacher->id)->get();
+            $sessionCount=count($sessions);
+            //now getting the teacher classes
+            $teacherClassesIds=TeacherClass::where('teacher_id',$teacher->id)->pluck('class_id');
+            $teacherClassesCount=count($teacherClassesIds);
+            //getting the number teacherds students
+            $teacherStudentCount=0;
+            foreach($teacherClassesIds as $classId){
+                $classCount=Student::where('class_id',$classId)->count();
+                $teacherStudentCount+=$classCount;
+            }
+
+            //returning success message
+            return response()->json([
+                'status'=>True,
+                'sessionCount'=>$sessionCount,
+                'teacherClassesCount'=>$teacherClassesCount,
+                'teacherStudentCount'=>$teacherStudentCount,
+            ]);
+        }catch(\Throwable $th){
+            return response()->json([
+                'status'=>false,
+                'message'=>$th->getMessage(),
+            ],500);
         }
     }
 }
