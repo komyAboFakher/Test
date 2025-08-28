@@ -39,63 +39,65 @@ use Illuminate\Support\Facades\Validator;
 
 class authController extends Controller
 {
-    public function setUsers2FA(){
-        try{
+    public function setUsers2FA()
+    {
+        try {
             //getting the user
-            $authUser=Auth::user();
-            $user=User::where('id',$authUser->id)->first();
-            if(!$user){
+            $authUser = Auth::user();
+            $user = User::where('id', $authUser->id)->first();
+            if (!$user) {
                 return response()->json([
                     'status' => false,
                     'message' => 'User not authenticated.',
-            ], 401);
+                ], 401);
             }
             //setting the 2FA
-            $user->TFA=true;
+            $user->TFA = true;
             //saving the suer
             $user->save();
             //returning success message
             return response()->json([
-                'status'=>true,
-                'message'=>'the 2FA has been set successfully!',
+                'status' => true,
+                'message' => 'the 2FA has been set successfully!',
             ]);
-        }catch(\Throwable $th){
+        } catch (\Throwable $th) {
             return response()->json([
-                'status'=>false,
-                'message'=>$th->getMessage(),
-            ],500);
+                'status' => false,
+                'message' => $th->getMessage(),
+            ], 500);
         }
     }
 
-    
-    public function unSetUsers2FA(){
-        try{
+
+    public function unSetUsers2FA()
+    {
+        try {
             //getting the user
-            $authUser=Auth::user();
-            $user=User::where('id',$authUser->id)->first();
-            if(!$user){
+            $authUser = Auth::user();
+            $user = User::where('id', $authUser->id)->first();
+            if (!$user) {
                 return response()->json([
                     'status' => false,
                     'message' => 'User not authenticated.',
-            ], 401);
+                ], 401);
             }
             //setting the 2FA
-            $user->TFA=false;
+            $user->TFA = false;
             //saving the suer
             $user->save();
             //returning success message
             return response()->json([
-                'status'=>true,
-                'message'=>'the 2FA has been unset successfully!',
+                'status' => true,
+                'message' => 'the 2FA has been unset successfully!',
             ]);
-        }catch(\Throwable $th){
+        } catch (\Throwable $th) {
             return response()->json([
-                'status'=>false,
-                'message'=>$th->getMessage(),
-            ],500);
+                'status' => false,
+                'message' => $th->getMessage(),
+            ], 500);
         }
     }
- 
+
     public function createUser(Request $request)
     {
         try {
@@ -136,13 +138,33 @@ class authController extends Controller
                     'errors' => $validateUser->errors(),
                 ], 404);
             }
+
             DB::transaction(function () use ($request) {
-                //intiating photo URL
+                // Store uploaded files
                 $photoPath = $request->file('photo')->store('photos', 'public');
-                //intiating certification URL
                 $certificationPath = $request->file('previousCertification')->store('certifications', 'public');
-                //creating a student
-                //create user for student
+
+                // Create parent user
+                $parentUser = User::create([
+                    'name' => $request->parentName,
+                    'middleName' => $request->parentMiddleName,
+                    'lastName' => $request->parentLastName,
+                    'phoneNumber' => $request->parentPhoneNumber,
+                    'email' => $request->parentEmail,
+                    'role' => 'parent',
+                    'password' => Hash::make($request->parentPassword),
+                ]);
+
+                // Create parent record
+                $parent = Parents::create([
+                    'user_id' => $parentUser->id,
+                    'name' => $request->parentName,
+                    'middle_name' => $request->parentMiddleName,
+                    'last_name' => $request->parentLastName,
+                    'job' => $request->parentJob,
+                ]);
+
+                // Create student user
                 $user = User::create([
                     'name' => $request->name,
                     'middleName' => $request->middleName,
@@ -156,72 +178,46 @@ class authController extends Controller
                 Mail::to($user->email)->send(
                     new \App\Mail\TeacherWelcomeMail($request->password, $user->email)
                 );
-                //creating a row in the student table
-                //getting class id
+
+                // Get class
                 $class = schoolClass::where('className', $request->class)->first();
-                if ($request->role == 'student') {
-                    $student = Student::create([
-                        'user_id' => $user->id,
-                        'class_id' => $class->id,
-                        'schoolGraduatedFrom' => $certificationPath,
-                        'photo' => $photoPath,
-                    ]);
-                }
 
-                $komy = $student->class_id;
+                // Create student record with parent_id
+                $student = Student::create([
+                    'user_id' => $user->id,
+                    'class_id' => $class->id,
+                    'schoolGraduatedFrom' => $certificationPath,
+                    'photo' => $photoPath,
+                    'parent_id' => $parent->id,
+                ]);
 
-                // adding the student and increment the current Student number and check the max size of the class
-                if ($komy) {
+                // Link student to parent (if needed)
+                $parent->update(['student_id' => $student->id]);
 
-                    $studentClass = schoolClass::findOrFail($komy);
+                // Update class student count
+                if ($student->class_id) {
+                    $studentClass = schoolClass::findOrFail($student->class_id);
 
                     if ($studentClass->studentsNum == $studentClass->currentStudentNumber) {
-                        return response()->json([
-                            "message" => "the current class has max size of students"
-                        ], 422);
+                        throw new \Exception("The current class has reached its maximum size.");
                     }
 
-                    if (is_null($studentClass->currentStudentNumber)) {
-                        $studentClass->currentStudentNumber = 1;
-                        $studentClass->save();
-                    } else {
-                        $studentClass->increment('currentStudentNumber');
-                        $studentClass->save();
-                    }
+                    $studentClass->currentStudentNumber = $studentClass->currentStudentNumber ? $studentClass->currentStudentNumber + 1 : 1;
+                    $studentClass->save();
                 }
 
-                //creating a new row in absence student table
-                $absence = AbsenceStudent::create([
+                // Create absence record
+                AbsenceStudent::create([
                     'student_id' => $student->id,
                     'absence_num' => 5,
                     'warning' => 0,
                 ]);
-                //now we wanna create a parent for this student
-                //creating a user for the parent
-                $parentUser = User::create([
-                    'name' => $request->parentName,
-                    'middleName' => $request->parentMiddleName,
-                    'lastName' => $request->parentLastName,
-                    'phoneNumber' => $request->parentPhoneNumber,
-                    'email' => $request->parentEmail,
-                    'role' => 'parent',
-                    'password' => Hash::make($request->parentPassword),
-                ]);
 
-                // Mail::to($parentUser->email)->send(new \App\Mail\TeacherWelcomeMail($request->password, $parentUser->email));
-
+                // Dispatch notification
                 sendUserNotification::dispatch($user, $parentUser->email, $request->password);
-
-                //creating a row in the parent table
-                $parent = Parents::create([
-                    'user_id' => $parentUser->id,
-                    'student_id' => $student->id,
-                    'name' => $request->parentName,
-                    'middle_name' => $request->parentMiddleName,
-                    'last_name' => $request->parentLastName,
-                    'job' => $request->parentJob,
-                ]);
             });
+
+            
             //success message
             return response()->json([
                 'status' => true,
@@ -476,9 +472,8 @@ class authController extends Controller
 
             $user = User::with('UserPermission')->where('email', $request->email)->first();
 
-            if($user->TFA == true){
-                $verificationCode=rand(10000,99999);
-                
+            if ($user->TFA == true) {
+                $verificationCode = rand(10000, 99999);
             }
             // --- Dispatch the Job for Background Processing ---
             $agent = new Agent();
@@ -490,13 +485,13 @@ class authController extends Controller
             SendLoginNotification::dispatch($user, $deviceDetails, $loginTime, $ip);
 
             //saving the fcm token
-            if($request->fcmToken != null){
-                $fcmSave=fcmController::saveFcmToken($request->fcmToken,$user->id);
-                if(!$fcmSave){
+            if ($request->fcmToken != null) {
+                $fcmSave = fcmController::saveFcmToken($request->fcmToken, $user->id);
+                if (!$fcmSave) {
                     return response()->json([
-                        'status'=>false,
-                        'message'=>'fcm is not saved!'
-                    ],422);
+                        'status' => false,
+                        'message' => 'fcm is not saved!'
+                    ], 422);
                 }
             }
             // --- Return Response Immediately ---
@@ -508,7 +503,6 @@ class authController extends Controller
                     'user' => $user,
                 ],
             ], 200);
-
         } catch (\Throwable $th) {
             return response()->json([
                 'status' => false,
