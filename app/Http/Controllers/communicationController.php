@@ -659,12 +659,12 @@ class CommunicationController extends Controller
             $currentUser = auth()->user();
             $comment = Comment::findOrFail($commentID);
 
-            if ($currentUser->id != $comment->user_id) {
+            if ($currentUser->id != $comment->user_id && $currentUser->role !== 'supervisor') {
                 return response()->json([
                     'message' => 'you are not allowed to delete  anything else than your comments !!'
                 ], 401);
             } else {
-                $comment->delete();
+                $comment->deleteWithReplies();
             }
 
             return response()->json([
@@ -872,38 +872,38 @@ class CommunicationController extends Controller
                 'Comment.user',
                 'Comment.event',
             ])->get()->
-            
-            //->groupBy(function ($k) {
-            //    $eventID = $k->comment->event->id;
-            //    return " event_id: {$eventID} ";
-            //})
-            //    ->map(function ($group) {
-            //        return $group->
-                    
-                    
-                    
-                    groupBy(function ($r) {
-                        $commentId = $r->comment->id;
-                        return " comment_id: {$commentId} ";
-                    })->map(function ($group) {
-                        return $group->map(function ($r) {
-                            return [
-                                'report_id' => $r->id,
-                                'event_id' => $r->comment->event_id,
-                                'reporter' => trim("{$r->reporter->name} {$r->reporter->middleName} {$r->reporter->lastName}"),
-                                'reporter role' => $r->reporter->role,
-                                'reporter email' => $r->reporter->email,
-                                'reporter phone' => $r->reporter->phoneNumber,
-                                'reason' => $r->reason,
-                                'reported_at' => $r->created_at,
-                                'comment_content' => $r->Comment->content,
-                                'author' => trim("{$r->Comment->user->name} {$r->Comment->user->middleName} {$r->Comment->user->lastName}"),
-                                'author role' => $r->Comment->user->role,
-                                'author email' => $r->Comment->user->email,
-                            ];
-                        });
+
+                //->groupBy(function ($k) {
+                //    $eventID = $k->comment->event->id;
+                //    return " event_id: {$eventID} ";
+                //})
+                //    ->map(function ($group) {
+                //        return $group->
+
+
+
+                groupBy(function ($r) {
+                    $commentId = $r->comment->id;
+                    return " comment_id: {$commentId} ";
+                })->map(function ($group) {
+                    return $group->map(function ($r) {
+                        return [
+                            'report_id' => $r->id,
+                            'event_id' => $r->comment->event_id,
+                            'reporter' => trim("{$r->reporter->name} {$r->reporter->middleName} {$r->reporter->lastName}"),
+                            'reporter role' => $r->reporter->role,
+                            'reporter email' => $r->reporter->email,
+                            'reporter phone' => $r->reporter->phoneNumber,
+                            'reason' => $r->reason,
+                            'reported_at' => $r->created_at,
+                            'comment_content' => $r->Comment->content,
+                            'author' => trim("{$r->Comment->user->name} {$r->Comment->user->middleName} {$r->Comment->user->lastName}"),
+                            'author role' => $r->Comment->user->role,
+                            'author email' => $r->Comment->user->email,
+                        ];
                     });
-                //});
+                });
+            //});
 
             if (!$rep) {
                 return response()->json([

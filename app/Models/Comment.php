@@ -37,6 +37,8 @@ class Comment extends Model
         return $this->hasMany(Comment::class, 'parent_id');
     }
 
+
+
     /*example for more understanding MAJD :
         
     Alice posts: "What's everyone doing this weekend?" (Comment ID 1, no parent)
@@ -54,9 +56,19 @@ class Comment extends Model
     }
 
 
+    public function deleteWithReplies()
+    {
+        foreach ($this->replies as $reply) {
+            $reply->deleteWithReplies(); // Recursively delete children
+        }
+
+        $this->delete(); // Finally delete self
+    }
+
+
     public function reactions()
     {
-        return $this->morphToMany(Reaction::class,'reactable', 'reactables')
+        return $this->morphToMany(Reaction::class, 'reactable', 'reactables')
             ->withPivot('user_id')
             ->withTimestamps();
     }
