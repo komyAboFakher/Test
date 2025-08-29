@@ -241,6 +241,10 @@ Route::post('AVG', [AverageController::class, 'Average'])->middleware('auth:sanc
 
 
 
+
+
+
+
 //komy
 /*
 php artisan db:seed
