@@ -14,10 +14,11 @@ return new class extends Migration
         Schema::create('averages', function (Blueprint $table) {
             $table->id();
             $table->foreignId('student_id')->constrained('students')->cascadeOnDelete();
-            $table->decimal('average_1', 5, 2)->nullable(); 
-            $table->decimal('average_2', 5, 2)->nullable(); 
-            $table->decimal('average_final', 5, 2)->nullable(); 
+            $table->decimal('average_1', 5, 2)->nullable();
+            $table->decimal('average_2', 5, 2)->nullable();
+            $table->decimal('average_final', 5, 2)->nullable();
             $table->string('academic_year')->nullable();
+            $table->boolean('success')->default(1);
             $table->timestamps();
         });
     }

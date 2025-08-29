@@ -101,10 +101,10 @@ class User extends Authenticatable
         return $this->hasOne(Application::class);
     }
     //_________________________________________________________________________
-    //public function permissions()
-    //{
-    //    return $this->belongsToMany(Permission::class, 'user_permissions', 'user_id');
-    //}
+    public function permissions()
+    {
+        return $this->belongsToMany(Permission::class, 'user_permissions', 'user_id');
+    }
     //_________________________________________________________________________
     public function UserPermission()
     {

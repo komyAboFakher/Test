@@ -94,6 +94,7 @@ class AverageController extends Controller
                     $students = Student::where('class_id', $class->id)->get();
 
                     foreach ($students as $student) {
+                        $komy = 1;
 
                         // check if the first semester avergaes not calculated yet !!
 
@@ -114,6 +115,14 @@ class AverageController extends Controller
                             ->where('semester', $semester)
                             ->get();
 
+
+                        foreach ($marks as $mark) {
+                            if ($mark->success == 0) {
+                                $komy = 0;
+                                break;
+                            }
+                        }
+
                         $semesterAverage = AverageController::calculateSemesterAverage($marks);
 
                         $averageRecord = Average::updateOrCreate(
@@ -122,8 +131,8 @@ class AverageController extends Controller
                                 'academic_year' => $academicYear,
                             ],
                             $semester === 'First'
-                                ? ['average_1' => $semesterAverage]
-                                : ['average_2' => $semesterAverage]
+                                ? ['average_1' => $semesterAverage, 'success' => $komy,]
+                                : ['average_2' => $semesterAverage, 'success' => $komy,]
                         );
 
                         //$averageRecord->refresh();

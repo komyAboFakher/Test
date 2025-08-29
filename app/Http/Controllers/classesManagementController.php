@@ -532,11 +532,11 @@ class classesManagementController extends Controller
                         'class_name' => $user->student->schoolClass->className ?? '',
                         'absences_number' => $user->student->AbsenceStudent->absence_num ?? '',
                         'warnings' => $user->student->AbsenceStudent->warning ?? '',
-                        'GPA' => $user->student->averages->map( function ($average){
+                        'GPA' => $user->student->averages->map(function ($average) {
                             return  [
-                                'GPA_1'=> $average->average_1 ?? null,
-                                'GPA_2'=> $average->average_2 ?? null,
-                                'GPA_final'=> $average->average_final ?? null,
+                                'GPA_1' => $average->average_1 ?? null,
+                                'GPA_2' => $average->average_2 ?? null,
+                                'GPA_final' => $average->average_final ?? null,
                             ];
                         })
                     ];
@@ -706,7 +706,7 @@ class classesManagementController extends Controller
                         'photo' => asset('storage/' . $user->other->photo) ?? null,
                         'certification' => asset('storage/' . $user->other->certification) ?? null,
                         'salary' => $user->other->salary ?? null,
-                        'permission' => $user->userPermission->pluck('Permission.permission'),  
+                        'permission' => $user->userPermission->pluck('Permission.permission'),
 
 
                     ];
@@ -760,7 +760,13 @@ class classesManagementController extends Controller
                 'phone' => $student->phoneNumber,
                 'photo' => asset('storage/' . $student->student->photo) ?? null,
                 'school_graduated_from' => asset('storage/' . $student->student->schoolGraduatedFrom) ?? null,
-                'gpa' => $student->student->Gpa ?? null,
+                'GPA' => $student->student->averages->map(function ($average) {
+                    return  [
+                        'GPA_1' => $average->average_1 ?? null,
+                        'GPA_2' => $average->average_2 ?? null,
+                        'GPA_final' => $average->average_final ?? null,
+                    ];
+                })
 
             ];
 
@@ -990,11 +996,11 @@ class classesManagementController extends Controller
                         'class_id' => $user->student->class_id ?? ' ',
                         'class_name' => $user->student->schoolClass->className ?? ' ',
                         'number of attendance years' => $attendanceYears ?? ' ',
-                        'GPA' => $user->student->averages->map( function ($average){
+                        'GPA' => $user->student->averages->map(function ($average) {
                             return  [
-                                'GPA_1'=> $average->average_1 ?? null,
-                                'GPA_2'=> $average->average_2 ?? null,
-                                'GPA_final'=> $average->average_final ?? null,
+                                'GPA_1' => $average->average_1 ?? null,
+                                'GPA_2' => $average->average_2 ?? null,
+                                'GPA_final' => $average->average_final ?? null,
                             ];
                         })
                     ];
@@ -1149,11 +1155,11 @@ class classesManagementController extends Controller
         try {
             // 1. Get the authenticated user.
             $user = Auth::user();
-            if(!$user){
+            if (!$user) {
                 return response()->json([
-                    'status'=>false,
-                    'message'=>'user not found!',
-                ],422);
+                    'status' => false,
+                    'message' => 'user not found!',
+                ], 422);
             }
             // 2. Find the student record associated with the user.
             // A middleware should already confirm the user is a student.
@@ -1167,27 +1173,27 @@ class classesManagementController extends Controller
                 ->where('id', '!=', $student->id)
                 ->with('users') // Assumes a 'user' relationship is defined on the Student model
                 ->get();
-            if(!$classmates){
+            if (!$classmates) {
                 return response()->json([
-                    'status'=>false,
-                    'message'=>'this student doesnt have any classMates !'
-                ],422);
+                    'status' => false,
+                    'message' => 'this student doesnt have any classMates !'
+                ], 422);
             }
 
             //getting the teachers
-            $teachers=TeacherClass::query()
-            ->join('teachers','teachers.id','=','teacher_Classes.teacher_id')
-            ->join('users','users.id','=','teachers.user_id')
-            ->join('subjects','subjects.id','=','teacher_Classes.subject_id')
-            ->where('class_id',$classId)
-            ->select('name','subjectName')
-            ->get();
+            $teachers = TeacherClass::query()
+                ->join('teachers', 'teachers.id', '=', 'teacher_Classes.teacher_id')
+                ->join('users', 'users.id', '=', 'teachers.user_id')
+                ->join('subjects', 'subjects.id', '=', 'teacher_Classes.subject_id')
+                ->where('class_id', $classId)
+                ->select('name', 'subjectName')
+                ->get();
 
-            if(!$teachers){
+            if (!$teachers) {
                 return response()->json([
-                    'status'=>false,
-                    'message'=>'this class doesnt have any teachers!',
-                ],422);
+                    'status' => false,
+                    'message' => 'this class doesnt have any teachers!',
+                ], 422);
             }
 
             //Return a successful response with the requested structure.
