@@ -142,10 +142,12 @@ class PermissionController extends Controller
             $validator = Validator::make(
                 $request->all(),
                 [
-                    'user_permission_id' => 'required|integer|exists:UserPermission,id'
+                    'user_id' => 'required|integer|exists:user_permissions',
+                    'permission' => 'required|string|in:Library,Nurse,Oversee',
                 ],
                 [
-                    'user_permission_id' => 'not found'
+                    'user_id' => 'not found',
+                    'permission.in' => 'permission must be Library or Nurse or Oversee'
                 ]
             );
 
@@ -156,7 +158,9 @@ class PermissionController extends Controller
                 ], 422);
             }
 
-            $userPermission = UserPermission::findOrfail($request->user_permission_id);
+            $koko = Permission::where('permission', $request->permission)->get();
+
+            $userPermission = UserPermission::where('user_id', $request->user_id)->where('permission_id', $koko->id)->first();
             $userPermission->delete();
 
             return response()->json([
