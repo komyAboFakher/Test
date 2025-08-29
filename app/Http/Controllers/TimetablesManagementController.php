@@ -316,7 +316,11 @@ public function teachersAndTheirSessions(Request $request)
             }
 
             if (!empty($errors)) {
-                return response()->json(['status' => false, 'message' => 'Invalid schedule data provided.', 'errors' => array_unique($errors)], 422);
+                return response()->json([
+                'status' => false,
+                'message' => 'Invalid schedule data provided.', 
+                'errors' => array_unique($errors)
+                ],422);
             }
 
             // --- PHASE 2: CREATION PHASE ---
@@ -495,7 +499,8 @@ public function generateWeeklySchedule(Request $request)
         // --- 1. PREPARATION: GATHER DATA ---
         $classSubjects = DB::table('teacher_classes as tc')
             ->join('subjects as s', 'tc.subject_id', '=', 's.id')
-            ->join('users as u', 'tc.teacher_id', '=', 'u.id')
+            ->join('teachers as t', 'tc.teacher_id', '=', 't.id')
+            ->join('users as u', 't.user_id', '=', 'u.id')
             ->where('tc.class_id', $class->id)
             ->select('tc.teacher_id', 'tc.subject_id', 's.subjectName as subject', DB::raw("CONCAT(u.name, ' ', u.lastName) as teacher_name"))
             ->get();

@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('schedule_brief_id')->constrained()->onDelete('cascade');
             $table->foreignId('subject_id')->constrained()->onDelete('cascade');
             $table->foreignId('teacher_id')->constrained()->onDelete('cascade');
+            $table->boolean('current')->default(true);
             $table->boolean('cancelled');
             $table->enum('session',['1','2','3','4','5','6','7']);
 
