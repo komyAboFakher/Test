@@ -394,6 +394,7 @@ class libraryController extends Controller
                 'user_id' => $currentUser,
                 'book_id' => $book->id,
                 'serrial_number' => $book->serrial_number,
+                'borrow_date'=> now(),
             ]);
 
             return response()->json([
