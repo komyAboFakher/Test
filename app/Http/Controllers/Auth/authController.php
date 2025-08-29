@@ -402,8 +402,7 @@ class authController extends Controller
                     'middleName' => 'required|string|max:255|regex:/^[a-zA-Z]+$/',
                     'lastName' => 'required|string|max:255|regex:/^[a-zA-Z]+$/',
                     'phoneNumber' => 'required|string|regex:/^\+?[0-9\s\-]{10,15}$/|unique:users,phoneNumber',
-                    'email' => 'required',
-                    'email',
+                    'email' => 'required|string',
                     'regex:/^[a-zA-Z0-9._%+-]+@gmail\.com$/i',
                     'unique:users,email',
                     'password' => 'required|string|min:8',
@@ -445,12 +444,8 @@ class authController extends Controller
         try {
             // --- BONUS: Corrected Validation ---
             $validateUser = Validator::make($request->all(), [
-                'email' => [
-                    'required',
-                    'email',
-                    'exists:users,email', // Correct for login: user must exist
-                    // 'regex:/^[a-zA-Z0-9._%+-]+@gmail\.com$/i' // Optional: if you only allow gmail
-                ],
+                'email' => ['required','email','exists:users,email'], // Correct for login: user must exist
+                // 'regex:/^[a-zA-Z0-9._%+-]+@gmail\.com$/i' // Optional: if you only allow gmail
                 'password' => 'required|string|min:8',
                 'deviceType' => 'required|string|in:web,mobile',
                 'fcmToken' => 'sometimes|string'

@@ -4,22 +4,26 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Parents;
+use App\Models\Session;
 use App\Models\Student;
 use App\Models\Teacher;
+use App\Models\FcmToken;
 use App\Models\Supervisor;
 use App\Models\SchoolClass;
 use App\Rules\validateDate;
+use App\Services\FCMService;
 use Illuminate\Http\Request;
+use App\Models\ScheduleBrief;
 use App\Models\AbsenceStudent;
 use App\Models\CheckInTeacher;
-use App\Models\ScheduleBrief;
-use App\Models\Session;
-use Illuminate\Console\Scheduling\Schedule;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Validator;
 use PhpParser\Node\Stmt\Catch_;
 use Psy\VersionUpdater\Checker;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use App\Jobs\SendSkipperNotification;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Console\Scheduling\Schedule;
 
 class StudentAttendanceController extends Controller
 {
@@ -154,29 +158,34 @@ class StudentAttendanceController extends Controller
             }
             //first of all we wanna get any student and get their classs name
             $validatedData=$validateSession->validated();
-            if(!empty($validatedData['students'])){
-                $firstStudentId=$validatedData['students'][0]['studentId'];
+            // if(!empty($validatedData['students'])){
+            //     $firstStudentId=$validatedData['students'][0]['studentId'];
 
-                $classId=Student::where('id',$firstStudentId)->value('class_id');
-            }else{
-                $classId=SchoolClass::where('className',$request->className)->value('id');
+            //     $classId=Student::where('id',$firstStudentId)->value('class_id');
+            // }else{
+            //     $classId=SchoolClass::where('className',$request->className)->value('id');
+            // }
+            $class = SchoolClass::where('className', $request->className)->first();
+            if (!$class) {
+                return response()->json(['status' => false, 'message' => 'Class not found.'], 404);
             }
-            //checking if this teacher has the session for this class
-            $today=now()->format('l');
-            $todaysBrief=ScheduleBrief::where('day',$today)->where('class_id',$classId)->first();
-            if(!$todaysBrief){
-                return response()->json([
-                    'status'=>false,
-                    'message'=>'There are no schedules for today',
-                ],422);
-            }
-            $teachersSession=Session::where('schedule_brief_id',$todaysBrief->id)->where('teacher_id',$teacher->id)->where('session',$request->session)->first();
-            if(!$teachersSession){
-                return response()->json([
-                    'status'=>false,
-                    'message'=>'you are not allowed to take the report of this session IDIOT!',
-                ],409);
-            }
+            $classId = $class->id;
+            // //checking if this teacher has the session for this class
+            // $today=now()->format('l');
+            // $todaysBrief=ScheduleBrief::where('day',$today)->where('class_id',$classId)->first();
+            // if(!$todaysBrief){
+            //     return response()->json([
+            //         'status'=>false,
+            //         'message'=>'There are no schedules for today',
+            //     ],422);
+            // }
+            // $teachersSession=Session::where('schedule_brief_id',$todaysBrief->id)->where('teacher_id',$teacher->id)->where('session',$request->session)->first();
+            // if(!$teachersSession){
+            //     return response()->json([
+            //         'status'=>false,
+            //         'message'=>'you are not allowed to take the report of this session IDIOT!',
+            //     ],409);
+            // }
     
             //checking if the session attendance has been already taken for the same teacher
             $sessionExists = CheckInTeacher::where('sessions', $request->session)->where('class_id', $classId)->whereDate('date', now())->first();
@@ -216,12 +225,37 @@ class StudentAttendanceController extends Controller
             }
 
             //now we need to track skips
-            $lastSessionReport = CheckInTeacher::where('sessions', $temp)  
-                ->where('class_id', $classId)
-                ->whereDate('created_at', now()) 
-                ->pluck('student_id'); 
-            //now we wanna check if there is a new absent student in this session
-            
+            if($request->session != 1){
+                $previousAbsenteeIds = CheckInTeacher::where('sessions', $temp)  
+                    ->where('class_id', $classId)
+                    ->whereDate('created_at', now()) 
+                    ->pluck('student_id')
+                    ->toArray();
+                    
+                $currentAbsenteeIds=array_column($validatedData['students'], 'studentId');
+                //now we wanna check if there is a new absent student in this session
+                $skipingstudentsIds=array_diff($currentAbsenteeIds,$previousAbsenteeIds);
+                //now after we have got the students ids we wanna get thier names
+                $skippers=Student::query()
+                ->join('users as u','students.user_id','=','u.id')
+                ->whereIn('students.id',$skipingstudentsIds)
+                ->select( 'u.id as user_id' , DB::raw("CONCAT(u.name, ' ', u.middleName ,' ' , u.lastName) as studentName"))
+                ->get()
+                ->toArray();
+                //->pluck('studentName');
+                $skippersIds=array_column($skippers,'user_id');
+                $studentNames=array_column($skippers,'studentName');
+                if(!empty($skipingstudentsIds)){
+                    // Prepare the data
+$namesString = implode(', ', $studentNames);
+$title = 'Student Class Skip Alert';
+$body = 'The following students have skipped class: ' . $namesString;
+$supervisorsIds = User::where('role', 'supervisor')->pluck('id');
+$fcmTokens = FcmToken::whereIn('user_id', $supervisorsIds)->pluck('token')->toArray();
+
+// Dispatch the job to the queue
+SendSkipperNotification::dispatch($fcmTokens, $title, $body);
+                }}
             //loging absence
             foreach ($request->students as $student) {
                 CheckInTeacher::create([
@@ -242,8 +276,6 @@ class StudentAttendanceController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => $th->getMessage(),
-                'line' => $th->getLine(),
-                'trace' => $th->getTraceAsString()
             ], 500);
         }
     }

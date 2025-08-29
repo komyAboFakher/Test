@@ -86,11 +86,12 @@ Route::delete('/unassignTeacherToClass', [classesManagementController::class, 'u
 //Route::post('/overWriteTeacherToClass', [classesManagementController::class, 'overWriteTeacherToClass'])->middleware('auth:sanctum', 'supervisor'); //done w request
 Route::get('/getStudentTeachersAndMates', [classesManagementController::class, 'getStudentTeachersAndMates'])->middleware('auth:sanctum', 'student'); //done
 Route::get('/getTeacherClasses', [classesManagementController::class, 'getTeacherClasses'])->middleware('auth:sanctum', 'teacher'); //done
+
 Route::get('/getSpecifiedUserNums', [classesManagementController::class, 'getSpecifiedUserNums'])->middleware('auth:sanctum', 'dean'); //done
 Route::get('/getTeacherWorkData', [classesManagementController::class, 'getTeacherWorkData'])->middleware('auth:sanctum', 'teacher'); //done
-Route::get('/checkStatsForSupervisor', [classesManagementController::class, 'checkStatsForSupervisor'])->middleware('auth:sanctum', 'teacher'); //done
+Route::get('/checkStatsForSupervisor', [classesManagementController::class, 'checkStatsForSupervisor'])->middleware('auth:sanctum', 'supervisor'); //done
 
-// for gaith, by KOMY 
+// for gaith, by KOMY
 
 
 Route::get('/getAllStudents', [classesManagementController::class, 'getAllStudents'])->middleware('auth:sanctum', 'komy'); // done w request
