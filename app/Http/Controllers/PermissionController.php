@@ -158,9 +158,9 @@ class PermissionController extends Controller
                 ], 422);
             }
 
-            $koko = Permission::where('permission', $request->permission)->get();
+            $koko = Permission::where('permission', $request->permission)->pluck('id');
 
-            $userPermission = UserPermission::where('user_id', $request->user_id)->where('permission_id', $koko->id)->first();
+            $userPermission = UserPermission::where('user_id', $request->user_id)->where('permission_id', $koko)->first();
             $userPermission->delete();
 
             return response()->json([

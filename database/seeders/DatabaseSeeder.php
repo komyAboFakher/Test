@@ -50,7 +50,7 @@ class DatabaseSeeder extends Seeder
             TeacherClassSeeder::class,
             ReactionSeeder::class,
             PermissionSeeder::class,
-            MarkSeeder::class,
+            //MarkSeeder::class,
 
         ]);
     }
