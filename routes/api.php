@@ -238,7 +238,7 @@ Route::delete('deleteAssignPermission', [PermissionController::class, 'deleteAss
 Route::post('AVG', [AverageController::class, 'Average'])->middleware('auth:sanctum', 'dean');
 
 
-
+// today 8/30/2025 we finished the project, it cost my an arm and leg, i hope I'll get a high mark for it, god bless me
 
 
 

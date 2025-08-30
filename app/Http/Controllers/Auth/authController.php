@@ -27,6 +27,7 @@ use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\fcmController;
 use App\Models\Permission;
+use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
@@ -467,7 +468,7 @@ class authController extends Controller
             }
 
             $user = User::with('UserPermission.permission')->where('email', $request->email)->first();
-
+           
             
 
             if ($user->TFA == true) {
