@@ -601,12 +601,15 @@ public function generateWeeklySchedule(Request $request)
             }
             //intiating pdfs url 
             $pdfUrl=$request->file('schedule')->store('exam_schedule','public');
+            // getting the academic
+            $academic = Academic::where('currentAcademic',true)->first();
             //creating schedule
             $schedule = ExamSchedule::firstOrcreate([
                 'grade' => $request->grade,
                 'semester' => $request->semester,
                 'type' => $request->type,
                 'schedule_pdf' => $pdfUrl,
+                'year' => $academic->academic_year,
             ]);
             //retrun success message 
             return response()->json([
